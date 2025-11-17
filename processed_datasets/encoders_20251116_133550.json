@@ -1,0 +1,46 @@
+{
+  "subject": {
+    "classes": [
+      "arts-humanities",
+      "computing",
+      "math",
+      "science",
+      "unknown"
+    ],
+    "dtype": "object"
+  },
+  "topic": {
+    "classes": [
+      "algebra",
+      "algorithms",
+      "calculus",
+      "general",
+      "geometry",
+      "programming",
+      "statistics",
+      "unknown",
+      "web-development"
+    ],
+    "dtype": "object"
+  },
+  "difficulty": {
+    "classes": [
+      "advanced",
+      "beginner",
+      "easy",
+      "hard",
+      "intermediate",
+      "medium",
+      "unknown"
+    ],
+    "dtype": "object"
+  },
+  "source": {
+    "classes": [
+      "khan_academy",
+      "mit_opencourseware",
+      "stack_exchange"
+    ],
+    "dtype": "object"
+  }
+}

@@ -1,0 +1,35 @@
+# Educational ML Pipeline Requirements
+# Install with: pip install -r requirements.txt
+# Compatible with Python 3.13+
+
+# Core Data Science Libraries
+pandas>=2.2.0
+numpy>=2.0.0
+scikit-learn>=1.5.0
+
+# Visualization
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# Web Scraping and HTTP
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# Model Serving API
+fastapi>=0.110.0
+uvicorn[standard]>=0.23.0
+
+# Model Persistence
+joblib>=1.4.0
+
+# Text Processing
+nltk>=3.8.0
+textblob>=0.17.1
+
+# Development and Testing
+jupyter>=1.0.0
+pytest>=8.0.0
+
+# Utilities
+tqdm>=4.66.0
+python-dotenv>=1.0.0

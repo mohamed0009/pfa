@@ -1,0 +1,729 @@
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+
+' ==========================================
+' DIAGRAMME DE CAS D'USAGE - VUE GLOBALE
+' ==========================================
+
+left to right direction
+
+actor "Apprenant" as Learner
+actor "Formateur" as Trainer
+actor "Administrateur" as Admin
+
+rectangle "Système Coach Virtuel" {
+  package "Authentification" {
+    usecase "UC-01: S'authentifier" as UC01
+    usecase "UC-02: S'inscrire" as UC02
+    usecase "UC-07: Modifier profil" as UC07
+  }
+  
+  package "Apprentissage" {
+    usecase "UC-03: Consulter modules" as UC03
+    usecase "UC-05: Passer un quiz" as UC05
+    usecase "UC-06: Consulter progression" as UC06
+  }
+  
+  package "Coach IA" {
+    usecase "UC-04: Interagir avec coach" as UC04
+  }
+  
+  package "Gestion (Formateur)" {
+    usecase "UC-08: Superviser apprenants" as UC08
+    usecase "UC-09: Créer module" as UC09
+    usecase "UC-10: Analyser performances" as UC10
+  }
+  
+  package "Administration" {
+    usecase "UC-11: Gérer utilisateurs" as UC11
+    usecase "UC-12: Configurer système" as UC12
+  }
+}
+
+Learner --> UC01
+Learner --> UC02
+Learner --> UC03
+Learner --> UC04
+Learner --> UC05
+Learner --> UC06
+Learner --> UC07
+
+Trainer --> UC01
+Trainer --> UC08
+Trainer --> UC09
+Trainer --> UC10
+
+Admin --> UC01
+Admin --> UC11
+Admin --> UC12
+
+@enduml
+
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+
+' ==========================================
+' DIAGRAMME DE CLASSES - MODÈLES
+' ==========================================
+
+package "Core Models" {
+  class UserModel {
+    -String id
+    -String email
+    -String name
+    -String? formation
+    -String? level
+    -UserRole role
+    -Map<String, dynamic> preferences
+    -DateTime createdAt
+    -DateTime? lastLogin
+    --
+    +fromJson(Map): UserModel
+    +toJson(): Map
+    +copyWith(...): UserModel
+  }
+  
+  enum UserRole {
+    admin
+    trainer
+    learner
+  }
+  
+  class LearningModule {
+    -String id
+    -String title
+    -String description
+    -String? category
+    -int estimatedDuration
+    -int level
+    -List<String> topics
+    -List<LearningContent> contents
+    -bool isCompleted
+    -double? progress
+    -DateTime createdAt
+    -DateTime? completedAt
+    --
+    +fromJson(Map): LearningModule
+    +toJson(): Map
+  }
+  
+  class LearningContent {
+    -String id
+    -ContentType type
+    -String title
+    -String content
+    -Map<String, dynamic>? metadata
+    --
+    +fromJson(Map): LearningContent
+    +toJson(): Map
+  }
+  
+  enum ContentType {
+    text
+    video
+    quiz
+    exercise
+    pdf
+    image
+  }
+  
+  class Quiz {
+    -String id
+    -String title
+    -String description
+    -String moduleId
+    -List<Question> questions
+    -int timeLimit
+    -DateTime createdAt
+    -bool isCompleted
+    -double? score
+    --
+    +fromJson(Map): Quiz
+    +toJson(): Map
+    +calculateScore(List<int>): double
+  }
+  
+  class Question {
+    -String id
+    -String question
+    -List<String> options
+    -int correctAnswerIndex
+    -String? explanation
+    --
+    +fromJson(Map): Question
+    +toJson(): Map
+  }
+  
+  class ChatMessage {
+    -String id
+    -String content
+    -MessageType type
+    -DateTime timestamp
+    -bool isGenerating
+    --
+    +fromJson(Map): ChatMessage
+    +toJson(): Map
+  }
+  
+  enum MessageType {
+    user
+    assistant
+    system
+  }
+  
+  class UserProgress {
+    -String userId
+    -String moduleId
+    -double progress
+    -DateTime? startedAt
+    -DateTime? completedAt
+    -int timeSpent
+    -Map<String, dynamic> performance
+    -List<String> completedContents
+    --
+    +fromJson(Map): UserProgress
+    +toJson(): Map
+    +updateProgress(double): void
+  }
+  
+  class LearningAnalytics {
+    -String userId
+    -int totalModules
+    -int completedModules
+    -int totalTimeSpent
+    -double averageScore
+    -List<ModuleProgress> moduleProgresses
+    -Map<String, int> weeklyActivity
+    -List<String> strengths
+    -List<String> areasForImprovement
+    --
+    +fromJson(Map): LearningAnalytics
+    +toJson(): Map
+  }
+  
+  class ModuleProgress {
+    -String moduleId
+    -String moduleTitle
+    -double progress
+    -double? score
+    -DateTime? lastAccessed
+    --
+    +fromJson(Map): ModuleProgress
+    +toJson(): Map
+  }
+}
+
+UserModel --> UserRole
+LearningModule "1" *-- "0..*" LearningContent
+LearningModule --> ContentType
+Quiz "1" *-- "1..*" Question
+ChatMessage --> MessageType
+UserProgress --> UserModel
+UserProgress --> LearningModule
+LearningAnalytics "1" *-- "0..*" ModuleProgress
+
+@enduml
+
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+
+' ==========================================
+' DIAGRAMME DE CLASSES - SERVICES
+' ==========================================
+
+package "Core Services" {
+  class AuthService {
+    -StorageService storage
+    -ApiService apiService
+    -LoggerService logger
+    -Uuid uuid
+    --
+    +login(String, String): Result<UserModel>
+    +register(...): Result<UserModel>
+    +logout(): Future<void>
+    +getCurrentUser(): Future<UserModel?>
+    +updateProfile(...): Result<UserModel>
+    -_getAllUsers(): Future<List<UserModel>>
+    -_saveAllUsers(List<UserModel>): Future<void>
+  }
+  
+  class AICoachService {
+    -ApiService apiService
+    -LoggerService logger
+    --
+    +generateResponse(String, String?): Future<String>
+    +generateQuiz(List<String>, int): Future<String>
+    +generateExercise(String, int): Future<String>
+    -_generateExplanationResponse(String): String
+    -_generateExampleResponse(String): String
+    -_generateHelpResponse(String): String
+    -_generateMotivationalResponse(String): String
+    -_generateGeneralResponse(String): String
+  }
+  
+  class LearningService {
+    -StorageService storage
+    -LoggerService logger
+    -Uuid uuid
+    --
+    +getModules(String?, int?): Future<List<LearningModule>>
+    +getModuleById(String): Future<LearningModule>
+    +getPersonalizedModules(String): Future<List<LearningModule>>
+    +generateQuiz(String, int): Future<Quiz>
+    +getUserProgress(String, String): Future<UserProgress>
+    +updateProgress(String, String, double): Future<void>
+    +generateContent(String, ContentType): Future<List<LearningContent>>
+  }
+  
+  class ApiService {
+    -Dio dio
+    -LoggerService logger
+    -StorageService storage
+    --
+    +get<T>(String): Future<T>
+    +post<T>(String, dynamic): Future<T>
+    +put<T>(String, dynamic): Future<T>
+    +delete<T>(String): Future<T>
+    +patch<T>(String, dynamic): Future<T>
+    +uploadFile<T>(String, String): Future<T>
+    -_setupInterceptors(): void
+    -_handleError(DioException): AppException
+  }
+  
+  class StorageService {
+    -FlutterSecureStorage secureStorage
+    -SharedPreferences sharedPreferences
+    --
+    +writeSecure(String, String): Future<void>
+    +readSecure(String): Future<String?>
+    +saveAccessToken(String): Future<void>
+    +getAccessToken(): Future<String?>
+    +saveRefreshToken(String): Future<void>
+    +getRefreshToken(): Future<String?>
+    +clearTokens(): Future<void>
+    +write(String, dynamic): Future<bool>
+    +read<T>(String): T?
+  }
+  
+  class LoggerService {
+    -Logger logger
+    --
+    +verbose(String, [dynamic, StackTrace?]): void
+    +debug(String, [dynamic, StackTrace?]): void
+    +info(String, [dynamic, StackTrace?]): void
+    +warning(String, [dynamic, StackTrace?]): void
+    +error(String, [dynamic, StackTrace?]): void
+    +fatal(String, [dynamic, StackTrace?]): void
+    +logApiRequest(String, String, {Map?}): void
+    +logApiResponse(String, String, int, {dynamic}): void
+    +logUserAction(String, {Map?}): void
+  }
+}
+
+AuthService --> StorageService
+AuthService --> ApiService
+AuthService --> LoggerService
+AICoachService --> ApiService
+AICoachService --> LoggerService
+LearningService --> StorageService
+LearningService --> LoggerService
+ApiService --> StorageService
+ApiService --> LoggerService
+
+@enduml
+
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+
+' ==========================================
+' DIAGRAMME DE CLASSES - PROVIDERS & UI
+' ==========================================
+
+package "State Management" {
+  class UserProvider {
+    -AuthService authService
+    -UserModel? _currentUser
+    -bool _isLoading
+    -String? _errorMessage
+    --
+    +UserModel? currentUser
+    +bool isAuthenticated
+    +bool isAdmin
+    +bool isTrainer
+    +bool isLearner
+    +bool isLoading
+    +String? errorMessage
+    +login(String, String): Future<bool>
+    +register(...): Future<bool>
+    +logout(): Future<void>
+    +updateProfile(...): Future<void>
+    +setUser(UserModel): void
+    +clearError(): void
+  }
+}
+
+package "Presentation Layer" {
+  class LoginScreen {
+    -GlobalKey<FormState> _formKey
+    -TextEditingController _emailController
+    -TextEditingController _passwordController
+    -bool _obscurePassword
+    -bool _isLoading
+    --
+    +build(BuildContext): Widget
+    -_handleLogin(): Future<void>
+    -_showErrorSnackbar(String): void
+  }
+  
+  class ChatScreen {
+    -List<ChatMessage> _messages
+    -TextEditingController _messageController
+    -bool _isGenerating
+    -AICoachService _aiCoachService
+    --
+    +build(BuildContext): Widget
+    -_sendMessage(): Future<void>
+    -_receiveResponse(String): Future<void>
+    -_buildMessageBubble(ChatMessage): Widget
+  }
+  
+  class LearnerDashboard {
+    -UserProvider _userProvider
+    -LearningService _learningService
+    --
+    +build(BuildContext): Widget
+    -_loadStatistics(): Future<void>
+    -_navigateToModules(): void
+    -_navigateToChat(): void
+  }
+  
+  class LearningModulesScreen {
+    -List<LearningModule> _modules
+    -bool _isLoading
+    -LearningService _learningService
+    --
+    +build(BuildContext): Widget
+    -_loadModules(): Future<void>
+    -_filterModules(String?): void
+  }
+}
+
+UserProvider --> AuthService
+LoginScreen ..> UserProvider : uses
+ChatScreen ..> AICoachService : uses
+LearnerDashboard ..> UserProvider : uses
+LearnerDashboard ..> LearningService : uses
+LearningModulesScreen ..> LearningService : uses
+
+@enduml
+
+@startuml
+!theme plain
+
+' ==========================================
+' DIAGRAMME DE SÉQUENCE - AUTHENTIFICATION
+' ==========================================
+
+actor Apprenant
+participant "LoginScreen" as Login
+participant "UserProvider" as Provider
+participant "AuthService" as Auth
+participant "StorageService" as Storage
+participant "ApiService" as API
+
+Apprenant -> Login: Saisir email/password
+Login -> Login: Valider formulaire
+Apprenant -> Login: Soumettre
+Login -> Provider: login(email, password)
+activate Provider
+
+Provider -> Auth: login(email, password)
+activate Auth
+
+Auth -> Storage: getAllUsers()
+activate Storage
+Storage --> Auth: List<UserModel>
+deactivate Storage
+
+Auth -> Auth: Vérifier identifiants
+Auth -> Storage: saveCurrentUser(user)
+activate Storage
+Storage --> Auth: OK
+deactivate Storage
+
+Auth --> Provider: Success<UserModel>
+deactivate Auth
+
+Provider -> Provider: _currentUser = user
+Provider -> Provider: notifyListeners()
+Provider --> Login: true
+deactivate Provider
+
+Login -> Login: Navigator.pushReplacement()
+Login --> Apprenant: Redirection Dashboard
+
+@enduml
+
+@startuml
+!theme plain
+
+' ==========================================
+' DIAGRAMME DE SÉQUENCE - CHAT AVEC COACH IA
+' ==========================================
+
+actor Apprenant
+participant "ChatScreen" as Chat
+participant "AICoachService" as AI
+participant "ApiService" as API
+participant "StorageService" as Storage
+
+Apprenant -> Chat: Saisir message
+Apprenant -> Chat: Envoyer
+activate Chat
+
+Chat -> Chat: Ajouter message utilisateur
+Chat -> AI: generateResponse(message, context)
+activate AI
+
+AI -> AI: Analyser message (keywords)
+alt Message contient "explain"
+    AI -> AI: _generateExplanationResponse()
+else Message contient "example"
+    AI -> AI: _generateExampleResponse()
+else Message contient "help"
+    AI -> AI: _generateHelpResponse()
+else
+    AI -> AI: _generateGeneralResponse()
+end
+
+' En production: appel API réel
+' AI -> API: post('/ai/chat', {message})
+' API --> AI: {response}
+' deactivate API
+
+AI --> Chat: String response
+deactivate AI
+
+Chat -> Chat: Ajouter message assistant
+Chat -> Storage: saveConversation(messages)
+activate Storage
+Storage --> Chat: OK
+deactivate Storage
+
+Chat -> Chat: Afficher réponse
+Chat --> Apprenant: Afficher réponse
+
+deactivate Chat
+
+@enduml
+
+@startuml
+!theme plain
+
+' ==========================================
+' DIAGRAMME DE SÉQUENCE - GÉNÉRATION QUIZ
+' ==========================================
+
+actor Apprenant
+participant "LearningScreen" as Screen
+participant "LearningService" as Learning
+participant "AICoachService" as AI
+participant "ApiService" as API
+participant "StorageService" as Storage
+
+Apprenant -> Screen: Demander quiz pour module
+activate Screen
+
+Screen -> Learning: generateQuiz(moduleId, difficulty)
+activate Learning
+
+Learning -> AI: generateQuiz(topics, difficulty)
+activate AI
+
+' En production: appel API IA
+' AI -> API: post('/ai/generate-quiz', {topics, difficulty})
+' API --> AI: {quizData}
+' deactivate API
+
+AI -> AI: Générer questions
+AI --> Learning: Quiz object
+deactivate AI
+
+Learning -> Storage: saveQuiz(quiz)
+activate Storage
+Storage --> Learning: OK
+deactivate Storage
+
+Learning --> Screen: Quiz
+deactivate Learning
+
+Screen -> Screen: Afficher quiz
+Screen --> Apprenant: Afficher questions
+
+Apprenant -> Screen: Répondre aux questions
+Apprenant -> Screen: Soumettre
+
+Screen -> Screen: Calculer score
+Screen -> Learning: updateProgress(userId, moduleId, score)
+activate Learning
+
+Learning -> Storage: saveProgress(progress)
+activate Storage
+Storage --> Learning: OK
+deactivate Storage
+
+Learning --> Screen: OK
+deactivate Learning
+
+Screen --> Apprenant: Afficher résultats
+
+deactivate Screen
+
+@enduml
+
+@startuml
+!theme plain
+
+' ==========================================
+' ARCHITECTURE EN COUCHES
+' ==========================================
+
+package "Presentation Layer" {
+  [Screens] as Screens
+  [Widgets] as Widgets
+  [Providers] as Providers
+  [Routes] as Routes
+}
+
+package "Domain Layer" {
+  [Models] as Models
+  [Entities] as Entities
+  [Use Cases] as UseCases
+}
+
+package "Data Layer" {
+  [Services] as Services
+  [Repositories] as Repos
+  [Data Sources] as DataSources
+}
+
+package "Infrastructure Layer" {
+  [API Client] as API
+  [Storage] as Storage
+  [Logger] as Logger
+  [DI Container] as DI
+}
+
+Screens --> Providers
+Widgets --> Providers
+Providers --> Services
+Services --> Repos
+Repos --> DataSources
+DataSources --> API
+DataSources --> Storage
+Services --> Logger
+DI --> Services
+DI --> Providers
+
+@enduml
+
+@startuml
+!theme plain
+
+' ==========================================
+' MODÈLE DE DONNÉES - RELATIONS
+' ==========================================
+
+entity "User" {
+  * id : String <<PK>>
+  --
+  * email : String
+  * name : String
+  * role : UserRole
+  formation : String
+  level : String
+  preferences : Map
+  * createdAt : DateTime
+  lastLogin : DateTime
+}
+
+entity "LearningModule" {
+  * id : String <<PK>>
+  --
+  * title : String
+  * description : String
+  category : String
+  * estimatedDuration : int
+  * level : int
+  topics : List<String>
+  * createdAt : DateTime
+  completedAt : DateTime
+}
+
+entity "LearningContent" {
+  * id : String <<PK>>
+  * moduleId : String <<FK>>
+  --
+  * type : ContentType
+  * title : String
+  * content : String
+  metadata : Map
+}
+
+entity "Quiz" {
+  * id : String <<PK>>
+  * moduleId : String <<FK>>
+  --
+  * title : String
+  description : String
+  * timeLimit : int
+  * createdAt : DateTime
+  score : double
+  isCompleted : bool
+}
+
+entity "Question" {
+  * id : String <<PK>>
+  * quizId : String <<FK>>
+  --
+  * question : String
+  * options : List<String>
+  * correctAnswerIndex : int
+  explanation : String
+}
+
+entity "UserProgress" {
+  * userId : String <<PK, FK>>
+  * moduleId : String <<PK, FK>>
+  --
+  * progress : double
+  startedAt : DateTime
+  completedAt : DateTime
+  timeSpent : int
+  performance : Map
+  completedContents : List<String>
+}
+
+entity "ChatMessage" {
+  * id : String <<PK>>
+  * userId : String <<FK>>
+  --
+  * content : String
+  * type : MessageType
+  * timestamp : DateTime
+  isGenerating : bool
+}
+
+User ||--o{ UserProgress : "has"
+LearningModule ||--o{ UserProgress : "tracked in"
+LearningModule ||--o{ LearningContent : "contains"
+LearningModule ||--o{ Quiz : "has"
+Quiz ||--o{ Question : "contains"
+User ||--o{ ChatMessage : "sends"
+
+@enduml
+

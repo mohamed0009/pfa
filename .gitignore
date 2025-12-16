@@ -91,3 +91,31 @@ coverage/
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 
+# Java/Maven/Spring Boot
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/.idea/
+backend/*.iml
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.springBeans
+backend/*.log
+backend/.vscode/
+
+# Spring Boot
+backend/application-local.properties
+backend/application-dev.properties
+backend/application-prod.properties
+
+# Database
+backend/*.db
+backend/*.sqlite
+
+# Node modules (si vous avez du frontend Node)
+node_modules/
+package-lock.json
+yarn.lock
+

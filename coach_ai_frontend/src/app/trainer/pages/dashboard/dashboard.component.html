@@ -1,0 +1,189 @@
+<div class="dashboard-container">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1>Tableau de Bord Formateur</h1>
+      <p *ngIf="trainerProfile">Bienvenue, {{ trainerProfile.firstName }} {{ trainerProfile.lastName }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" routerLink="/trainer/content">
+        <span class="material-icons">add</span>
+        Nouveau Contenu
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des données...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading" class="dashboard-content">
+    <!-- Stats Cards -->
+    <div class="stats-grid" *ngIf="stats">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1);">
+          <span class="material-icons" style="color: #3b82f6;">people</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.totalStudents }}</h3>
+          <p>Apprenants Total</p>
+          <span class="stat-badge success">{{ stats.activeStudents }} actifs</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1);">
+          <span class="material-icons" style="color: #10b981;">auto_stories</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.totalFormations }}</h3>
+          <p>Formations</p>
+          <span class="stat-badge">{{ stats.totalModules }} modules</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1);">
+          <span class="material-icons" style="color: #f59e0b;">assignment</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.contentPendingValidation }}</h3>
+          <p>En attente de validation</p>
+          <span class="stat-badge warning">{{ stats.contentApproved }} approuvés</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(139, 92, 246, 0.1);">
+          <span class="material-icons" style="color: #8b5cf6;">trending_up</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.averageStudentProgress | number:'1.0-0' }}%</h3>
+          <p>Progression Moyenne</p>
+          <span class="stat-badge">{{ stats.averageStudentSatisfaction | number:'1.1-1' }}/5 satisfaction</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+      <!-- At Risk Students -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span class="material-icons">warning</span>
+            Apprenants à Risque
+          </h2>
+          <a routerLink="/trainer/students" class="link">Voir tout</a>
+        </div>
+        <div class="card-body">
+          <div *ngIf="atRiskStudents.length === 0" class="empty-state">
+            <span class="material-icons">check_circle</span>
+            <p>Aucun apprenant à risque détecté</p>
+          </div>
+
+          <div *ngIf="atRiskStudents.length > 0" class="students-list">
+            <div *ngFor="let student of atRiskStudents" class="student-item" [routerLink]="['/trainer/students', student.studentId]">
+              <div class="student-avatar">
+                <img *ngIf="student.studentAvatar" [src]="student.studentAvatar" [alt]="student.studentName">
+                <span *ngIf="!student.studentAvatar" class="material-icons">person</span>
+              </div>
+              <div class="student-info">
+                <h4>{{ student.studentName }}</h4>
+                <p class="formation-name">{{ student.formationName }}</p>
+                <div class="risk-indicators">
+                  <span class="risk-badge" [style.background]="getRiskLevelColor(student.riskLevel)">
+                    {{ student.riskLevel === 'low' ? 'Faible' : student.riskLevel === 'medium' ? 'Moyen' : 'Élevé' }}
+                  </span>
+                  <span class="metric">{{ student.progress }}% complété</span>
+                  <span class="metric">Inactif {{ student.daysInactive }}j</span>
+                </div>
+              </div>
+              <span class="material-icons chevron">chevron_right</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formations Statistics -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span class="material-icons">analytics</span>
+            Statistiques Formations
+          </h2>
+          <a routerLink="/trainer/statistics" class="link">Détails</a>
+        </div>
+        <div class="card-body">
+          <div *ngIf="recentFormations.length === 0" class="empty-state">
+            <span class="material-icons">library_books</span>
+            <p>Aucune formation disponible</p>
+          </div>
+
+          <div *ngIf="recentFormations.length > 0" class="formations-list">
+            <div *ngFor="let formation of recentFormations" class="formation-item">
+              <div class="formation-header">
+                <h4>{{ formation.formationName }}</h4>
+                <span class="students-count">{{ formation.totalStudents }} apprenants</span>
+              </div>
+              <div class="formation-stats">
+                <div class="stat-item">
+                  <span class="label">Progression</span>
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="formation.averageProgress"></div>
+                  </div>
+                  <span class="value">{{ formation.averageProgress | number:'1.0-0' }}%</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">Taux de complétion</span>
+                  <span class="value">{{ formation.completionRate | number:'1.0-0' }}%</span>
+                </div>
+                <div class="stat-item">
+                  <span class="label">Note moyenne</span>
+                  <span class="value">{{ formation.averageScore | number:'1.1-1' }}/100</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <h2>Actions Rapides</h2>
+      <div class="actions-grid">
+        <a routerLink="/trainer/content/formations" class="action-card">
+          <span class="material-icons">add_circle</span>
+          <span>Créer une Formation</span>
+        </a>
+        <a routerLink="/trainer/ai-assistant" class="action-card">
+          <span class="material-icons">psychology</span>
+          <span>Assistant IA</span>
+        </a>
+        <a routerLink="/trainer/evaluation/exercises" class="action-card">
+          <span class="material-icons">grading</span>
+          <span>Évaluer des Exercices</span>
+        </a>
+        <a routerLink="/trainer/communication/messages" class="action-card">
+          <span class="material-icons">mail</span>
+          <span>Messages</span>
+        </a>
+        <a routerLink="/trainer/students" class="action-card">
+          <span class="material-icons">group</span>
+          <span>Suivre les Apprenants</span>
+        </a>
+        <a routerLink="/trainer/learning-paths" class="action-card">
+          <span class="material-icons">route</span>
+          <span>Parcours Personnalisés</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+

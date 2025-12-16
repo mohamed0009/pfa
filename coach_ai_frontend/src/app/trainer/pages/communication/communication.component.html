@@ -1,0 +1,203 @@
+<div class="communication-container">
+  <header class="page-header">
+    <h1>
+      <span class="material-icons">forum</span>
+      Communication
+    </h1>
+    <p>Communiquez avec vos apprenants</p>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs-nav">
+    <button 
+      class="tab-btn"
+      [class.active]="activeTab === 'messages'"
+      (click)="activeTab = 'messages'">
+      <span class="material-icons">email</span>
+      Messages ({{ unreadMessages }})
+    </button>
+    <button 
+      class="tab-btn"
+      [class.active]="activeTab === 'questions'"
+      (click)="activeTab = 'questions'">
+      <span class="material-icons">help</span>
+      Questions ({{ unansweredQuestions }})
+    </button>
+    <button 
+      class="tab-btn"
+      [class.active]="activeTab === 'reminders'"
+      (click)="activeTab = 'reminders'">
+      <span class="material-icons">notifications</span>
+      Rappels ({{ upcomingReminders }})
+    </button>
+  </div>
+
+  <!-- Messages Tab -->
+  <div *ngIf="activeTab === 'messages'" class="tab-content">
+    <div class="messages-layout">
+      <!-- Messages List -->
+      <div class="messages-list">
+        <div class="list-header">
+          <h3>Conversations</h3>
+          <button class="btn btn-primary btn-sm" (click)="newMessage()">
+            <span class="material-icons">add</span>
+            Nouveau
+          </button>
+        </div>
+
+        <div class="search-box">
+          <span class="material-icons">search</span>
+          <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher...">
+        </div>
+
+        <div class="message-items">
+          <div 
+            *ngFor="let message of messages"
+            class="message-item"
+            [class.active]="selectedMessage?.id === message.id"
+            [class.unread]="!message.read"
+            (click)="selectMessage(message)">
+            <div class="message-avatar">
+              <span class="material-icons">person</span>
+              <span *ngIf="!message.read" class="unread-indicator"></span>
+            </div>
+            <div class="message-info">
+              <div class="message-header">
+                <strong>{{ message.senderRole === 'student' ? message.senderName : message.recipientName }}</strong>
+                <span class="message-time">{{ message.sentAt | date:'short' }}</span>
+              </div>
+              <p class="message-subject">{{ message.subject || 'Sans objet' }}</p>
+              <p class="message-preview">{{ getMessagePreview(message.content) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Detail -->
+      <div class="message-detail" *ngIf="selectedMessage">
+        <div class="detail-header">
+          <div class="sender-info">
+            <div class="sender-avatar">
+              <span class="material-icons">person</span>
+            </div>
+            <div>
+              <h3>{{ selectedMessage.senderRole === 'student' ? selectedMessage.senderName : selectedMessage.recipientName }}</h3>
+              <p>{{ selectedMessage.sentAt | date:'medium' }}</p>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <button class="btn-icon" title="Archiver">
+              <span class="material-icons">archive</span>
+            </button>
+            <button class="btn-icon" title="Supprimer">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="detail-body">
+          <h2>{{ selectedMessage.subject }}</h2>
+          <p>{{ selectedMessage.content }}</p>
+        </div>
+
+        <div class="detail-reply">
+          <textarea 
+            [(ngModel)]="replyContent"
+            placeholder="Écrire une réponse..."
+            rows="4"></textarea>
+          <button class="btn btn-primary" (click)="sendReply()">
+            <span class="material-icons">send</span>
+            Envoyer
+          </button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="!selectedMessage">
+        <span class="material-icons">inbox</span>
+        <p>Sélectionnez une conversation</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions Tab -->
+  <div *ngIf="activeTab === 'questions'" class="tab-content">
+    <div class="questions-grid">
+      <div *ngFor="let question of questions" class="question-card">
+        <div class="question-header">
+          <div class="student-info">
+            <div class="student-avatar">
+              <span class="material-icons">person</span>
+            </div>
+            <div>
+              <strong>{{ question.studentName }}</strong>
+              <p>{{ question.createdAt | date:'short' }}</p>
+            </div>
+          </div>
+          <span class="status-badge" [class.answered]="question.status === 'answered' || question.status === 'resolved'">
+            {{ getQuestionStatusLabel(question.status) }}
+          </span>
+        </div>
+
+        <div class="question-content">
+          <h4>Question</h4>
+          <p>{{ question.question }}</p>
+          <div class="question-meta">
+            <span class="material-icons">label</span>
+            <span>{{ question.category }}</span>
+          </div>
+        </div>
+
+        <div class="question-actions">
+          <button class="btn btn-secondary" (click)="viewQuestion(question.id)">
+            <span class="material-icons">visibility</span>
+            Voir
+          </button>
+          <button class="btn btn-primary" (click)="answerQuestion(question.id)" *ngIf="question.status === 'open'">
+            <span class="material-icons">reply</span>
+            Répondre
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reminders Tab -->
+  <div *ngIf="activeTab === 'reminders'" class="tab-content">
+    <div class="reminders-header">
+      <button class="btn btn-primary" (click)="createReminder()">
+        <span class="material-icons">add</span>
+        Créer un Rappel
+      </button>
+    </div>
+
+    <div class="reminders-list">
+      <div *ngFor="let reminder of reminders" class="reminder-card" [class.upcoming]="isUpcoming(reminder.scheduledFor)">
+        <div class="reminder-icon">
+          <span class="material-icons">{{ getReminderIcon(reminder.type) }}</span>
+        </div>
+        <div class="reminder-content">
+          <h4>{{ reminder.title }}</h4>
+          <p>{{ reminder.message }}</p>
+          <div class="reminder-meta">
+            <span class="material-icons">schedule</span>
+            <span>{{ reminder.scheduledFor | date:'medium' }}</span>
+            <span class="separator">•</span>
+            <span class="material-icons">people</span>
+            <span>{{ reminder.recipients.length }} destinataires</span>
+          </div>
+        </div>
+        <div class="reminder-actions">
+          <button class="btn-icon" (click)="editReminder(reminder.id)">
+            <span class="material-icons">edit</span>
+          </button>
+          <button class="btn-icon" (click)="deleteReminder(reminder.id)">
+            <span class="material-icons">delete</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+

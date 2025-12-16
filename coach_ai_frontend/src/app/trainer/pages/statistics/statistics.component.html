@@ -1,0 +1,228 @@
+<div class="statistics-container">
+  <header class="page-header">
+    <h1>
+      <span class="material-icons">bar_chart</span>
+      Statistiques
+    </h1>
+    <p>Analysez les performances et la progression de vos formations</p>
+  </header>
+
+  <!-- Filtres -->
+  <div class="filters-card">
+    <div class="filter-group">
+      <label>Formation</label>
+      <select [(ngModel)]="selectedFormation" class="form-control" (change)="loadStatistics()">
+        <option value="all">Toutes les formations</option>
+        <option *ngFor="let formation of formations" [value]="formation.id">{{ formation.title }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Période</label>
+      <select [(ngModel)]="selectedPeriod" class="form-control" (change)="loadStatistics()">
+        <option value="7">7 derniers jours</option>
+        <option value="30">30 derniers jours</option>
+        <option value="90">3 derniers mois</option>
+        <option value="365">Année</option>
+      </select>
+    </div>
+
+    <button class="btn btn-secondary" (click)="exportStatistics()">
+      <span class="material-icons">download</span>
+      Exporter
+    </button>
+  </div>
+
+  <div *ngIf="statistics" class="statistics-content">
+    <!-- Overview Cards -->
+    <div class="stats-overview">
+      <div class="stat-card">
+        <div class="stat-icon primary">
+          <span class="material-icons">people</span>
+        </div>
+        <div class="stat-info">
+          <h3>{{ statistics.totalStudents }}</h3>
+          <p>Apprenants Actifs</p>
+          <span class="trend positive" *ngIf="statistics.studentsTrend > 0">
+            <span class="material-icons">trending_up</span>
+            +{{ statistics.studentsTrend }}%
+          </span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon success">
+          <span class="material-icons">school</span>
+        </div>
+        <div class="stat-info">
+          <h3>{{ statistics.averageCompletion }}%</h3>
+          <p>Taux de Complétion</p>
+          <span class="trend positive" *ngIf="statistics.completionTrend > 0">
+            <span class="material-icons">trending_up</span>
+            +{{ statistics.completionTrend }}%
+          </span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon warning">
+          <span class="material-icons">star</span>
+        </div>
+        <div class="stat-info">
+          <h3>{{ statistics.averageScore }}/100</h3>
+          <p>Score Moyen</p>
+          <span class="trend" [class.positive]="statistics.scoreTrend > 0" [class.negative]="statistics.scoreTrend < 0">
+            <span class="material-icons">{{ statistics.scoreTrend > 0 ? 'trending_up' : 'trending_down' }}</span>
+            {{ statistics.scoreTrend > 0 ? '+' : '' }}{{ statistics.scoreTrend }}%
+          </span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon info">
+          <span class="material-icons">schedule</span>
+        </div>
+        <div class="stat-info">
+          <h3>{{ statistics.averageTimeSpent }}h</h3>
+          <p>Temps Moyen</p>
+          <span class="trend">
+            Par apprenant
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>
+          <span class="material-icons">show_chart</span>
+          Évolution de la Progression
+        </h3>
+        <div class="chart-placeholder">
+          <div class="chart-bars">
+            <div *ngFor="let item of statistics.progressionTrend" class="bar-item">
+              <div class="bar" [style.height.%]="item.value">
+                <span class="bar-value">{{ item.value }}%</span>
+              </div>
+              <span class="bar-label">{{ item.date }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>
+          <span class="material-icons">pie_chart</span>
+          Répartition par Difficulté
+        </h3>
+        <div class="difficulty-stats">
+          <div class="difficulty-item">
+            <div class="difficulty-bar facile" [style.width.%]="statistics.difficultyDistribution.easy"></div>
+            <span class="difficulty-label">Facile: {{ statistics.difficultyDistribution.easy }}%</span>
+          </div>
+          <div class="difficulty-item">
+            <div class="difficulty-bar moyen" [style.width.%]="statistics.difficultyDistribution.medium"></div>
+            <span class="difficulty-label">Moyen: {{ statistics.difficultyDistribution.medium }}%</span>
+          </div>
+          <div class="difficulty-item">
+            <div class="difficulty-bar difficile" [style.width.%]="statistics.difficultyDistribution.hard"></div>
+            <span class="difficulty-label">Difficile: {{ statistics.difficultyDistribution.hard }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modules Performance -->
+    <div class="modules-performance-card">
+      <h3>
+        <span class="material-icons">analytics</span>
+        Performance par Module
+      </h3>
+      <div class="modules-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Apprenants</th>
+              <th>Complétion</th>
+              <th>Score Moyen</th>
+              <th>Temps Moyen</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let module of statistics.modulePerformance">
+              <td>
+                <strong>{{ module.title }}</strong>
+              </td>
+              <td>{{ module.enrolledStudents }}</td>
+              <td>
+                <div class="progress-bar-container">
+                  <div class="progress-bar" [style.width.%]="module.completionRate"></div>
+                  <span class="progress-text">{{ module.completionRate }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="score-badge" [class.high]="module.averageScore >= 80" [class.medium]="module.averageScore >= 60 && module.averageScore < 80" [class.low]="module.averageScore < 60">
+                  {{ module.averageScore }}/100
+                </span>
+              </td>
+              <td>{{ module.averageTime }}h</td>
+              <td>
+                <span class="status-badge" [class.success]="module.status === 'excellent'" [class.warning]="module.status === 'good'" [class.danger]="module.status === 'needs_improvement'">
+                  {{ getStatusLabel(module.status) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- At Risk Students -->
+    <div class="at-risk-card" *ngIf="statistics.atRiskStudents.length > 0">
+      <h3>
+        <span class="material-icons">warning</span>
+        Apprenants en Difficulté
+      </h3>
+      <div class="at-risk-list">
+        <div *ngFor="let student of statistics.atRiskStudents" class="at-risk-item">
+          <div class="student-info">
+            <div class="student-avatar">
+              <span class="material-icons">person</span>
+            </div>
+            <div>
+              <strong>{{ student.name }}</strong>
+              <p>{{ student.formation }}</p>
+            </div>
+          </div>
+          <div class="risk-details">
+            <span class="risk-badge">{{ student.riskLevel }}</span>
+            <span class="risk-reason">{{ student.reason }}</span>
+          </div>
+          <button class="btn btn-sm btn-secondary" (click)="contactStudent(student.id)">
+            <span class="material-icons">email</span>
+            Contacter
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des statistiques...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !statistics" class="empty-state">
+    <span class="material-icons">bar_chart</span>
+    <h3>Aucune statistique disponible</h3>
+    <p>Sélectionnez une formation pour voir les statistiques</p>
+  </div>
+</div>
+
+
+

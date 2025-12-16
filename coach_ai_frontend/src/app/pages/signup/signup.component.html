@@ -1,0 +1,206 @@
+<div class="auth-container">
+  <div class="auth-wrapper">
+    <!-- Left Side - Branding (Hidden on mobile) -->
+    <div class="auth-branding">
+      <div class="branding-content">
+        <div class="logo-large">
+          <span class="material-icons">psychology</span>
+        </div>
+        <h1>CoachIA Pro</h1>
+        <p class="tagline">Démarrez Votre Parcours d'Apprentissage Personnalisé</p>
+        <div class="features-list">
+          <div class="feature-item">
+            <span class="material-icons">check_circle</span>
+            <span>Accès Immédiat</span>
+          </div>
+          <div class="feature-item">
+            <span class="material-icons">check_circle</span>
+            <span>100+ Parcours Disponibles</span>
+          </div>
+          <div class="feature-item">
+            <span class="material-icons">check_circle</span>
+            <span>Certifications Reconnues</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side - Signup Form -->
+    <div class="auth-form-section">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="logo-small">
+            <span class="material-icons">psychology</span>
+            <span class="logo-text">CoachIA Pro</span>
+          </div>
+          <h2>Créer Votre Compte</h2>
+          <p>Commencez votre formation dès aujourd'hui</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="alert alert-error" *ngIf="errorMessage && submitted">
+          <span class="material-icons">error</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <!-- Signup Form -->
+        <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form">
+          <!-- Full Name Field -->
+          <div class="form-group">
+            <label for="fullName">Nom Complet</label>
+            <div class="input-wrapper">
+              <span class="input-icon material-icons">person</span>
+              <input
+                type="text"
+                id="fullName"
+                formControlName="fullName"
+                class="form-control"
+                [class.invalid]="submitted && f['fullName'].errors"
+                placeholder="Entrez votre nom complet"
+              />
+            </div>
+            <div class="error-message" *ngIf="submitted && f['fullName'].errors">
+              <span *ngIf="f['fullName'].errors['required']">Le nom complet est requis</span>
+              <span *ngIf="f['fullName'].errors['minlength']">Le nom doit contenir au moins 3 caractères</span>
+            </div>
+          </div>
+
+          <!-- Email Field -->
+          <div class="form-group">
+            <label for="email">Adresse Email</label>
+            <div class="input-wrapper">
+              <span class="input-icon material-icons">email</span>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                class="form-control"
+                [class.invalid]="submitted && f['email'].errors"
+                placeholder="Entrez votre email"
+              />
+            </div>
+            <div class="error-message" *ngIf="submitted && f['email'].errors">
+              <span *ngIf="f['email'].errors['required']">L'email est requis</span>
+              <span *ngIf="f['email'].errors['email']">L'email n'est pas valide</span>
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <label for="password">Mot de Passe</label>
+            <div class="input-wrapper">
+              <span class="input-icon material-icons">lock</span>
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                id="password"
+                formControlName="password"
+                class="form-control"
+                [class.invalid]="submitted && f['password'].errors"
+                placeholder="Créez un mot de passe"
+                (input)="updatePasswordStrength()"
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                (click)="togglePasswordVisibility()"
+                tabindex="-1"
+              >
+                <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+            <div class="error-message" *ngIf="submitted && f['password'].errors">
+              <span *ngIf="f['password'].errors['required']">Le mot de passe est requis</span>
+              <span *ngIf="f['password'].errors['minlength']">Le mot de passe doit contenir au moins 8 caractères</span>
+              <span *ngIf="f['password'].errors['pattern']">Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre</span>
+            </div>
+            <!-- Password Strength Indicator -->
+            <div class="password-strength" *ngIf="f['password'].value">
+              <div class="strength-label">
+                <span>Force du mot de passe :</span>
+                <span [class]="'strength-text strength-' + passwordStrength">{{ getPasswordStrengthText() }}</span>
+              </div>
+              <div class="strength-bar">
+                <div 
+                  class="strength-fill"
+                  [class]="'strength-' + passwordStrength"
+                  [style.width]="getPasswordStrengthWidth()"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirm Password Field -->
+          <div class="form-group">
+            <label for="confirmPassword">Confirmer le Mot de Passe</label>
+            <div class="input-wrapper">
+              <span class="input-icon material-icons">lock_outline</span>
+              <input
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                id="confirmPassword"
+                formControlName="confirmPassword"
+                class="form-control"
+                [class.invalid]="submitted && f['confirmPassword'].errors"
+                placeholder="Confirmez votre mot de passe"
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                (click)="toggleConfirmPasswordVisibility()"
+                tabindex="-1"
+              >
+                <span class="material-icons">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+            <div class="error-message" *ngIf="submitted && f['confirmPassword'].errors">
+              <span *ngIf="f['confirmPassword'].errors['required']">La confirmation est requise</span>
+              <span *ngIf="f['confirmPassword'].errors['passwordMismatch']">Les mots de passe ne correspondent pas</span>
+            </div>
+          </div>
+
+          <!-- Terms Checkbox -->
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="acceptTerms" />
+              <span>
+                J'accepte les 
+                <a href="#" class="link-primary">Conditions d'Utilisation</a> 
+                et la 
+                <a href="#" class="link-primary">Politique de Confidentialité</a>
+              </span>
+            </label>
+            <div class="error-message" *ngIf="submitted && f['acceptTerms'].errors">
+              <span *ngIf="f['acceptTerms'].errors['required']">Vous devez accepter les conditions</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-primary btn-submit" [disabled]="loading">
+            <span *ngIf="!loading">Créer Mon Compte</span>
+            <span *ngIf="loading" class="spinner"></span>
+          </button>
+
+          <!-- Demo Notice -->
+          <div class="demo-notice">
+            <span class="material-icons">info</span>
+            <p>
+              Essai gratuit de 14 jours inclus. Aucune carte bancaire requise.
+            </p>
+          </div>
+        </form>
+
+        <!-- Login Link -->
+        <div class="auth-footer">
+          <p>
+            Vous avez déjà un compte ?
+            <a routerLink="/login" class="link-primary">Se connecter</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+

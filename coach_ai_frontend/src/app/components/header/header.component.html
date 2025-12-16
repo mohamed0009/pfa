@@ -1,0 +1,50 @@
+<header class="header">
+  <div class="container">
+    <nav class="navbar">
+      <div class="logo">
+        <a routerLink="/">CoachIA Pro</a>
+      </div>
+
+      <button class="menu-toggle" (click)="toggleMenu()" [class.active]="isMenuOpen">
+        <span class="material-icons">{{ isMenuOpen ? 'close' : 'menu' }}</span>
+      </button>
+
+      <ul class="nav-links" [class.active]="isMenuOpen">
+        <li><a routerLink="/" (click)="closeMenu()">Accueil</a></li>
+        <li><a href="#about" (click)="closeMenu()">À Propos</a></li>
+        <li><a href="#services" (click)="closeMenu()">Formations</a></li>
+        <li><a href="#blog" (click)="closeMenu()">Blog</a></li>
+        <li><a href="#contact" (click)="closeMenu()">Contact</a></li>
+      </ul>
+
+      <div class="auth-buttons" [class.active]="isMenuOpen">
+        <!-- Not Authenticated -->
+        <ng-container *ngIf="(isAuthenticated$ | async) === false">
+          <button class="btn btn-text" routerLink="/login" (click)="closeMenu()">Connexion</button>
+          <button class="btn btn-primary" routerLink="/signup" (click)="closeMenu()">S'inscrire</button>
+        </ng-container>
+
+        <!-- Authenticated -->
+        <ng-container *ngIf="isAuthenticated$ | async">
+          <div class="user-menu">
+            <a routerLink="/profile" class="user-profile" (click)="closeMenu()">
+              <img [src]="(currentUser$ | async)?.avatarUrl"
+                   [alt]="(currentUser$ | async)?.fullName"
+                   class="user-avatar">
+              <span class="user-name">{{ (currentUser$ | async)?.fullName }}</span>
+            </a>
+            <button class="btn btn-text logout-btn" (click)="onLogout()">
+              <span class="material-icons">logout</span>
+              Déconnexion
+            </button>
+          </div>
+        </ng-container>
+      </div>
+    </nav>
+  </div>
+</header>
+
+
+
+
+

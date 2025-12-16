@@ -1,0 +1,172 @@
+<div class="notifications-page">
+  <div class="page-header">
+    <h1>Gestion des Notifications</h1>
+    <p class="subtitle">Créez, planifiez et automatisez vos notifications</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="material-icons">send</span>
+      <div><h3>{{ notifStats.sent }}</h3><p>Notifications Envoyées</p></div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">schedule</span>
+      <div><h3>{{ notifStats.scheduled }}</h3><p>Planifiées</p></div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">visibility</span>
+      <div><h3>{{ notifStats.readRate }}%</h3><p>Taux de Lecture</p></div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">auto_mode</span>
+      <div><h3>{{ notifStats.activeRules }}</h3><p>Règles Actives</p></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-nav">
+    <button class="tab-btn" [class.active]="activeTab === 'compose'" (click)="activeTab = 'compose'">
+      <span class="material-icons">edit</span>
+      Composer
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'sent'" (click)="activeTab = 'sent'">
+      <span class="material-icons">send</span>
+      Envoyées ({{ sentNotifications.length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'scheduled'" (click)="activeTab = 'scheduled'">
+      <span class="material-icons">schedule_send</span>
+      Planifiées ({{ scheduledNotifications.length }})
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'rules'" (click)="activeTab = 'rules'">
+      <span class="material-icons">rule</span>
+      Règles Auto ({{ automaticRules.length }})
+    </button>
+  </div>
+
+  <!-- Compose Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'compose'">
+    <div class="composer-card">
+      <h2>Nouvelle Notification</h2>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type</label>
+          <select [(ngModel)]="newNotification.type" class="form-control">
+            <option value="announcement">Annonce</option>
+            <option value="alert">Alerte</option>
+            <option value="reminder">Rappel</option>
+            <option value="motivation">Motivation</option>
+            <option value="update">Mise à jour</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Priorité</label>
+          <select [(ngModel)]="newNotification.priority" class="form-control">
+            <option value="urgent">Urgent</option>
+            <option value="high">Haute</option>
+            <option value="medium">Moyenne</option>
+            <option value="low">Basse</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Audience Cible</label>
+          <select [(ngModel)]="newNotification.targetAudience" class="form-control">
+            <option value="all">Tous</option>
+            <option value="apprenants">Apprenants</option>
+            <option value="formateurs">Formateurs</option>
+            <option value="administrateurs">Administrateurs</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Titre *</label>
+        <input type="text" [(ngModel)]="newNotification.title" class="form-control" placeholder="Titre de la notification">
+      </div>
+
+      <div class="form-group">
+        <label>Message *</label>
+        <textarea [(ngModel)]="newNotification.message" rows="5" class="form-control" placeholder="Contenu de la notification"></textarea>
+      </div>
+
+      <div class="composer-actions">
+        <button class="btn btn-secondary" (click)="saveDraft()">
+          <span class="material-icons">save</span>
+          Sauvegarder en brouillon
+        </button>
+        <button class="btn btn-primary" (click)="createAndSendNotification()">
+          <span class="material-icons">send</span>
+          Envoyer Maintenant
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sent Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'sent'">
+    <div class="notifications-list">
+      <div class="notification-item" *ngFor="let notif of sentNotifications">
+        <div class="notif-header">
+          <h4>{{ notif.title }}</h4>
+          <span class="badge" [attr.data-type]="notif.priority">{{ getPriorityLabel(notif.priority) }}</span>
+        </div>
+        <p>{{ notif.message }}</p>
+        <div class="notif-meta">
+          <span>{{ getTypeLabel(notif.type) }}</span>
+          <span>{{ notif.targetAudience }}</span>
+          <span>Envoyée le {{ notif.sentAt | date: 'short' }}</span>
+          <span *ngIf="notif.readCount && notif.totalRecipients">
+            {{ notif.readCount }}/{{ notif.totalRecipients }} lues
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scheduled Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'scheduled'">
+    <div class="notifications-list">
+      <div class="notification-item" *ngFor="let notif of scheduledNotifications">
+        <div class="notif-header">
+          <h4>{{ notif.title }}</h4>
+          <span class="badge badge-warning">Planifiée</span>
+        </div>
+        <p>{{ notif.message }}</p>
+        <div class="notif-meta">
+          <span>Envoi prévu: {{ notif.scheduledFor | date: 'medium' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Automatic Rules Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'rules'">
+    <div class="rules-list">
+      <div class="rule-card" *ngFor="let rule of automaticRules">
+        <div class="rule-header">
+          <h4>{{ rule.name }}</h4>
+          <label class="toggle-switch">
+            <input type="checkbox" [checked]="rule.enabled" (change)="toggleRule(rule)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <p class="rule-template">{{ rule.template }}</p>
+        <div class="rule-meta">
+          <span class="type-badge">{{ rule.type }}</span>
+          <span>Déclencheur: {{ rule.trigger.condition }} = {{ rule.trigger.value }}</span>
+        </div>
+        <button class="btn btn-danger btn-sm" (click)="deleteRule(rule)">
+          <span class="material-icons">delete</span>
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+

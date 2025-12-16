@@ -1,0 +1,463 @@
+<div class="ai-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Supervision du Coach Virtuel IA</h1>
+      <p class="subtitle">Configuration, monitoring et modération de l'IA</p>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="material-icons">forum</span>
+      <div>
+        <h3>{{ aiStats.totalInteractions }}</h3>
+        <p>Interactions Totales</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">speed</span>
+      <div>
+        <h3>{{ aiStats.averageResponseTime }}ms</h3>
+        <p>Temps Moyen de Réponse</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">flag</span>
+      <div>
+        <h3>{{ aiStats.flaggedInteractions }}</h3>
+        <p>Interactions Signalées</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">auto_awesome</span>
+      <div>
+        <h3>{{ aiStats.generatedContentCount.quiz + aiStats.generatedContentCount.exercise + aiStats.generatedContentCount.summary }}</h3>
+        <p>Contenus Générés</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'configuration'"
+      (click)="activeTab = 'configuration'">
+      <span class="material-icons">settings</span>
+      Configuration
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'interactions'"
+      (click)="activeTab = 'interactions'">
+      <span class="material-icons">forum</span>
+      Interactions ({{ interactions.length }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'generated'"
+      (click)="activeTab = 'generated'">
+      <span class="material-icons">auto_awesome</span>
+      Contenu Généré
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'knowledge'"
+      (click)="activeTab = 'knowledge'">
+      <span class="material-icons">library_books</span>
+      Base de Connaissances
+    </button>
+  </div>
+
+  <!-- Configuration Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'configuration' && config">
+    <div class="config-card">
+      <div class="card-header">
+        <h2>Paramètres du Coach IA</h2>
+        <div *ngIf="!editingConfig">
+          <button class="btn btn-primary" (click)="editingConfig = true">
+            <span class="material-icons">edit</span>
+            Modifier
+          </button>
+        </div>
+        <div *ngIf="editingConfig" class="edit-actions">
+          <button class="btn btn-secondary" (click)="cancelConfigEdit()">Annuler</button>
+          <button class="btn btn-primary" (click)="saveConfiguration()">
+            <span class="material-icons">save</span>
+            Sauvegarder
+          </button>
+        </div>
+      </div>
+
+      <div class="config-body">
+        <div class="config-group">
+          <label>Langue</label>
+          <select [(ngModel)]="config.language" [disabled]="!editingConfig" class="form-control">
+            <option value="Français">Français</option>
+            <option value="English">Anglais</option>
+          </select>
+        </div>
+
+        <div class="config-group">
+          <label>Ton des Réponses</label>
+          <select [(ngModel)]="config.tone" [disabled]="!editingConfig" class="form-control">
+            <option value="formal">Formel</option>
+            <option value="friendly">Amical</option>
+            <option value="motivating">Motivant</option>
+            <option value="professional">Professionnel</option>
+          </select>
+        </div>
+
+        <div class="config-group">
+          <label>Niveau de Détail</label>
+          <select [(ngModel)]="config.detailLevel" [disabled]="!editingConfig" class="form-control">
+            <option value="concise">Concis</option>
+            <option value="moderate">Modéré</option>
+            <option value="detailed">Détaillé</option>
+          </select>
+        </div>
+
+        <div class="config-group">
+          <label>Longueur Maximale des Réponses</label>
+          <input 
+            type="number" 
+            [(ngModel)]="config.maxResponseLength" 
+            [readonly]="!editingConfig"
+            class="form-control"
+            min="100" 
+            max="2000">
+          <span class="helper-text">{{ config.maxResponseLength }} caractères</span>
+        </div>
+
+        <div class="config-toggles">
+          <div class="toggle-item">
+            <label class="toggle-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="config.enableQuizGeneration"
+                [disabled]="!editingConfig">
+              <span class="toggle-switch"></span>
+              Génération de Quiz
+            </label>
+          </div>
+
+          <div class="toggle-item">
+            <label class="toggle-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="config.enableExerciseGeneration"
+                [disabled]="!editingConfig">
+              <span class="toggle-switch"></span>
+              Génération d'Exercices
+            </label>
+          </div>
+
+          <div class="toggle-item">
+            <label class="toggle-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="config.enableSummaryGeneration"
+                [disabled]="!editingConfig">
+              <span class="toggle-switch"></span>
+              Génération de Résumés
+            </label>
+          </div>
+
+          <div class="toggle-item">
+            <label class="toggle-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="config.enablePersonalization"
+                [disabled]="!editingConfig">
+              <span class="toggle-switch"></span>
+              Personnalisation Avancée
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactions Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'interactions'">
+    <div class="filters-bar">
+      <button 
+        class="filter-btn" 
+        [class.active]="interactionFilter === 'all'"
+        (click)="interactionFilter = 'all'; loadInteractions()">
+        Toutes ({{ aiStats.totalInteractions }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="interactionFilter === 'flagged'"
+        (click)="interactionFilter = 'flagged'; loadInteractions()">
+        Signalées ({{ aiStats.flaggedInteractions }})
+      </button>
+    </div>
+
+    <div class="interactions-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Utilisateur</th>
+            <th>Question</th>
+            <th>Sentiment</th>
+            <th>Temps</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let interaction of interactions" [class.flagged]="interaction.flagged">
+            <td>{{ interaction.timestamp | date: 'short' }}</td>
+            <td>
+              <div class="user-info">
+                <strong>{{ interaction.userName }}</strong>
+                <span class="role-badge">{{ interaction.userRole }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="question-preview" (click)="viewInteraction(interaction)">
+                {{ interaction.question | slice:0:60 }}{{ interaction.question.length > 60 ? '...' : '' }}
+              </div>
+            </td>
+            <td>
+              <span 
+                class="sentiment-badge"
+                [style.background]="getSentimentColor(interaction.sentiment)">
+                <span class="material-icons">{{ getSentimentIcon(interaction.sentiment) }}</span>
+              </span>
+            </td>
+            <td>{{ interaction.responseTime }}ms</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-icon" (click)="viewInteraction(interaction)" title="Voir détails">
+                  <span class="material-icons">visibility</span>
+                </button>
+                <button 
+                  class="btn-icon" 
+                  *ngIf="!interaction.flagged"
+                  (click)="openFlagModal(interaction)"
+                  title="Signaler">
+                  <span class="material-icons">flag</span>
+                </button>
+                <button 
+                  class="btn-icon btn-success" 
+                  *ngIf="interaction.flagged"
+                  (click)="unflagInteraction(interaction)"
+                  title="Retirer le signalement">
+                  <span class="material-icons">check</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Generated Content Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'generated'">
+    <div class="filters-bar">
+      <button 
+        class="filter-btn" 
+        [class.active]="contentTypeFilter === 'all'"
+        (click)="contentTypeFilter = 'all'; loadGeneratedContent()">
+        Tous
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="contentTypeFilter === 'quiz'"
+        (click)="contentTypeFilter = 'quiz'; loadGeneratedContent()">
+        Quiz ({{ aiStats.generatedContentCount.quiz }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="contentTypeFilter === 'exercise'"
+        (click)="contentTypeFilter = 'exercise'; loadGeneratedContent()">
+        Exercices ({{ aiStats.generatedContentCount.exercise }})
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="contentTypeFilter === 'summary'"
+        (click)="contentTypeFilter = 'summary'; loadGeneratedContent()">
+        Résumés ({{ aiStats.generatedContentCount.summary }})
+      </button>
+    </div>
+
+    <div class="content-grid">
+      <div class="generated-card" *ngFor="let content of generatedContent">
+        <div class="card-icon" [style.background]="content.type === 'quiz' ? '#4A90E2' : content.type === 'exercise' ? '#2DD4A4' : '#FFB800'">
+          <span class="material-icons">{{ getContentTypeIcon(content.type) }}</span>
+        </div>
+        <div class="card-body">
+          <span class="content-type-badge">{{ content.type }}</span>
+          <h4>{{ content.courseName }}</h4>
+          <div class="content-meta">
+            <span>{{ content.usedCount }} utilisations</span>
+            <span *ngIf="content.rating">⭐ {{ content.rating }}/5</span>
+          </div>
+          <p class="content-date">{{ content.generatedAt | date: 'short' }}</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn-icon" title="Archiver" (click)="archiveContent(content)">
+            <span class="material-icons">archive</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Knowledge Base Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'knowledge'">
+    <div class="section-header">
+      <h2>Documents de la Base de Connaissances</h2>
+      <button class="btn btn-primary" (click)="uploadDocument()">
+        <span class="material-icons">upload_file</span>
+        Uploader un Document
+      </button>
+    </div>
+
+    <div class="documents-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Titre</th>
+            <th>Catégorie</th>
+            <th>Type</th>
+            <th>Taille</th>
+            <th>Statut</th>
+            <th>Uploadé par</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of knowledgeDocuments">
+            <td><strong>{{ doc.title }}</strong></td>
+            <td>{{ doc.category }}</td>
+            <td>{{ doc.fileType }}</td>
+            <td>{{ (doc.fileSize / 1024 / 1024).toFixed(2) }} MB</td>
+            <td>
+              <span class="status-dot" [style.background]="getFileStatusColor(doc.status)"></span>
+              {{ doc.status === 'active' ? 'Actif' : doc.status === 'processing' ? 'Indexation...' : 'Erreur' }}
+            </td>
+            <td>{{ doc.uploadedBy }}</td>
+            <td>{{ doc.uploadedAt | date: 'short' }}</td>
+            <td>
+              <button class="btn-icon btn-danger" (click)="deleteDocument(doc)" title="Supprimer">
+                <span class="material-icons">delete</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Interaction Details Modal -->
+<div class="modal-overlay" *ngIf="showInteractionModal && selectedInteraction" (click)="showInteractionModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Détails de l'Interaction</h2>
+      <button class="btn-close" (click)="showInteractionModal = false">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="interaction-detail">
+        <div class="detail-row">
+          <strong>Utilisateur:</strong>
+          <span>{{ selectedInteraction.userName }} ({{ selectedInteraction.userRole }})</span>
+        </div>
+        <div class="detail-row">
+          <strong>Date:</strong>
+          <span>{{ selectedInteraction.timestamp | date: 'medium' }}</span>
+        </div>
+        <div class="detail-row">
+          <strong>Catégorie:</strong>
+          <span>{{ selectedInteraction.category }}</span>
+        </div>
+        <div class="detail-row">
+          <strong>Temps de réponse:</strong>
+          <span>{{ selectedInteraction.responseTime }}ms</span>
+        </div>
+      </div>
+
+      <div class="conversation">
+        <div class="message user-message">
+          <strong>Question:</strong>
+          <p>{{ selectedInteraction.question }}</p>
+        </div>
+        <div class="message ai-message">
+          <strong>Réponse de l'IA:</strong>
+          <p>{{ selectedInteraction.response }}</p>
+        </div>
+      </div>
+
+      <div class="sentiment-analysis">
+        <strong>Analyse de Sentiment:</strong>
+        <span 
+          class="sentiment-badge large"
+          [style.background]="getSentimentColor(selectedInteraction.sentiment)">
+          <span class="material-icons">{{ getSentimentIcon(selectedInteraction.sentiment) }}</span>
+          {{ selectedInteraction.sentiment }}
+        </span>
+      </div>
+
+      <div *ngIf="selectedInteraction.flagged" class="flag-info">
+        <span class="material-icons">flag</span>
+        <strong>Signalé:</strong> {{ selectedInteraction.flagReason }}
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        class="btn btn-danger" 
+        *ngIf="!selectedInteraction.flagged"
+        (click)="openFlagModal(selectedInteraction)">
+        <span class="material-icons">flag</span>
+        Signaler
+      </button>
+      <button class="btn btn-secondary" (click)="showInteractionModal = false">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Flag Modal -->
+<div class="modal-overlay" *ngIf="showFlagModal" (click)="closeFlagModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Signaler cette Interaction</h2>
+      <button class="btn-close" (click)="closeFlagModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <label>Raison du signalement</label>
+      <textarea 
+        [(ngModel)]="flagReason" 
+        placeholder="Décrivez pourquoi cette interaction est problématique..."
+        rows="4"
+        class="form-control">
+      </textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeFlagModal()">Annuler</button>
+      <button class="btn btn-danger" (click)="flagInteraction()">
+        <span class="material-icons">flag</span>
+        Signaler
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+

@@ -1,0 +1,77 @@
+<section class="testimonials-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Témoignages Inspirants<br>
+        de Nos Apprenants
+      </h2>
+      <div class="section-actions">
+        <button class="btn btn-outline">Lire Plus</button>
+        <button class="btn btn-primary">Voir les Avis</button>
+      </div>
+    </div>
+
+    <div class="testimonials-carousel">
+      <button class="carousel-btn prev" (click)="prevSlide()" [disabled]="currentIndex === 0">
+        <span class="material-icons">chevron_left</span>
+      </button>
+
+      <div class="testimonials-wrapper">
+        <div class="testimonials-track" [style.transform]="'translateX(-' + (currentIndex * 100) + '%)'">
+          <div class="testimonial-slide" *ngFor="let testimonial of testimonials">
+            <div class="testimonial-card">
+              <div class="testimonial-header">
+                <div class="quote-icon">
+                  <span class="material-icons">format_quote</span>
+                </div>
+                <div class="testimonial-type-badge">
+                  <span class="material-icons">psychology</span>
+                  <span>{{ testimonial.therapyType }}</span>
+                </div>
+              </div>
+
+              <div class="testimonial-rating">
+                <span class="star" *ngFor="let filled of getStarArray(testimonial.rating)">
+                  <span class="material-icons" [class.filled]="filled">{{ filled ? 'star' : 'star_border' }}</span>
+                </span>
+              </div>
+
+              <p class="testimonial-text">{{ testimonial.comment }}</p>
+
+              <div class="testimonial-footer">
+                <div class="client-info">
+                  <div class="client-avatar" *ngIf="testimonial.avatarUrl">
+                    <img [src]="testimonial.avatarUrl" [alt]="testimonial.name">
+                  </div>
+                  <div class="client-details">
+                    <h4>{{ testimonial.name }}</h4>
+                    <p>{{ testimonial.date | date: 'MMMM d, yyyy' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="carousel-btn next" (click)="nextSlide()" 
+              [disabled]="currentIndex === testimonials.length - 1">
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+
+    <div class="carousel-indicators">
+      <button 
+        *ngFor="let testimonial of testimonials; let i = index" 
+        class="indicator"
+        [class.active]="i === currentIndex"
+        (click)="goToSlide(i)">
+      </button>
+    </div>
+  </div>
+</section>
+
+
+
+
+

@@ -1,0 +1,59 @@
+<section class="team-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Rencontrez Notre Équipe d'Experts<br>
+        Dédiée à Votre Réussite
+      </h2>
+      <p class="section-subtitle">
+        Des spécialistes en IA éducative et pédagogie pour vous accompagner vers l'excellence
+      </p>
+    </div>
+
+    <div class="team-carousel">
+      <button class="carousel-btn prev" (click)="prevSlide()" [disabled]="!canGoPrev()">
+        <span class="material-icons">chevron_left</span>
+      </button>
+
+      <div class="team-grid">
+        <div class="team-card" *ngFor="let member of displayedMembers">
+          <div class="member-image">
+            <img [src]="member.imageUrl" [alt]="member.name">
+            <div class="member-overlay">
+              <button class="btn btn-view">View Profile</button>
+            </div>
+          </div>
+
+          <div class="member-content">
+            <h3>{{ member.name }}</h3>
+            <p class="member-title">{{ member.title }}</p>
+            <p class="member-credentials">{{ member.credentials }}</p>
+
+            <div class="specializations">
+              <span class="spec-tag" *ngFor="let spec of member.specialization">
+                {{ spec }}
+              </span>
+            </div>
+
+            <p class="member-bio">{{ member.bio }}</p>
+
+            <button class="btn btn-book">Book Appointment</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="carousel-btn next" (click)="nextSlide()" [disabled]="!canGoNext()">
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+
+    <div class="view-all">
+      <button class="btn btn-view-all">Voir Toute l'Équipe</button>
+    </div>
+  </div>
+</section>
+
+
+
+
+

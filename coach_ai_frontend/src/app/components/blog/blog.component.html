@@ -1,0 +1,54 @@
+<section class="blog-section" id="blog">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Conseils et Ressources pour<br>
+        Votre Parcours d'Apprentissage
+      </h2>
+      <div class="header-actions">
+        <button class="carousel-btn">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        <button class="carousel-btn">
+          <span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="blog-grid">
+      <div class="blog-card" *ngFor="let article of articles">
+        <div class="article-image">
+          <img [src]="article.imageUrl" [alt]="article.title">
+          <div class="article-category">{{ article.category }}</div>
+        </div>
+
+        <div class="article-content">
+          <div class="article-meta">
+            <span class="meta-item">
+              <span class="material-icons">schedule</span>
+              {{ article.readTime }}
+            </span>
+            <span class="meta-item">
+              <span class="material-icons">calendar_today</span>
+              {{ article.date | date: 'MMM d, yyyy' }}
+            </span>
+          </div>
+
+          <h3>{{ article.title }}</h3>
+          <p class="article-excerpt">{{ article.excerpt }}</p>
+
+          <button class="btn btn-read">Lire l'Article</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="view-all-blog">
+      <button class="btn btn-view-all">Voir Tous les Articles</button>
+    </div>
+  </div>
+</section>
+
+
+
+
+

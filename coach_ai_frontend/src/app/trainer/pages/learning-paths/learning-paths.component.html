@@ -1,0 +1,181 @@
+<div class="learning-paths-container">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>
+        <span class="material-icons">route</span>
+        Parcours Personnalisés
+      </h1>
+      <p>Adaptez les parcours d'apprentissage à vos apprenants</p>
+    </div>
+    <button class="btn btn-primary" (click)="createPath()">
+      <span class="material-icons">add</span>
+      Créer un Parcours
+    </button>
+  </header>
+
+  <!-- Filters -->
+  <div class="filters-card">
+    <div class="filter-group">
+      <label>Afficher</label>
+      <select [(ngModel)]="filterType" class="form-control" (change)="applyFilters()">
+        <option value="all">Tous les parcours</option>
+        <option value="active">Actifs</option>
+        <option value="draft">Brouillons</option>
+        <option value="completed">Complétés</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Formation</label>
+      <select [(ngModel)]="selectedFormation" class="form-control" (change)="applyFilters()">
+        <option value="all">Toutes les formations</option>
+        <option *ngFor="let formation of formations" [value]="formation.id">{{ formation.title }}</option>
+      </select>
+    </div>
+
+    <div class="search-group">
+      <span class="material-icons">search</span>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+        placeholder="Rechercher un apprenant..."
+        class="search-input">
+    </div>
+  </div>
+
+  <!-- Paths Grid -->
+  <div class="paths-grid">
+    <div *ngFor="let path of filteredPaths" class="path-card">
+      <div class="path-header">
+        <div class="student-info">
+          <div class="student-avatar">
+            <span class="material-icons">person</span>
+          </div>
+          <div>
+            <h3>{{ path.studentName }}</h3>
+            <p>{{ path.formationTitle || path.formationName }}</p>
+          </div>
+        </div>
+        <span class="status-badge" [class]="path.status">
+          {{ getStatusLabel(path.status) }}
+        </span>
+      </div>
+
+      <div class="path-content">
+        <div class="path-progress">
+          <div class="progress-header">
+            <span>Progression</span>
+            <strong>{{ path.completionRate || 0 }}%</strong>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" [style.width.%]="path.completionRate || 0"></div>
+          </div>
+        </div>
+
+        <div class="path-stats">
+          <div class="stat-item">
+            <span class="material-icons">menu_book</span>
+            <span>{{ path.modulesCount || path.modules?.length || 0 }} modules</span>
+          </div>
+          <div class="stat-item">
+            <span class="material-icons">schedule</span>
+            <span>{{ path.estimatedTime || 0 }}h estimées</span>
+          </div>
+          <div class="stat-item">
+            <span class="material-icons">star</span>
+            <span>{{ path.averageScore || 0 }}/100</span>
+          </div>
+        </div>
+
+        <div class="path-adaptations" *ngIf="(path.adaptations && path.adaptations.length > 0) || (path.adjustments && path.adjustments.length > 0)">
+          <h4>Adaptations</h4>
+          <div class="adaptation-chips">
+            <span *ngFor="let adaptation of (path.adaptations || [])" class="adaptation-chip" [class]="adaptation.type">
+              {{ adaptation.label }}
+            </span>
+            <span *ngFor="let adj of (path.adjustments || [])" class="adaptation-chip" [class]="adj.adjustments?.[0]?.type || 'general'">
+              {{ adj.reason || 'Ajustement' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="ai-suggestions" *ngIf="path.aiSuggestions && path.aiSuggestions.length > 0">
+          <div class="suggestion-header">
+            <span class="material-icons">lightbulb</span>
+            <span>Suggestions IA</span>
+          </div>
+          <ul>
+            <li *ngFor="let suggestion of path.aiSuggestions">{{ suggestion }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="path-actions">
+        <button class="btn btn-secondary" (click)="viewPath(path.id)">
+          <span class="material-icons">visibility</span>
+          Voir Détails
+        </button>
+        <button class="btn btn-primary" (click)="adjustPath(path.id)">
+          <span class="material-icons">tune</span>
+          Ajuster
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredPaths.length === 0" class="empty-state">
+    <span class="material-icons">route</span>
+    <h3>Aucun parcours trouvé</h3>
+    <p>Créez un parcours personnalisé pour vos apprenants</p>
+    <button class="btn btn-primary" (click)="createPath()">
+      <span class="material-icons">add</span>
+      Créer un Parcours
+    </button>
+  </div>
+
+  <!-- AI Collaboration Panel -->
+  <div class="ai-panel" *ngIf="showAIPanel">
+    <div class="ai-panel-header">
+      <h3>
+        <span class="material-icons">psychology</span>
+        Collaboration avec l'IA
+      </h3>
+      <button class="btn-icon" (click)="showAIPanel = false">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="ai-panel-content">
+      <p>L'IA a analysé les performances des apprenants et suggère les adaptations suivantes :</p>
+      
+      <div class="ai-recommendations">
+        <div *ngFor="let recommendation of aiRecommendations" class="recommendation-card">
+          <div class="recommendation-header">
+            <span class="material-icons">{{ recommendation.icon }}</span>
+            <strong>{{ recommendation.studentName }}</strong>
+          </div>
+          <p>{{ recommendation.suggestion }}</p>
+          <div class="recommendation-actions">
+            <button class="btn btn-sm btn-secondary" (click)="dismissRecommendation(recommendation.id)">
+              Ignorer
+            </button>
+            <button class="btn btn-sm btn-primary" (click)="applyRecommendation(recommendation.id)">
+              Appliquer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des parcours...</p>
+  </div>
+</div>
+
+
+

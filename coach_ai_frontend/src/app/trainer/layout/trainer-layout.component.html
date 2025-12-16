@@ -1,0 +1,74 @@
+<div class="admin-container" [class.sidebar-collapsed]="isSidebarCollapsed">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="logo" *ngIf="!isSidebarCollapsed">
+        <span class="material-icons logo-icon">school</span>
+        <span class="logo-text">CoachIA Pro Formateur</span>
+      </div>
+      <div class="logo-collapsed" *ngIf="isSidebarCollapsed">
+        <span class="material-icons">school</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a 
+        *ngFor="let item of navItems"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="nav-item"
+        [title]="item.label"
+      >
+        <span class="material-icons nav-icon">{{ item.icon }}</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">{{ item.label }}</span>
+        <span class="nav-badge" *ngIf="item.badge && !isSidebarCollapsed">{{ item.badge }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" (click)="navigateToHome()">
+        <span class="material-icons nav-icon">home</span>
+        <span class="nav-label" *ngIf="!isSidebarCollapsed">Retour au Site</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="admin-main">
+    <!-- Top Bar -->
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="toggle-btn" (click)="toggleSidebar()">
+          <span class="material-icons">menu</span>
+        </button>
+        <div class="search-bar">
+          <span class="material-icons search-icon">search</span>
+          <input type="text" placeholder="Rechercher...">
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button class="icon-btn notifications-btn">
+          <span class="material-icons">notifications</span>
+          <span class="badge" *ngIf="notifications > 0">{{ notifications }}</span>
+        </button>
+
+        <div class="admin-profile" *ngIf="currentUser$ | async as user">
+          <img [src]="user.avatarUrl" [alt]="user.fullName" class="profile-avatar">
+          <div class="profile-info">
+            <span class="profile-name">{{ user.fullName }}</span>
+            <span class="profile-role">Formateur</span>
+          </div>
+          <button class="icon-btn" (click)="onLogout()" title="Déconnexion">
+            <span class="material-icons">logout</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="admin-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

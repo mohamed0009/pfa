@@ -1,0 +1,67 @@
+<div class="profile-container">
+  <app-header></app-header>
+  
+  <main class="profile-content">
+    <div class="container">
+      <div class="profile-header">
+        <h1>Mon Profil Apprenant</h1>
+      </div>
+
+      <div class="profile-card" *ngIf="user">
+        <div class="profile-avatar">
+          <img [src]="user.avatarUrl" [alt]="user.name">
+        </div>
+        
+        <div class="profile-info">
+          <h2>{{ user.name }}</h2>
+          <p class="email">{{ user.email }}</p>
+          <p class="join-date">Membre depuis {{ user.joinDate | date: 'MMMM yyyy' }}</p>
+        </div>
+
+        <div class="profile-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <span class="material-icons">school</span>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ user.coursesCompleted }}</div>
+              <div class="stat-label">Formations Complétées</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">
+              <span class="material-icons">schedule</span>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">{{ user.hoursStudied }}</div>
+              <div class="stat-label">Heures d'Apprentissage</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">
+              <span class="material-icons">emoji_events</span>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value">12</div>
+              <div class="stat-label">Réussites</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <button class="btn btn-primary">Modifier le Profil</button>
+          <button class="btn btn-outline">Voir l'Activité</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <app-footer></app-footer>
+</div>
+
+
+
+
+

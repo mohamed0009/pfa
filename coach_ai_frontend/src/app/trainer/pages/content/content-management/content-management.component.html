@@ -1,0 +1,181 @@
+<div class="content-management-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1>Gestion des Contenus Pédagogiques</h1>
+      <p>Créez, modifiez et gérez vos contenus de formation</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" routerLink="/trainer/ai-assistant">
+        <span class="material-icons">psychology</span>
+        Assistant IA
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!isLoading">
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-icon" style="background: rgba(59, 130, 246, 0.1);">
+          <span class="material-icons" style="color: #3b82f6;">auto_stories</span>
+        </div>
+        <div class="summary-content">
+          <h3>{{ summary.formations }}</h3>
+          <p>Formations</p>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon" style="background: rgba(16, 185, 129, 0.1);">
+          <span class="material-icons" style="color: #10b981;">view_module</span>
+        </div>
+        <div class="summary-content">
+          <h3>{{ summary.modules }}</h3>
+          <p>Modules</p>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon" style="background: rgba(139, 92, 246, 0.1);">
+          <span class="material-icons" style="color: #8b5cf6;">menu_book</span>
+        </div>
+        <div class="summary-content">
+          <h3>{{ summary.courses }}</h3>
+          <p>Cours</p>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon" style="background: rgba(245, 158, 11, 0.1);">
+          <span class="material-icons" style="color: #f59e0b;">assignment</span>
+        </div>
+        <div class="summary-content">
+          <h3>{{ summary.exercises }}</h3>
+          <p>Exercices</p>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="summary-icon" style="background: rgba(239, 68, 68, 0.1);">
+          <span class="material-icons" style="color: #ef4444;">quiz</span>
+        </div>
+        <div class="summary-content">
+          <h3>{{ summary.quizzes }}</h3>
+          <p>Quiz</p>
+        </div>
+      </div>
+
+      <div class="summary-card highlight">
+        <div class="summary-icon" style="background: rgba(245, 158, 11, 0.1);">
+          <span class="material-icons" style="color: #f59e0b;">pending</span>
+        </div>
+        <div class="summary-content">
+          <h3>{{ summary.pendingValidation }}</h3>
+          <p>En attente de validation</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Types -->
+    <section class="section">
+      <h2>Types de Contenus</h2>
+      <div class="content-types-grid">
+        <a *ngFor="let type of contentTypes" [routerLink]="type.route" class="content-type-card">
+          <div class="type-icon" [style.background]="type.color + '15'">
+            <span class="material-icons" [style.color]="type.color">{{ type.icon }}</span>
+          </div>
+          <h3>{{ type.name }}</h3>
+          <p>{{ type.description }}</p>
+          <div class="card-action">
+            <span>Gérer</span>
+            <span class="material-icons">arrow_forward</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Recent Formations -->
+    <section class="section" *ngIf="recentFormations.length > 0">
+      <div class="section-header">
+        <h2>Formations Récentes</h2>
+        <a routerLink="/trainer/content/formations" class="link">Voir toutes</a>
+      </div>
+
+      <div class="formations-grid">
+        <div *ngFor="let formation of recentFormations" 
+             class="formation-card" 
+             [routerLink]="['/trainer/content/formations', formation.id]">
+          <div class="formation-thumbnail">
+            <img *ngIf="formation.thumbnail" [src]="formation.thumbnail" [alt]="formation.title">
+            <div *ngIf="!formation.thumbnail" class="placeholder-thumbnail">
+              <span class="material-icons">auto_stories</span>
+            </div>
+          </div>
+
+          <div class="formation-content">
+            <div class="formation-header">
+              <h3>{{ formation.title }}</h3>
+              <span class="status-badge" [style.background]="getStatusColor(formation.status)">
+                {{ getStatusBadge(formation.status) }}
+              </span>
+            </div>
+
+            <p class="formation-description">{{ formation.description }}</p>
+
+            <div class="formation-meta">
+              <div class="meta-item">
+                <span class="material-icons">people</span>
+                <span>{{ formation.enrolledCount }} inscrits</span>
+              </div>
+              <div class="meta-item">
+                <span class="material-icons">schedule</span>
+                <span>{{ formation.duration }}h</span>
+              </div>
+              <div class="meta-item">
+                <span class="material-icons">trending_up</span>
+                <span>{{ formation.completionRate | number:'1.0-0' }}% complétion</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="section">
+      <h2>Actions Rapides</h2>
+      <div class="quick-actions-grid">
+        <button class="action-button" routerLink="/trainer/content/formations">
+          <span class="material-icons">add_circle</span>
+          <span>Nouvelle Formation</span>
+        </button>
+
+        <button class="action-button" routerLink="/trainer/ai-assistant">
+          <span class="material-icons">auto_fix_high</span>
+          <span>Générer avec l'IA</span>
+        </button>
+
+        <button class="action-button" routerLink="/trainer/content/exercises">
+          <span class="material-icons">assignment_add</span>
+          <span>Nouvel Exercice</span>
+        </button>
+
+        <button class="action-button" routerLink="/trainer/content/quizzes">
+          <span class="material-icons">quiz</span>
+          <span>Nouveau Quiz</span>
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+
+

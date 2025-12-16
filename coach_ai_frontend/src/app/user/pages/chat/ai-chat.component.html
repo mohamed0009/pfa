@@ -1,0 +1,228 @@
+<div class="chat-container">
+  <!-- Conversations Sidebar -->
+  <aside class="conversations-sidebar" [class.show]="showConversationsList">
+    <div class="sidebar-header">
+      <h2>Conversations</h2>
+      <button class="btn-icon" (click)="openNewConversationModal()" title="Nouvelle conversation">
+        <span class="material-icons">add_circle</span>
+      </button>
+    </div>
+
+    <div class="conversations-list">
+      <div 
+        class="conversation-item" 
+        *ngFor="let conv of conversations"
+        [class.active]="activeConversation?.id === conv.id"
+        (click)="selectConversation(conv)">
+        <div class="conversation-content">
+          <div class="conversation-header">
+            <h4>{{ conv.title }}</h4>
+            <span class="conversation-time">{{ formatTime(conv.lastMessageDate) }}</span>
+          </div>
+          <p class="conversation-preview">{{ conv.lastMessage }}</p>
+          <span class="conversation-badge" *ngIf="conv.messagesCount > 0">{{ conv.messagesCount }} messages</span>
+        </div>
+        <button class="btn-delete" (click)="deleteConversation(conv, $event)" title="Supprimer">
+          <span class="material-icons">delete</span>
+        </button>
+      </div>
+
+      <div *ngIf="conversations.length === 0" class="empty-conversations">
+        <span class="material-icons">chat_bubble_outline</span>
+        <p>Aucune conversation</p>
+        <button class="btn btn-primary btn-sm" (click)="openNewConversationModal()">
+          Commencer une conversation
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Chat Area -->
+  <main class="chat-area">
+    <!-- Chat Header -->
+    <header class="chat-header" *ngIf="activeConversation">
+      <button class="btn-menu-toggle" (click)="toggleConversationsList()">
+        <span class="material-icons">menu</span>
+      </button>
+      <div class="chat-header-info">
+        <div class="ai-avatar">
+          <span class="material-icons">psychology</span>
+        </div>
+        <div>
+          <h3>Coach Virtuel IA</h3>
+          <p>{{ activeConversation.title }}</p>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="btn-icon" title="Informations">
+          <span class="material-icons">info</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Messages Container -->
+    <div class="messages-container" #messagesContainer *ngIf="activeConversation">
+      <div class="messages-list">
+        <div 
+          class="message" 
+          *ngFor="let message of messages"
+          [class.message-user]="message.sender === 'user'"
+          [class.message-ai]="message.sender === 'ai'">
+          
+          <div class="message-avatar" *ngIf="message.sender === 'ai'">
+            <span class="material-icons">psychology</span>
+          </div>
+
+          <div class="message-content">
+            <div class="message-bubble">
+              <p>{{ message.content }}</p>
+              
+              <!-- Attachments -->
+              <div class="message-attachments" *ngIf="message.attachments && message.attachments.length > 0">
+                <div 
+                  *ngFor="let att of message.attachments" 
+                  class="attachment-item">
+                  <a 
+                    *ngIf="att.type !== 'audio'"
+                    [href]="att.url" 
+                    class="attachment-link">
+                    <span class="material-icons">{{ att.type === 'link' ? 'link' : att.type === 'document' ? 'description' : 'assignment' }}</span>
+                    {{ att.title }}
+                  </a>
+                  <div *ngIf="att.type === 'audio'" class="audio-attachment">
+                    <span class="material-icons">audiotrack</span>
+                    <audio [src]="att.url" controls></audio>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+          </div>
+
+          <div class="message-avatar" *ngIf="message.sender === 'user'">
+            <span class="material-icons">person</span>
+          </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="message message-ai" *ngIf="isTyping">
+          <div class="message-avatar">
+            <span class="material-icons">psychology</span>
+          </div>
+          <div class="message-content">
+            <div class="message-bubble">
+              <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Conversation Selected -->
+    <div class="empty-chat" *ngIf="!activeConversation">
+      <span class="material-icons">psychology</span>
+      <h3>Coach Virtuel IA</h3>
+      <p>Sélectionnez une conversation ou créez-en une nouvelle pour commencer</p>
+      <button class="btn btn-primary" (click)="openNewConversationModal()">
+        <span class="material-icons">add</span>
+        Nouvelle Conversation
+      </button>
+    </div>
+
+    <!-- Message Input -->
+    <div class="message-input-container" *ngIf="activeConversation">
+      <form (ngSubmit)="sendMessage()" class="message-form">
+        <button type="button" class="btn-icon" title="Pièce jointe">
+          <span class="material-icons">attach_file</span>
+        </button>
+        
+        <button 
+          type="button" 
+          class="btn-icon btn-audio" 
+          [class.recording]="isRecording"
+          [title]="isRecording ? 'Arrêter l\'enregistrement' : 'Enregistrer un message audio'"
+          (mousedown)="startRecording(); $event.preventDefault()"
+          (mouseup)="stopRecording(); $event.preventDefault()"
+          (mouseleave)="stopRecording()"
+          (touchstart)="startRecording(); $event.preventDefault()"
+          (touchend)="stopRecording(); $event.preventDefault()"
+          (click)="$event.preventDefault()">
+          <span class="material-icons">{{ isRecording ? 'stop' : 'mic' }}</span>
+          <span class="recording-indicator" *ngIf="isRecording">
+            <span class="pulse"></span>
+          </span>
+        </button>
+        
+        <input 
+          type="text" 
+          [(ngModel)]="newMessage"
+          name="message"
+          placeholder="Posez votre question au coach IA..."
+          class="message-input"
+          [disabled]="isTyping || isRecording">
+        
+        <button 
+          type="submit" 
+          class="btn-send"
+          [disabled]="(!newMessage.trim() && !audioBlob) || isTyping || isRecording">
+          <span class="material-icons">send</span>
+        </button>
+      </form>
+      
+      <!-- Audio Recording Indicator -->
+      <div class="audio-recording-info" *ngIf="isRecording">
+        <span class="recording-dot"></span>
+        <span>Enregistrement en cours... ({{ recordingDuration }}s)</span>
+        <button type="button" class="btn-cancel-recording" (click)="cancelRecording()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      
+      <!-- Audio Preview -->
+      <div class="audio-preview" *ngIf="audioBlob && !isRecording">
+        <audio [src]="audioUrl" controls></audio>
+        <button type="button" class="btn-remove-audio" (click)="removeAudio()" title="Supprimer l'audio">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- New Conversation Modal -->
+<div class="modal-overlay" *ngIf="showNewConversationModal" (click)="showNewConversationModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Nouvelle Conversation</h2>
+      <button class="btn-close" (click)="showNewConversationModal = false">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Titre de la conversation</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newConversationTitle"
+          placeholder="Ex: Questions sur React"
+          class="form-control"
+          (keyup.enter)="createNewConversation()">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showNewConversationModal = false">Annuler</button>
+      <button class="btn btn-primary" (click)="createNewConversation()" [disabled]="!newConversationTitle.trim()">
+        <span class="material-icons">add</span>
+        Créer
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+

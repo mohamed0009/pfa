@@ -1,0 +1,79 @@
+<section class="hero">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="container">
+      <div class="hero-text">
+        <h1 class="hero-title">
+          Votre Coach IA Personnel<br>
+          pour la Formation Professionnelle
+        </h1>
+        <p class="hero-subtitle">
+          Parcours d'apprentissage personnalisés, accompagnement intelligent et suivi en temps réel.<br>
+          Développez vos compétences avec l'IA au service de votre réussite.
+        </p>
+        <button class="btn btn-hero" (click)="scrollToSection('services')">
+          Commencer Maintenant
+        </button>
+      </div>
+
+      <div class="trust-indicators">
+        <p class="trust-text">Ils nous font confiance</p>
+        <div class="partners">
+          <div class="partner">LinkedIn Learning</div>
+          <div class="partner">Udemy</div>
+          <div class="partner">Coursera</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Section (Part of Hero) -->
+  <div class="about-section" id="about">
+    <div class="container">
+      <div class="about-content">
+        <div class="about-text">
+          <h2>
+            <span class="highlight">Plateforme d'apprentissage intelligente</span> propulsée par l'IA.
+            Nous vous accompagnons dans votre développement professionnel avec des parcours personnalisés,
+            des exercices adaptatifs et un suivi en temps réel de votre progression.
+          </h2>
+          
+          <div class="features">
+            <div class="feature">
+              <span class="material-icons">school</span>
+              <span>Parcours Personnalisés</span>
+            </div>
+            <div class="feature">
+              <span class="material-icons">psychology</span>
+              <span>Coach IA Intelligent</span>
+            </div>
+            <div class="feature">
+              <span class="material-icons">timeline</span>
+              <span>Suivi de Progression</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-stats">
+          <div class="stat" *ngFor="let stat of statistics">
+            <button class="btn btn-stat">En Savoir Plus</button>
+            <button class="btn btn-stat-primary">Démarrer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="statistics">
+        <div class="stat-card" *ngFor="let stat of statistics">
+          <span class="material-icons">{{ stat.icon }}</span>
+          <h3>{{ stat.value }}</h3>
+          <p>{{ stat.label }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+

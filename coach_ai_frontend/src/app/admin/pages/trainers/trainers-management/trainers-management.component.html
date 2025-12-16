@@ -1,0 +1,356 @@
+<div class="trainers-page">
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Supervision des Formateurs</h1>
+      <p class="subtitle">Validez, supervisez et gérez les formateurs</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <span class="material-icons">person_add</span>
+      Ajouter un Formateur
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="material-icons">person</span>
+      <div><h3>{{ trainerStats.total }}</h3><p>Total Formateurs</p></div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons" style="color: #10b981;">check_circle</span>
+      <div><h3>{{ trainerStats.active }}</h3><p>Actifs</p></div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons" style="color: #f59e0b;">pending</span>
+      <div><h3>{{ trainerStats.pending }}</h3><p>En Attente</p></div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">star</span>
+      <div><h3>{{ trainerStats.averageRating?.toFixed(1) || 0 }}</h3><p>Note Moyenne</p></div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <button class="filter-btn" [class.active]="statusFilter === 'all'" (click)="statusFilter = 'all'; loadTrainers()">
+      Tous
+    </button>
+    <button class="filter-btn" [class.active]="statusFilter === 'pending'" (click)="statusFilter = 'pending'; loadTrainers()">
+      En attente ({{ trainerStats.pending }})
+    </button>
+    <button class="filter-btn" [class.active]="statusFilter === 'active'" (click)="statusFilter = 'active'; loadTrainers()">
+      Actifs ({{ trainerStats.active }})
+    </button>
+  </div>
+
+  <!-- Trainers Grid -->
+  <div class="trainers-grid">
+    <div class="trainer-card" *ngFor="let trainer of trainers">
+      <img [src]="trainer.avatarUrl" [alt]="trainer.fullName" class="trainer-avatar">
+      <span class="status-dot" [style.background]="getStatusColor(trainer.status)"></span>
+      
+      <div class="trainer-info">
+        <h3>{{ trainer.fullName }}</h3>
+        <p class="email">{{ trainer.email }}</p>
+        <div class="specializations">
+          <span class="spec-tag" *ngFor="let spec of trainer.specializations">{{ spec }}</span>
+        </div>
+        <p class="bio">{{ trainer.bio }}</p>
+      </div>
+
+      <div class="trainer-stats">
+        <div class="stat-item">
+          <span class="material-icons">people</span>
+          <span>{{ trainer.studentsCount }} étudiants</span>
+        </div>
+        <div class="stat-item">
+          <span class="material-icons">school</span>
+          <span>{{ trainer.coursesCreated }} cours</span>
+        </div>
+        <div class="stat-item" *ngIf="trainer.rating > 0">
+          <span class="material-icons">star</span>
+          <span>{{ trainer.rating }}/5</span>
+        </div>
+      </div>
+
+      <div class="trainer-actions">
+        <button class="btn btn-primary btn-sm" *ngIf="trainer.status === 'pending'" (click)="openValidationModal(trainer)">
+          <span class="material-icons">check</span>
+          Valider
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="viewMetrics(trainer)">
+          <span class="material-icons">analytics</span>
+          Métriques
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="openEditModal(trainer)">
+          <span class="material-icons">edit</span>
+          Modifier
+        </button>
+        <button class="btn btn-secondary btn-sm" (click)="openAssignModal(trainer)">
+          <span class="material-icons">assignment</span>
+          Assigner
+        </button>
+        <button class="btn btn-danger btn-sm" *ngIf="trainer.status === 'active'" (click)="suspendTrainer(trainer)">
+          <span class="material-icons">block</span>
+          Suspendre
+        </button>
+        <button class="btn btn-danger btn-sm" (click)="openDeleteModal(trainer)">
+          <span class="material-icons">delete</span>
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Validation Modal -->
+<div class="modal-overlay" *ngIf="showValidationModal && selectedTrainer" (click)="showValidationModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Valider le Formateur</h2>
+      <button class="btn-close" (click)="showValidationModal = false">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Voulez-vous valider <strong>{{ selectedTrainer.fullName }}</strong> en tant que formateur ?</p>
+      <div class="trainer-preview">
+        <p><strong>Spécialisations:</strong> {{ selectedTrainer.specializations.join(', ') }}</p>
+        <p><strong>Cours créés:</strong> {{ selectedTrainer.coursesCreated }}</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showValidationModal = false">Annuler</button>
+      <button class="btn btn-primary" (click)="validateTrainer()">
+        <span class="material-icons">check</span>
+        Valider
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Trainer Modal -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Créer un Nouveau Formateur</h2>
+      <button class="btn-close" (click)="closeModals()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nom Complet *</label>
+        <input type="text" [(ngModel)]="trainerForm.fullName" class="form-control" placeholder="Entrez le nom complet">
+      </div>
+
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" [(ngModel)]="trainerForm.email" class="form-control" placeholder="Entrez l'email">
+      </div>
+
+      <div class="form-group">
+        <label>Bio</label>
+        <textarea [(ngModel)]="trainerForm.bio" rows="3" class="form-control" placeholder="Décrivez l'expertise du formateur"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Spécialisations</label>
+        <div class="specializations-input">
+          <input 
+            type="text" 
+            [(ngModel)]="newSpecialization" 
+            class="form-control"
+            placeholder="Ajouter une spécialisation"
+            (keyup.enter)="addSpecialization()">
+          <button class="btn btn-sm btn-secondary" (click)="addSpecialization()">
+            <span class="material-icons">add</span>
+          </button>
+        </div>
+        <div class="spec-tags" *ngIf="trainerForm.specializations && trainerForm.specializations.length > 0">
+          <span class="spec-tag" *ngFor="let spec of trainerForm.specializations; let i = index">
+            {{ spec }}
+            <button class="remove-spec" (click)="removeSpecialization(i)">×</button>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>URL de l'Avatar</label>
+        <input type="text" [(ngModel)]="trainerForm.avatarUrl" class="form-control" placeholder="URL de la photo de profil">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModals()">Annuler</button>
+      <button class="btn btn-primary" (click)="createTrainer()">
+        <span class="material-icons">person_add</span>
+        Créer le Formateur
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Trainer Modal -->
+<div class="modal-overlay" *ngIf="showEditModal && selectedTrainer" (click)="closeModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Modifier le Formateur</h2>
+      <button class="btn-close" (click)="closeModals()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nom Complet *</label>
+        <input type="text" [(ngModel)]="trainerForm.fullName" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" [(ngModel)]="trainerForm.email" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label>Bio</label>
+        <textarea [(ngModel)]="trainerForm.bio" rows="3" class="form-control"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Spécialisations</label>
+        <div class="specializations-input">
+          <input 
+            type="text" 
+            [(ngModel)]="newSpecialization" 
+            class="form-control"
+            placeholder="Ajouter une spécialisation"
+            (keyup.enter)="addSpecialization()">
+          <button class="btn btn-sm btn-secondary" (click)="addSpecialization()">
+            <span class="material-icons">add</span>
+          </button>
+        </div>
+        <div class="spec-tags" *ngIf="trainerForm.specializations && trainerForm.specializations.length > 0">
+          <span class="spec-tag" *ngFor="let spec of trainerForm.specializations; let i = index">
+            {{ spec }}
+            <button class="remove-spec" (click)="removeSpecialization(i)">×</button>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>URL de l'Avatar</label>
+        <input type="text" [(ngModel)]="trainerForm.avatarUrl" class="form-control">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModals()">Annuler</button>
+      <button class="btn btn-primary" (click)="saveTrainerEdit()">
+        <span class="material-icons">save</span>
+        Sauvegarder
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal && selectedTrainer" (click)="closeModals()">
+  <div class="modal-content modal-confirm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Confirmer la Suppression</h2>
+      <button class="btn-close" (click)="closeModals()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-icon">
+        <span class="material-icons">warning</span>
+      </div>
+      <p>Voulez-vous vraiment supprimer le formateur <strong>{{ selectedTrainer.fullName }}</strong> ?</p>
+      <p class="warning-text">Cette action est irréversible.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModals()">Annuler</button>
+      <button class="btn btn-danger" (click)="deleteTrainer()">
+        <span class="material-icons">delete</span>
+        Supprimer Définitivement
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Assignment Modal -->
+<div class="modal-overlay" *ngIf="showAssignModal && selectedTrainer" (click)="showAssignModal = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Assigner des Formations</h2>
+      <button class="btn-close" (click)="showAssignModal = false">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Sélectionnez les formations pour <strong>{{ selectedTrainer.fullName }}</strong></p>
+      <div class="formations-list">
+        <label class="formation-checkbox" *ngFor="let formation of formations">
+          <input 
+            type="checkbox" 
+            [checked]="selectedFormationIds.includes(formation.id)"
+            (change)="toggleFormationAssignment(formation.id)">
+          <span>{{ formation.title }}</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="showAssignModal = false">Annuler</button>
+      <button class="btn btn-primary" (click)="saveAssignments()">
+        <span class="material-icons">save</span>
+        Sauvegarder
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Metrics Modal -->
+<div class="modal-overlay" *ngIf="showMetricsModal && selectedMetrics" (click)="closeModals()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Métriques du Formateur</h2>
+      <button class="btn-close" (click)="closeModals()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="metrics-grid">
+        <div class="metric-item">
+          <span class="metric-label">Étudiants Actifs</span>
+          <span class="metric-value">{{ selectedMetrics.studentsActive }}</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Progression Moyenne</span>
+          <span class="metric-value">{{ selectedMetrics.averageProgress }}%</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Contenu Créé</span>
+          <span class="metric-value">{{ selectedMetrics.contentCreated }}</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">En Attente</span>
+          <span class="metric-value">{{ selectedMetrics.contentPending }}</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Satisfaction</span>
+          <span class="metric-value">{{ selectedMetrics.studentSatisfaction }}/5</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Temps de Réponse</span>
+          <span class="metric-value">{{ selectedMetrics.responseTime }}h</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModals()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+
+
+

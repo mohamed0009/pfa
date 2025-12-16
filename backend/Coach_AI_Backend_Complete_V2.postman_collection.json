@@ -1,0 +1,2172 @@
+{
+	"info": {
+		"_postman_id": "coach-ai-backend-complete-v2",
+		"name": "Coach AI Backend - Collection Complète V2",
+		"description": "Collection complète pour tester TOUS les endpoints du backend Coach AI avec les nouvelles fonctionnalités",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token_trainer",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token_admin",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. AUTHENTIFICATION",
+			"item": [
+				{
+					"name": "Test Backend",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/test",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "test"]
+						}
+					}
+				},
+				{
+					"name": "Login USER",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"        console.log(\"Token USER sauvegardé: \" + jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"test123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Login TRAINER",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"jwt_token_trainer\", jsonData.token);",
+									"        console.log(\"Token TRAINER sauvegardé: \" + jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"trainer@test.com\",\n  \"password\": \"test123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Login ADMIN",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set(\"jwt_token_admin\", jsonData.token);",
+									"        console.log(\"Token ADMIN sauvegardé: \" + jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"test123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Signup",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"nouveau@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Prénom\",\n  \"lastName\": \"Nom\",\n  \"role\": \"USER\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/signup",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "signup"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. COURS (Public)",
+			"item": [
+				{
+					"name": "Liste des cours",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/courses",
+							"host": ["{{base_url}}"],
+							"path": ["api", "courses"]
+						}
+					}
+				},
+				{
+					"name": "Cours populaires",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/courses?popular=true",
+							"host": ["{{base_url}}"],
+							"path": ["api", "courses"],
+							"query": [
+								{
+									"key": "popular",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Cours par catégorie",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/courses?category=Developpement",
+							"host": ["{{base_url}}"],
+							"path": ["api", "courses"],
+							"query": [
+								{
+									"key": "category",
+									"value": "Developpement"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Détails d'un cours",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/courses/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "courses", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "course-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. UTILISATEUR - PROFIL",
+			"item": [
+				{
+					"name": "Mon profil",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Mettre à jour profil",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Nouveau Prénom\",\n  \"lastName\": \"Nouveau Nom\",\n  \"formation\": \"Développement Web\",\n  \"niveau\": \"DEBUTANT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "profile"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. UTILISATEUR - INSCRIPTIONS",
+			"item": [
+				{
+					"name": "Mes inscriptions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/enrollments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "enrollments"]
+						}
+					}
+				},
+				{
+					"name": "S'inscrire à un cours",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/enrollments/:courseId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "enrollments", ":courseId"],
+							"variable": [
+								{
+									"key": "courseId",
+									"value": "course-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. UTILISATEUR - PROGRÈS",
+			"item": [
+				{
+					"name": "Mon progrès global",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/progress",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "progress"]
+						}
+					}
+				},
+				{
+					"name": "Progrès dans un cours",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/progress/courses/:courseId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "progress", "courses", ":courseId"],
+							"variable": [
+								{
+									"key": "courseId",
+									"value": "course-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Mettre à jour progrès leçon",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"isCompleted\": true,\n  \"timeSpent\": 3600\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/progress/lessons/:lessonId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "progress", "lessons", ":lessonId"],
+							"variable": [
+								{
+									"key": "lessonId",
+									"value": "lesson-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. UTILISATEUR - EXERCICES",
+			"item": [
+				{
+					"name": "Liste des exercices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/exercises",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "exercises"]
+						}
+					}
+				},
+				{
+					"name": "Détails d'un exercice",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/exercises/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "exercises", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "exercise-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Soumettre un exercice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Réponse de l'exercice...\",\n  \"attachments\": []\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/exercises/:id/submissions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "exercises", ":id", "submissions"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "exercise-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Mes soumissions pour un exercice",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/exercises/:id/submissions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "exercises", ":id", "submissions"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "exercise-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. UTILISATEUR - CHAT AI",
+			"item": [
+				{
+					"name": "Liste des conversations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/chat/conversations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "chat", "conversations"]
+						}
+					}
+				},
+				{
+					"name": "Créer une conversation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Ma nouvelle conversation\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/chat/conversations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "chat", "conversations"]
+						}
+					}
+				},
+				{
+					"name": "Messages d'une conversation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/chat/conversations/:conversationId/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "chat", "conversations", ":conversationId", "messages"],
+							"variable": [
+								{
+									"key": "conversationId",
+									"value": "conversation-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Envoyer un message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Bonjour, j'ai une question sur le cours JavaScript\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/chat/conversations/:conversationId/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "chat", "conversations", ":conversationId", "messages"],
+							"variable": [
+								{
+									"key": "conversationId",
+									"value": "conversation-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "8. UTILISATEUR - NOTIFICATIONS",
+			"item": [
+				{
+					"name": "Liste des notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/notifications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "notifications"]
+						}
+					}
+				},
+				{
+					"name": "Marquer comme lu",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/notifications/:id/read",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "notifications", ":id", "read"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "notification-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Nombre de notifications non lues",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/notifications/unread/count",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "notifications", "unread", "count"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "9. UTILISATEUR - QUIZ",
+			"item": [
+				{
+					"name": "Liste des quiz disponibles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/quizzes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "quizzes"]
+						}
+					}
+				},
+				{
+					"name": "Détails d'un quiz",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/quizzes/:quizId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "quizzes", ":quizId"],
+							"variable": [
+								{
+									"key": "quizId",
+									"value": "quiz-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Démarrer un quiz",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/quizzes/:quizId/attempts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "quizzes", ":quizId", "attempts"],
+							"variable": [
+								{
+									"key": "quizId",
+									"value": "quiz-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Soumettre un quiz",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"questionId\": \"question-id-1\",\n    \"userAnswer\": \"Réponse A\"\n  },\n  {\n    \"questionId\": \"question-id-2\",\n    \"userAnswer\": \"Réponse B\"\n  }\n]"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/quizzes/attempts/:attemptId/submit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "quizzes", "attempts", ":attemptId", "submit"],
+							"variable": [
+								{
+									"key": "attemptId",
+									"value": "attempt-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Historique des tentatives",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/quizzes/attempts",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "quizzes", "attempts"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "10. UTILISATEUR - SUPPORT",
+			"item": [
+				{
+					"name": "Mes tickets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/support/tickets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "support", "tickets"]
+						}
+					}
+				},
+				{
+					"name": "Créer un ticket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subject\": \"Problème avec le cours\",\n  \"description\": \"Je n'arrive pas à accéder à la leçon 3\",\n  \"priority\": \"MEDIUM\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/user/support/tickets",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "support", "tickets"]
+						}
+					}
+				},
+				{
+					"name": "Détails d'un ticket",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/user/support/tickets/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user", "support", "tickets", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ticket-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "11. FORMATEUR - PROFIL",
+			"item": [
+				{
+					"name": "Mon profil formateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Mettre à jour profil formateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Jean\",\n  \"lastName\": \"Dupont\",\n  \"phone\": \"+33123456789\",\n  \"bio\": \"Formateur expérimenté en développement web\",\n  \"avatarUrl\": \"https://example.com/avatar.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Statistiques formateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "stats"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "12. FORMATEUR - FORMATIONS",
+			"item": [
+				{
+					"name": "Mes formations",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/formations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "formations"]
+						}
+					}
+				},
+				{
+					"name": "Détails d'une formation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/formations/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "formations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "formation-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer une formation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Formation JavaScript Avancé\",\n  \"description\": \"Description de la formation\",\n  \"level\": \"AVANCE\",\n  \"category\": \"Developpement\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/formations",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "formations"]
+						}
+					}
+				},
+				{
+					"name": "Mettre à jour une formation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Nouveau titre\",\n  \"description\": \"Nouvelle description\",\n  \"level\": \"INTERMEDIAIRE\",\n  \"category\": \"Developpement\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/formations/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "formations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "formation-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer une formation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/formations/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "formations", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "formation-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Soumettre pour validation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"formation-id-here\",\n  \"type\": \"formation\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/validation/submit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "validation", "submit"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "13. FORMATEUR - MODULES",
+			"item": [
+				{
+					"name": "Mes modules",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/modules",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "modules"]
+						}
+					}
+				},
+				{
+					"name": "Modules par formation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/modules?formationId=formation-id-here",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "modules"],
+							"query": [
+								{
+									"key": "formationId",
+									"value": "formation-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer un module",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Module JavaScript\",\n  \"description\": \"Description du module\",\n  \"formation\": {\n    \"id\": \"formation-id-here\"\n  },\n  \"order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/modules",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "modules"]
+						}
+					}
+				},
+				{
+					"name": "Mettre à jour un module",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Module JavaScript Mis à Jour\",\n  \"description\": \"Nouvelle description\",\n  \"order\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/modules/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "modules", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "module-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un module",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/modules/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "modules", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "module-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "14. FORMATEUR - COURS",
+			"item": [
+				{
+					"name": "Mes cours",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/courses",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "courses"]
+						}
+					}
+				},
+				{
+					"name": "Créer un cours",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Cours React\",\n  \"description\": \"Description du cours\",\n  \"level\": \"INTERMEDIAIRE\",\n  \"category\": \"Developpement\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/courses",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "courses"]
+						}
+					}
+				},
+				{
+					"name": "Mettre à jour un cours",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Cours React Avancé\",\n  \"description\": \"Nouvelle description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/courses/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "courses", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "course-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un cours",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/courses/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "courses", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "course-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "15. FORMATEUR - EXERCICES",
+			"item": [
+				{
+					"name": "Exercices en attente de correction",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/reviews/exercises/pending",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "reviews", "exercises", "pending"]
+						}
+					}
+				},
+				{
+					"name": "Corriger un exercice",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"feedback\": \"Bon travail ! Quelques améliorations possibles...\",\n  \"score\": 85\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/reviews/exercises/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "reviews", "exercises", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "submission-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Soumissions d'exercices (avec statut)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/exercises/submissions?status=SUBMITTED",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "exercises", "submissions"],
+							"query": [
+								{
+									"key": "status",
+									"value": "SUBMITTED"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "16. FORMATEUR - QUIZ",
+			"item": [
+				{
+					"name": "Mes quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/quizzes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "quizzes"]
+						}
+					}
+				},
+				{
+					"name": "Quiz par cours",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/quizzes?courseId=course-id-here",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "quizzes"],
+							"query": [
+								{
+									"key": "courseId",
+									"value": "course-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Créer un quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Quiz JavaScript\",\n  \"description\": \"Description du quiz\",\n  \"passingScore\": 70,\n  \"course\": {\n    \"id\": \"course-id-here\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/quizzes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "quizzes"]
+						}
+					}
+				},
+				{
+					"name": "Mettre à jour un quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Quiz JavaScript Mis à Jour\",\n  \"description\": \"Nouvelle description\",\n  \"passingScore\": 75\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/quizzes/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "quizzes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "quiz-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/quizzes/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "quizzes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "quiz-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Quiz en attente de révision",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/reviews/quizzes/pending",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "reviews", "quizzes", "pending"]
+						}
+					}
+				},
+				{
+					"name": "Ajouter feedback à un quiz",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"feedback\": \"Excellent travail ! Continue ainsi.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/reviews/quizzes/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "reviews", "quizzes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "attempt-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "17. FORMATEUR - ÉTUDIANTS",
+			"item": [
+				{
+					"name": "Liste des étudiants",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/students",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "students"]
+						}
+					}
+				},
+				{
+					"name": "Étudiants par formation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/students?formationId=formation-id-here",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "students"],
+							"query": [
+								{
+									"key": "formationId",
+									"value": "formation-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Détails d'un étudiant",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/students/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "students", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "student-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "18. FORMATEUR - MESSAGES",
+			"item": [
+				{
+					"name": "Mes messages",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trainer/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Envoyer un message",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_trainer}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"conversationId\": \"conversation-id-here\",\n  \"content\": \"Bonjour, je réponds à votre question...\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trainer/messages",
+							"host": ["{{base_url}}"],
+							"path": ["api", "trainer", "messages"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "19. ADMIN - UTILISATEURS",
+			"item": [
+				{
+					"name": "Liste des utilisateurs",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"]
+						}
+					}
+				},
+				{
+					"name": "Utilisateurs par rôle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users?role=TRAINER",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users"],
+							"query": [
+								{
+									"key": "role",
+									"value": "TRAINER"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Détails d'un utilisateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Mettre à jour statut utilisateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\"ACTIVE\""
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/:id/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", ":id", "status"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un utilisateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "users", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "user-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "20. ADMIN - FORMATEURS",
+			"item": [
+				{
+					"name": "Liste des formateurs",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/trainers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "trainers"]
+						}
+					}
+				},
+				{
+					"name": "Formateurs par statut",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/trainers?status=PENDING",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "trainers"],
+							"query": [
+								{
+									"key": "status",
+									"value": "PENDING"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Détails d'un formateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/trainers/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "trainers", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "trainer-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Valider un formateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/trainers/:id/validate",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "trainers", ":id", "validate"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "trainer-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Suspendre un formateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/trainers/:id/suspend",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "trainers", ":id", "suspend"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "trainer-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Supprimer un formateur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/trainers/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "trainers", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "trainer-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "21. ADMIN - CONTENU",
+			"item": [
+				{
+					"name": "Contenu en attente",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/content/pending",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "content", "pending"]
+						}
+					}
+				},
+				{
+					"name": "Approuver une formation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/content/formations/:id/approve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "content", "formations", ":id", "approve"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "formation-id-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Rejeter une formation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token_admin}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Raison du rejet\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/content/formations/:id/reject",
+							"host": ["{{base_url}}"],
+							"path": ["api", "admin", "content", "formations", ":id", "reject"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "formation-id-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
+

@@ -5,7 +5,7 @@ import '../../../core/models/conversation_model.dart';
 import '../../../core/services/conversation_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_dimensions.dart';
-import '../../../core/di/service_locator.dart';
+import '../../../core/di/dependency_injection.dart';
 import '../../../widgets/custom_card.dart';
 import 'dart:ui';
 
@@ -419,7 +419,7 @@ class _ChatScreenState extends State<ChatScreen> {
               _error!,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppTheme.textColor.withOpacity(0.7),
+                color: AppTheme.textPrimary.withOpacity(0.7),
               ),
             ),
             SizedBox(height: 16),
@@ -532,53 +532,66 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
           
           Flexible(
-            child: CustomCard(
-              useGlassmorphism: !isUser,
-              padding: EdgeInsets.zero,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                decoration: BoxDecoration(
-                  gradient: isUser ? AppTheme.primaryGradient : null,
-                  color: isUser ? null : Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(AppDimensions.radiusMd),
-                    topRight: Radius.circular(AppDimensions.radiusMd),
-                    bottomLeft: Radius.circular(isUser ? AppDimensions.radiusMd : 4),
-                    bottomRight: Radius.circular(isUser ? 4 : AppDimensions.radiusMd),
+            child: Column(
+              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                CustomCard(
+                  useGlassmorphism: !isUser,
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: isUser ? AppTheme.primaryGradient : null,
+                      color: isUser ? null : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(AppDimensions.radiusMd),
+                        topRight: Radius.circular(AppDimensions.radiusMd),
+                        bottomLeft: Radius.circular(isUser ? AppDimensions.radiusMd : 4),
+                        bottomRight: Radius.circular(isUser ? 4 : AppDimensions.radiusMd),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isUser ? AppTheme.primaryColor : Colors.black).withOpacity(0.1),
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message.content,
+                          style: TextStyle(
+                            color: isUser ? Colors.white : AppTheme.textPrimary,
+                            fontSize: 15,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            color: isUser
+                                ? Colors.white.withOpacity(0.8)
+                                : AppTheme.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isUser ? AppTheme.primaryColor : Colors.black).withOpacity(0.1),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      message.content,
-                      style: TextStyle(
-                        color: isUser ? Colors.white : AppTheme.textPrimary,
-                        fontSize: 15,
-                        height: 1.5,
-                      ),
+                if (message.attachments != null && message.attachments!.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Column(
+                      crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      children: message.attachments!.map((a) => _buildAttachment(a)).toList(),
                     ),
-                    SizedBox(height: 6),
-                    Text(
-                      '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
-                      style: TextStyle(
-                        color: isUser
-                            ? Colors.white.withOpacity(0.8)
-                            : AppTheme.textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+              ],
             )
                 .animate()
                 .fadeIn(delay: (index * 50).ms, duration: 400.ms)
@@ -614,6 +627,94 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildAttachment(MessageAttachment attachment) {
+    IconData icon;
+    Color color;
+    
+    switch (attachment.type) {
+      case 'link':
+        icon = Icons.link_rounded;
+        color = Colors.blue;
+        break;
+      case 'file':
+        icon = Icons.insert_drive_file_rounded;
+        color = Colors.orange;
+        break;
+      case 'image':
+        icon = Icons.image_rounded;
+        color = Colors.purple;
+        break;
+      default:
+        icon = Icons.attach_file_rounded;
+        color = Colors.grey;
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 8),
+      constraints: BoxConstraints(maxWidth: 250),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        elevation: 1,
+        child: InkWell(
+          onTap: () {
+            // TODO: Handle attachment tap (open URL, etc.)
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Opening ${attachment.url}')),
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        attachment.title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        attachment.type.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: AppTheme.textSecondary.withOpacity(0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/conversation_model.dart';
 import '../../../core/services/conversation_service.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/di/service_locator.dart';
+import '../../../core/di/dependency_injection.dart';
 import 'chat_screen.dart';
 
 /// Screen displaying list of user's AI coach conversations
@@ -141,14 +141,14 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textColor,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 Text(
                   '${_conversations.length} conversation(s)',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.textColor.withOpacity(0.6),
+                    color: AppTheme.textPrimary.withOpacity(0.6),
                   ),
                 ),
               ],
@@ -189,7 +189,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               _error!,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppTheme.textColor.withOpacity(0.7),
+                color: AppTheme.textPrimary.withOpacity(0.7),
               ),
             ),
             SizedBox(height: 16),
@@ -245,7 +245,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textColor,
+              color: AppTheme.textPrimary,
             ),
           ),
           SizedBox(height: 8),
@@ -254,7 +254,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              color: AppTheme.textColor.withOpacity(0.6),
+              color: AppTheme.textPrimary.withOpacity(0.6),
             ),
           ),
         ],
@@ -351,7 +351,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textColor,
+                          color: AppTheme.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -362,7 +362,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                           conversation.lastMessage!,
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppTheme.textColor.withOpacity(0.6),
+                            color: AppTheme.textPrimary.withOpacity(0.6),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -388,14 +388,14 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                           Icon(
                             Icons.access_time_rounded,
                             size: 14,
-                            color: AppTheme.textColor.withOpacity(0.4),
+                            color: AppTheme.textPrimary.withOpacity(0.4),
                           ),
                           SizedBox(width: 4),
                           Text(
                             dateFormat.format(lastMessageDate),
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppTheme.textColor.withOpacity(0.4),
+                              color: AppTheme.textPrimary.withOpacity(0.4),
                             ),
                           ),
                         ],
@@ -406,7 +406,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 20,
-                  color: AppTheme.textColor.withOpacity(0.3),
+                  color: AppTheme.textPrimary.withOpacity(0.3),
                 ),
               ],
             ),

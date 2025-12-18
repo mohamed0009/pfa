@@ -2,38 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Modern Color Palette - Vibrant & Professional
-  static const Color primaryColor = Color(0xFF6366F1); // Indigo
-  static const Color secondaryColor = Color(0xFF8B5CF6); // Purple
-  static const Color accentColor = Color(0xFF06B6D4); // Cyan
-  static const Color backgroundColor = Color(0xFFF8FAFC);
+  // Modern Color Palette - Green/Teal (Coursera Style)
+  static const Color primaryColor = Color(0xFF01996D); // Coursera Green
+  static const Color secondaryColor = Color(0xFF007955); // Darker Green
+  static const Color accentColor = Color(0xFF4A90E2); // Web Accent Blue
+  static const Color backgroundColor = Color(0xFFFAFAFA); // Coursera Page BG
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color errorColor = Color(0xFFEF4444);
-  static const Color successColor = Color(0xFF10B981);
-  static const Color warningColor = Color(0xFFF59E0B);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color borderColor = Color(0xFFE2E8F0);
+  static const Color successColor = Color(0xFF00A862);
+  static const Color warningColor = Color(0xFFFFB800);
+  static const Color textPrimary = Color(0xFF1F1F1F);
+  static const Color textSecondary = Color(0xFF6B6B6B);
+  static const Color borderColor = Color(0xFFE5E5E5);
   
   // Gradient Colors
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+    colors: [Color(0xFF01996D), Color(0xFF00B383)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
   
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xFF06B6D4), Color(0xFF3B82F6)],
+    colors: [Color(0xFF4A90E2), Color(0xFF357ABD)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   // Dark Theme Colors
-  static const Color darkBackground = Color(0xFF0F172A);
-  static const Color darkSurface = Color(0xFF1E293B);
-  static const Color darkSurfaceVariant = Color(0xFF334155);
-  static const Color darkTextPrimary = Color(0xFFF1F5F9);
-  static const Color darkTextSecondary = Color(0xFF94A3B8);
+  static const Color darkBackground = Color(0xFF121212);
+  static const Color darkSurface = Color(0xFF1E1E1E);
+  static const Color darkSurfaceVariant = Color(0xFF2C2C2C);
+  static const Color darkTextPrimary = Color(0xFFE0E0E0);
+  static const Color darkTextSecondary = Color(0xFFA0A0A0);
 
   static ThemeData get lightTheme {
     return ThemeData(

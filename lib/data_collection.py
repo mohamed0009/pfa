@@ -66,7 +66,7 @@ class EducationalDatasetCollector:
         np.random.seed(42)
         random.seed(42)
     
-    def collect_khan_academy_data(self, max_items: int = 1000) -> List[Dict]:
+    def collect_khan_academy_data(self, max_items: int = 2000000) -> List[Dict]:
         """Collect educational content from Khan Academy"""
         logger.info("Collecting data from Khan Academy...")
         
@@ -77,7 +77,10 @@ class EducationalDatasetCollector:
         subjects = ['math', 'science', 'computing', 'arts-humanities']
         difficulties = ['beginner', 'intermediate', 'advanced']
         
-        for i in range(min(max_items, 500)):  # Limit to avoid over-collection
+        logger.info(f"Generating {max_items} Khan Academy samples...")
+        for i in range(max_items):  # Generate large dataset for training
+            if i % 100000 == 0:
+                logger.info(f"Progress: {i}/{max_items} Khan Academy items ({i/max_items*100:.1f}%)")
             subject = random.choice(subjects)
             difficulty = random.choice(difficulties)
             
@@ -142,7 +145,7 @@ class EducationalDatasetCollector:
         logger.info(f"Collected {len(sample_data)} items from Khan Academy")
         return sample_data
     
-    def collect_mit_opencourseware_data(self, max_items: int = 800) -> List[Dict]:
+    def collect_mit_opencourseware_data(self, max_items: int = 2000000) -> List[Dict]:
         """Collect course content from MIT OpenCourseWare"""
         logger.info("Collecting data from MIT OpenCourseWare...")
         
@@ -150,7 +153,10 @@ class EducationalDatasetCollector:
         departments = ['mathematics', 'electrical-engineering', 'computer-science', 'physics']
         course_levels = ['undergraduate', 'graduate']
         
-        for i in range(min(max_items, 400)):
+        logger.info(f"Generating {max_items} MIT OCW samples...")
+        for i in range(max_items):
+            if i % 100000 == 0:
+                logger.info(f"Progress: {i}/{max_items} MIT items ({i/max_items*100:.1f}%)")
             department = random.choice(departments)
             level = random.choice(course_levels)
             
@@ -214,7 +220,7 @@ class EducationalDatasetCollector:
         logger.info(f"Collected {len(sample_data)} items from MIT OpenCourseWare")
         return sample_data
     
-    def collect_stack_exchange_data(self, max_items: int = 1200) -> List[Dict]:
+    def collect_stack_exchange_data(self, max_items: int = 2000000) -> List[Dict]:
         """Collect Q&A data from Stack Exchange sites"""
         logger.info("Collecting data from Stack Exchange...")
         
@@ -222,7 +228,10 @@ class EducationalDatasetCollector:
         sites = ['math', 'stackoverflow', 'cseducators']
         question_types = ['conceptual', 'problem-solving', 'debugging', 'best-practices']
         
-        for i in range(min(max_items, 600)):
+        logger.info(f"Generating {max_items} Stack Exchange samples...")
+        for i in range(max_items):
+            if i % 100000 == 0:
+                logger.info(f"Progress: {i}/{max_items} Stack Exchange items ({i/max_items*100:.1f}%)")
             site = random.choice(sites)
             q_type = random.choice(question_types)
             

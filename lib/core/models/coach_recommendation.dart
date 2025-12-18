@@ -14,7 +14,6 @@ class CoachRecommendation {
     this.labels = const [],
     required this.source,
   });
-  });
 
   factory CoachRecommendation.fromJson(Map<String, dynamic> json) {
     return CoachRecommendation(

@@ -1,0 +1,75 @@
+<footer class="footer" id="contact">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-column brand-column">
+        <div class="logo">
+          <h3>CoachIA Pro</h3>
+        </div>
+        <p class="brand-description">
+          Votre partenaire de confiance pour la formation professionnelle intelligente. 
+          Nous vous accompagnons vers l'excellence avec notre coach virtuel IA.
+        </p>
+        <div class="social-links">
+          <a [href]="social.url" class="social-link" *ngFor="let social of socialLinks" 
+             [attr.aria-label]="social.icon">
+            <span class="material-icons">{{ social.icon === 'twitter' ? 'tag' : social.icon === 'facebook' ? 'facebook' : social.icon === 'instagram' ? 'camera_alt' : 'work' }}</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h4>Quick Links</h4>
+        <ul class="footer-links">
+          <li *ngFor="let link of quickLinks">
+            <a [href]="link.path">{{ link.label }}</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Nos Formations</h4>
+        <ul class="footer-links">
+          <li *ngFor="let service of services">
+            <a [href]="service.path">{{ service.label }}</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer-column">
+        <h4>Nous Contacter</h4>
+        <div class="contact-info">
+          <div class="contact-item">
+            <span class="material-icons">location_on</span>
+            <span>15 Avenue de l'Innovation<br>Paris, 75001</span>
+          </div>
+          <div class="contact-item">
+            <span class="material-icons">phone</span>
+            <span>+33 1 23 45 67 89</span>
+          </div>
+          <div class="contact-item">
+            <span class="material-icons">email</span>
+            <span>contact&#64;coachiapro.fr</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="copyright">
+        &copy; {{ currentYear }} CoachIA Pro. Tous droits réservés.
+      </p>
+      <div class="footer-legal">
+        <a href="#">Politique de Confidentialité</a>
+        <span class="separator">|</span>
+        <a href="#">Conditions d'Utilisation</a>
+        <span class="separator">|</span>
+        <a href="#">Politique de Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+
+
+

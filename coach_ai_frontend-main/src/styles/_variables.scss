@@ -1,0 +1,89 @@
+// Color Palette
+$primary-green: #01996d;
+
+// ========== COURSERA COLORS (Exact Replica) ==========
+$coursera-blue: #01996d;           // Bleu principal Coursera
+$coursera-blue-dark: #009978;      // Bleu foncé (hover)
+$coursera-blue-light: #E6F0FF;     // Bleu clair (backgrounds)
+$coursera-white: #FFFFFF;          // Blanc pur
+$coursera-bg-light: #F5F5F5;       // Fond gris très clair
+$coursera-bg-page: #FAFAFA;        // Fond de page
+$coursera-border: #E5E5E5;         // Bordures
+$coursera-text: #1F1F1F;           // Texte principal
+$coursera-text-secondary: #6B6B6B; // Texte secondaire
+$coursera-text-muted: #A0A0A0;     // Texte atténué
+$coursera-success: #00A862;        // Vert succès
+$coursera-warning: #FFB800;        // Orange warning
+$coursera-star: #F8B900;           // Étoiles rating
+
+// Alias pour compatibilité avec anciens composants
+$primary-blue: $coursera-blue;     // Redirige vers Coursera blue
+
+// Legacy (Admin Space)
+$dark-bg: #1A1A1A;
+$light-bg: #F5F3EF;
+$dark-text: #1A1A1A;
+$text-secondary: #666666;
+$text-muted: #999999;
+
+// Accent Colors (Legacy)
+$accent-blue: #4A90E2;
+$accent-yellow: #FFB800;
+
+// ========== COURSERA TYPOGRAPHY ==========
+// Coursera utilise "Source Sans Pro" comme font principale
+$font-primary: 'Source Sans Pro', 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-weight-regular: 400;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Font sizes (Coursera scale)
+$font-size-xs: 0.75rem;      // 12px
+$font-size-sm: 0.875rem;     // 14px
+$font-size-base: 1rem;       // 16px
+$font-size-md: 1.125rem;     // 18px
+$font-size-lg: 1.25rem;      // 20px
+$font-size-xl: 1.5rem;       // 24px
+$font-size-xxl: 2rem;        // 32px
+$font-size-xxxl: 2.5rem;     // 40px
+
+// Line heights
+$line-height-tight: 1.2;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// Spacing
+$spacing-xs: 8px;
+$spacing-sm: 16px;
+$spacing-md: 24px;
+$spacing-lg: 32px;
+$spacing-xl: 48px;
+$spacing-xxl: 64px;
+
+// Border Radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-round: 50%;
+
+// Shadows
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+$shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+$shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.20);
+
+// Transitions
+$transition-fast: 0.2s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.4s ease;
+
+// Breakpoints
+$breakpoint-xs: 480px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 968px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1400px;
+
+

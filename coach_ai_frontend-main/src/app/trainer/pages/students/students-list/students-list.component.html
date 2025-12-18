@@ -1,0 +1,111 @@
+<div class="students-container">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>Mes Apprenants</h1>
+      <p>Suivez la progression et les performances de vos apprenants</p>
+    </div>
+  </header>
+
+  <!-- At Risk Alert -->
+  <div *ngIf="atRiskStudents.length > 0" class="alert-card">
+    <span class="material-icons">warning</span>
+    <div class="alert-content">
+      <h3>{{ atRiskStudents.length }} apprenant(s) à risque</h3>
+      <p>Nécessitent votre attention</p>
+    </div>
+    <button class="btn-text">Voir détails</button>
+  </div>
+
+  <!-- Filters & Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input 
+        type="text" 
+        placeholder="Rechercher un apprenant..." 
+        [(ngModel)]="searchTerm"
+        (input)="filterStudents()">
+    </div>
+
+    <div class="filter-controls">
+      <select [(ngModel)]="selectedFormation" (change)="filterStudents()">
+        <option value="all">Toutes les formations</option>
+      </select>
+
+      <div class="view-toggle">
+        <button 
+          [class.active]="viewMode === 'list'" 
+          (click)="viewMode = 'list'">
+          <span class="material-icons">view_list</span>
+        </button>
+        <button 
+          [class.active]="viewMode === 'grid'" 
+          (click)="viewMode = 'grid'">
+          <span class="material-icons">view_module</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Students List -->
+  <div *ngIf="!isLoading && filteredStudents.length > 0" 
+       [class.grid-view]="viewMode === 'grid'"
+       [class.list-view]="viewMode === 'list'"
+       class="students-list">
+    
+    <div *ngFor="let student of filteredStudents" 
+         class="student-card"
+         [routerLink]="['/trainer/students', student.studentId]">
+      
+      <div class="student-avatar">
+        <img *ngIf="student.studentAvatar" [src]="student.studentAvatar" [alt]="student.studentName">
+        <span *ngIf="!student.studentAvatar" class="material-icons">person</span>
+      </div>
+
+      <div class="student-info">
+        <h3>{{ student.studentName }}</h3>
+        <p class="formation">{{ student.formationName }}</p>
+        
+        <div class="stats-row">
+          <div class="stat-item">
+            <span class="label">Progression</span>
+            <div class="progress-bar">
+              <div class="progress-fill" 
+                   [style.width.%]="student.overallProgress"
+                   [style.background]="getProgressColor(student.overallProgress)"></div>
+            </div>
+            <span class="value">{{ student.overallProgress }}%</span>
+          </div>
+
+          <div class="stat-item">
+            <span class="label">Performance</span>
+            <span class="value badge">{{ getPerformanceLabel(student.averageScore) }}</span>
+          </div>
+
+          <div class="stat-item">
+            <span class="label">Temps d'étude</span>
+            <span class="value">{{ student.timeSpent }}h</span>
+          </div>
+        </div>
+      </div>
+
+      <span class="material-icons chevron">chevron_right</span>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredStudents.length === 0" class="empty-state">
+    <span class="material-icons">people_outline</span>
+    <h3>Aucun apprenant trouvé</h3>
+    <p>Modifiez vos filtres pour voir plus de résultats</p>
+  </div>
+</div>
+
+
+

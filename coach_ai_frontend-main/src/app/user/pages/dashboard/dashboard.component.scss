@@ -1,0 +1,676 @@
+@import '../../../../styles/variables';
+
+.dashboard-page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// Welcome Section
+.welcome-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding: 32px;
+  background: linear-gradient(135deg, $primary-green 0%, darken($primary-green, 10%) 100%);
+  border-radius: 16px;
+  color: white;
+
+  .welcome-content {
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: white !important; // Force le titre "Bon après-midi, Marie ! 👋" en blanc
+    }
+
+    p {
+      font-size: 1rem;
+      opacity: 0.95;
+      color: white !important; // Force le texte en blanc
+    }
+  }
+
+  .welcome-stats {
+    display: flex;
+    gap: 24px;
+
+    .stat-mini {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      color: white !important; // Force tout le texte des stats en blanc
+
+      .material-icons {
+        font-size: 32px;
+        color: white !important; // Force les icônes en blanc
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 2px;
+        color: white !important; // Force "5 jours" et "2.5h" en blanc
+      }
+
+      p {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        color: white !important; // Force les labels en blanc
+      }
+    }
+  }
+}
+
+// Dashboard Grid
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+// Cards
+.card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  &.card-primary {
+    background: linear-gradient(135deg, $primary-green 0%, darken($primary-green, 10%) 100%);
+    color: white !important;
+
+    // Force tous les éléments et leurs enfants en blanc
+    * {
+      color: white !important;
+    }
+
+    .card-header,
+    .card-body,
+    .card-footer {
+      color: white !important;
+    }
+
+    // Force tous les titres en blanc
+    h1, h2, h3, h4, h5, h6 {
+      color: white !important;
+    }
+
+    // Force tous les textes en blanc
+    p, span, strong, div, label, a {
+      color: white !important;
+    }
+
+    // Force les icônes en blanc
+    .material-icons,
+    span.material-icons {
+      color: white !important;
+    }
+
+    // Badge de leçon
+    .lesson-badge {
+      background: rgba(255, 255, 255, 0.2) !important;
+      color: white !important;
+    }
+
+    // Métadonnées de leçon
+    .lesson-meta,
+    .meta-item {
+      color: rgba(255, 255, 255, 0.95) !important;
+
+      span {
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+    }
+
+    // Texte secondaire légèrement transparent
+    .text-secondary {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    // Bouton primaire dans carte verte
+    .btn-primary {
+      background: white !important;
+      color: $primary-green !important;
+
+      .material-icons {
+        color: $primary-green !important;
+      }
+    }
+  }
+
+  &.card-wide {
+    grid-column: span 2;
+  }
+
+  &.card-actions {
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 24px 16px;
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: $dark-text;
+      margin: 0;
+    }
+
+    .material-icons {
+      color: $primary-green;
+      font-size: 28px;
+    }
+  }
+
+  .card-body {
+    flex: 1;
+    padding: 0 24px 20px;
+  }
+
+  .card-footer {
+    padding: 16px 24px;
+    border-top: 1px solid $light-bg;
+  }
+}
+
+// Lesson Card
+.lesson-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.lesson-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+
+    .material-icons {
+      font-size: 18px;
+    }
+  }
+}
+
+// Progress Circle
+.progress-circle {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 20px auto;
+
+  svg {
+    transform: rotate(-90deg);
+  }
+
+  .progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+
+    .progress-percentage {
+      display: block;
+      font-size: 2rem;
+      font-weight: 700;
+      color: $primary-green;
+    }
+
+    .progress-label {
+      display: block;
+      font-size: 0.85rem;
+      color: $text-secondary;
+      margin-top: 4px;
+    }
+  }
+}
+
+.progress-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 24px;
+
+  .progress-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .material-icons {
+      font-size: 32px;
+      color: $primary-green;
+    }
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      strong {
+        font-size: 1.25rem;
+        color: $dark-text;
+      }
+
+      span {
+        font-size: 0.85rem;
+        color: $text-secondary;
+      }
+    }
+  }
+}
+
+// Goal Progress
+.goal-progress {
+  margin-bottom: 20px;
+
+  .goal-bar {
+    height: 12px;
+    background: $light-bg;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+
+    .goal-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, $primary-green, lighten($primary-green, 15%));
+      transition: width 0.3s ease;
+      border-radius: 12px;
+    }
+  }
+
+  .goal-text {
+    text-align: center;
+    font-size: 0.95rem;
+    color: $text-secondary;
+
+    strong {
+      color: $primary-green;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.goal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .goal-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: $light-bg;
+    border-radius: 10px;
+
+    .material-icons {
+      color: $primary-green;
+      font-size: 24px;
+    }
+
+    span {
+      font-size: 0.9rem;
+      color: $dark-text;
+    }
+  }
+}
+
+// Recommendations
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.recommendation-card {
+  padding: 20px;
+  background: $light-bg;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .rec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .rec-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba($primary-green, 0.1);
+      color: $primary-green;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+
+      &.ai-badge {
+        background: linear-gradient(135deg, #9333ea, #a855f7);
+        color: white;
+      }
+
+      .material-icons {
+        font-size: 16px;
+      }
+    }
+
+    .rec-type {
+      font-size: 0.75rem;
+      color: $text-secondary;
+      font-weight: 600;
+    }
+  }
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $dark-text;
+    margin: 0;
+  }
+
+  p {
+    font-size: 0.85rem;
+    color: $text-secondary;
+    margin: 0;
+  }
+
+  .rec-reason {
+    font-size: 0.8rem;
+    color: $text-muted;
+    font-style: italic;
+  }
+
+  .btn {
+    margin-top: auto;
+  }
+}
+
+// Activity List
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+
+  &:hover {
+    background: $light-bg;
+  }
+
+  .activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &.activity-lesson_completed {
+      background: rgba(16, 185, 129, 0.1);
+      .material-icons { color: #10b981; }
+    }
+
+    &.activity-quiz_passed {
+      background: rgba($primary-green, 0.1);
+      .material-icons { color: $primary-green; }
+    }
+
+    &.activity-exercise_submitted {
+      background: rgba(245, 158, 11, 0.1);
+      .material-icons { color: #f59e0b; }
+    }
+
+    &.activity-chat_session {
+      background: rgba(147, 51, 234, 0.1);
+      .material-icons { color: #9333ea; }
+    }
+
+    .material-icons {
+      font-size: 20px;
+    }
+  }
+
+  .activity-content {
+    flex: 1;
+
+    strong {
+      font-size: 0.95rem;
+      color: $dark-text;
+      font-weight: 600;
+    }
+
+    p {
+      font-size: 0.85rem;
+      color: $text-secondary;
+      margin: 4px 0;
+    }
+
+    .activity-time {
+      font-size: 0.75rem;
+      color: $text-muted;
+    }
+  }
+}
+
+// Notifications List
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border-left: 4px solid transparent;
+  background: $light-bg;
+  transition: all 0.3s ease;
+
+  &.notif-high {
+    border-left-color: #dc2626;
+  }
+
+  &.notif-medium {
+    border-left-color: #f59e0b;
+  }
+
+  &.notif-low {
+    border-left-color: $primary-green;
+  }
+
+  .material-icons {
+    color: $primary-green;
+    font-size: 24px;
+  }
+
+  .notification-content {
+    flex: 1;
+
+    strong {
+      font-size: 0.95rem;
+      color: $dark-text;
+      font-weight: 600;
+    }
+
+    p {
+      font-size: 0.85rem;
+      color: $text-secondary;
+      margin: 4px 0 0;
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: $text-muted;
+  font-size: 0.95rem;
+}
+
+// Actions Grid
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: none;
+  border: 2px solid $light-bg;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: $dark-text;
+  font-weight: 600;
+
+  .material-icons {
+    font-size: 32px;
+    color: $primary-green;
+  }
+
+  &:hover {
+    border-color: $primary-green;
+    background: rgba($primary-green, 0.05);
+    transform: translateY(-2px);
+  }
+}
+
+// Buttons
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &.btn-primary {
+    background: $primary-green;
+    color: white;
+
+    &:hover {
+      background: darken($primary-green, 10%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba($primary-green, 0.3);
+    }
+  }
+
+  &.btn-secondary {
+    background: $light-bg;
+    color: $dark-text;
+
+    &:hover {
+      background: darken($light-bg, 5%);
+    }
+  }
+
+  &.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+  }
+
+  .material-icons {
+    font-size: 20px;
+  }
+}
+
+// Responsive
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card.card-wide {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px;
+
+    .welcome-stats {
+      width: 100%;
+      flex-direction: column;
+      gap: 12px;
+
+      .stat-mini {
+        width: 100%;
+      }
+    }
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .recommendations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .progress-stats {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+
+
+

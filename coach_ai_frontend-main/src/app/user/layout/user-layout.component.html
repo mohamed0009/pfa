@@ -1,0 +1,188 @@
+<!-- COURSERA-STYLE LAYOUT -->
+<div class="coursera-layout">
+  <!-- Top Navigation Bar (Fixed) -->
+  <header class="coursera-header">
+    <div class="header-container">
+      <!-- Logo -->
+      <div class="header-logo" [routerLink]="['/user/dashboard']">
+        <span class="material-icons logo-icon">school</span>
+        <span class="logo-text">Coach IA</span>
+      </div>
+
+      <!-- Main Navigation -->
+      <nav class="header-nav">
+        <a
+          routerLink="/user/courses"
+          routerLinkActive="active"
+          class="nav-link">
+          Explorer
+        </a>
+        <a
+          routerLink="/user/dashboard"
+          routerLinkActive="active"
+          class="nav-link">
+          Mes cours
+        </a>
+        <a
+          routerLink="/user/progress"
+          routerLinkActive="active"
+          class="nav-link">
+          Progression
+        </a>
+      </nav>
+
+      <!-- Search Bar -->
+      <div class="header-search">
+        <span class="material-icons search-icon">search</span>
+        <input
+          type="text"
+          placeholder="Que souhaitez-vous apprendre ?"
+          class="search-input">
+      </div>
+
+      <!-- Right Actions -->
+      <div class="header-actions">
+        <!-- AI Coach Button -->
+        <button class="action-btn" [routerLink]="['/user/chat']" title="Coach IA">
+          <span class="material-icons">psychology</span>
+        </button>
+
+        <!-- Notifications -->
+        <button class="action-btn" [routerLink]="['/user/notifications']" title="Notifications">
+          <span class="material-icons">notifications</span>
+          <span class="notification-badge" *ngIf="unreadNotifications > 0">
+            {{ unreadNotifications }}
+          </span>
+        </button>
+
+        <!-- User Profile Dropdown -->
+        <div class="user-menu" (click)="showProfileMenu = !showProfileMenu">
+          <img
+            [src]="currentUser?.avatarUrl"
+            alt="Profile"
+            class="user-avatar">
+          <span class="material-icons dropdown-arrow">expand_more</span>
+
+          <!-- Dropdown Menu -->
+          <div class="user-dropdown" *ngIf="showProfileMenu" (click)="$event.stopPropagation()">
+            <div class="dropdown-header">
+              <img
+                [src]="currentUser?.avatarUrl"
+                alt="Profile"
+                class="dropdown-avatar">
+              <div class="dropdown-info">
+                <div class="dropdown-name">
+                  {{ currentUser?.firstName }} {{ currentUser?.lastName }}
+                </div>
+                <div class="dropdown-email">{{ currentUser?.email }}</div>
+              </div>
+            </div>
+
+            <div class="dropdown-divider"></div>
+
+            <a
+              class="dropdown-item"
+              [routerLink]="['/user/profile']"
+              (click)="showProfileMenu = false">
+              <span class="material-icons">person</span>
+              Mon profil
+            </a>
+
+            <a
+              class="dropdown-item"
+              [routerLink]="['/user/courses']"
+              (click)="showProfileMenu = false">
+              <span class="material-icons">school</span>
+              Mes cours
+            </a>
+
+            <a
+              class="dropdown-item"
+              [routerLink]="['/user/progress']"
+              (click)="showProfileMenu = false">
+              <span class="material-icons">trending_up</span>
+              Ma progression
+            </a>
+
+            <div class="dropdown-divider"></div>
+
+            <a
+              class="dropdown-item"
+              [routerLink]="['/user/support']"
+              (click)="showProfileMenu = false">
+              <span class="material-icons">help</span>
+              Aide
+            </a>
+
+            <div class="dropdown-divider"></div>
+
+            <button class="dropdown-item logout-btn" (click)="logout()">
+              <span class="material-icons">logout</span>
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="coursera-main">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer (Coursera-style) -->
+  <footer class="coursera-footer">
+    <div class="footer-container">
+      <div class="footer-columns">
+        <div class="footer-col">
+          <h4>Coach IA</h4>
+          <ul>
+            <li><a href="#">À propos</a></li>
+            <li><a href="#">Notre équipe</a></li>
+            <li><a href="#">Carrières</a></li>
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Apprenants</h4>
+          <ul>
+            <li><a [routerLink]="['/user/courses']">Catalogue de cours</a></li>
+            <li><a [routerLink]="['/user/chat']">Coach IA</a></li>
+            <li><a [routerLink]="['/user/support']">Support</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Plus</h4>
+          <ul>
+            <li><a href="#">Conditions d'utilisation</a></li>
+            <li><a href="#">Confidentialité</a></li>
+            <li><a href="#">Accessibilité</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col footer-social">
+          <h4>Suivez-nous</h4>
+          <div class="social-links">
+            <a href="#" class="social-link">
+              <span class="material-icons">facebook</span>
+            </a>
+            <a href="#" class="social-link">
+              <span class="material-icons">link</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Coach IA. Tous droits réservés.</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+
+
+

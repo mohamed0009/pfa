@@ -1,0 +1,249 @@
+<div class="dashboard-page">
+  <!-- Welcome Section -->
+  <div class="welcome-section">
+    <div class="welcome-content">
+      <h1>{{ getDayGreeting() }}, {{ currentUser?.firstName }} ! 👋</h1>
+      <p>Continuez votre apprentissage là où vous vous êtes arrêté</p>
+    </div>
+    <div class="welcome-stats">
+      <div class="stat-mini">
+        <span class="material-icons">local_fire_department</span>
+        <div>
+          <h3>{{ userProgress?.currentStreak || 0 }} jours</h3>
+          <p>Série actuelle</p>
+        </div>
+      </div>
+      <div class="stat-mini">
+        <span class="material-icons">schedule</span>
+        <div>
+          <h3>{{ studyTimeToday }}h</h3>
+          <p>Aujourd'hui</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-grid">
+    <!-- Continue Learning Card -->
+    <div class="card card-primary" *ngIf="nextLesson">
+      <div class="card-header">
+        <h2>Continuer l'Apprentissage</h2>
+        <span class="material-icons">play_circle</span>
+      </div>
+      <div class="card-body">
+        <div class="lesson-badge">{{ nextLesson.type }}</div>
+        <h3>{{ nextLesson.title }}</h3>
+        <p>{{ nextLesson.description }}</p>
+        <div class="lesson-meta">
+          <span class="meta-item">
+            <span class="material-icons">schedule</span>
+            {{ nextLesson.duration }} min
+          </span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-primary" [routerLink]="['/user/learning-path']">
+          Reprendre
+          <span class="material-icons">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Ma Progression</h2>
+        <span class="material-icons">trending_up</span>
+      </div>
+      <div class="card-body">
+        <div class="progress-circle">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" stroke-width="8"></circle>
+            <circle 
+              cx="50" 
+              cy="50" 
+              r="45" 
+              fill="none" 
+              [attr.stroke]="getProgressColor(userProgress?.overallProgress || 0)"
+              stroke-width="8"
+              [style.stroke-dasharray]="(2 * Math.PI * 45)"
+              [style.stroke-dashoffset]="(2 * Math.PI * 45) * (1 - (userProgress?.overallProgress || 0) / 100)"
+              stroke-linecap="round"
+              transform="rotate(-90 50 50)"></circle>
+          </svg>
+          <div class="progress-text">
+            <span class="progress-percentage">{{ userProgress?.overallProgress || 0 }}%</span>
+            <span class="progress-label">Complété</span>
+          </div>
+        </div>
+        
+        <div class="progress-stats">
+          <div class="progress-stat-item">
+            <span class="material-icons">school</span>
+            <div>
+              <strong>{{ userProgress?.modulesCompleted || 0 }}</strong> / {{ userProgress?.totalModules || 0 }}
+              <span>Modules</span>
+            </div>
+          </div>
+          <div class="progress-stat-item">
+            <span class="material-icons">quiz</span>
+            <div>
+              <strong>{{ userProgress?.quizzesCompleted || 0 }}</strong>
+              <span>Quiz réussis</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-secondary" [routerLink]="['/user/progress']">
+          Voir détails
+        </button>
+      </div>
+    </div>
+
+    <!-- Weekly Goal -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Objectif Hebdomadaire</h2>
+        <span class="material-icons">flag</span>
+      </div>
+      <div class="card-body">
+        <div class="goal-progress">
+          <div class="goal-bar">
+            <div class="goal-bar-fill" [style.width.%]="userProgress?.weeklyGoalProgress || 0"></div>
+          </div>
+          <p class="goal-text">
+            <strong>{{ userProgress?.weeklyGoalProgress || 0 }}%</strong> de l'objectif atteint
+          </p>
+        </div>
+        
+        <div class="goal-details">
+          <div class="goal-item">
+            <span class="material-icons">schedule</span>
+            <span>{{ (userProgress?.totalStudyTime || 0) % 10 | number:'1.1-1' }}h / {{ currentUser?.preferences?.weeklyGoalHours || 10 }}h</span>
+          </div>
+          <div class="goal-item">
+            <span class="material-icons">check_circle</span>
+            <span>{{ userProgress?.lessonsCompleted || 0 }} leçons cette semaine</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="card card-wide" *ngIf="recommendations.length > 0">
+      <div class="card-header">
+        <h2>Recommandations pour Vous</h2>
+        <span class="material-icons">auto_awesome</span>
+      </div>
+      <div class="card-body">
+        <div class="recommendations-grid">
+          <div class="recommendation-card" *ngFor="let rec of recommendations">
+            <div class="rec-header">
+              <span class="rec-badge" [class.ai-badge]="rec.isAIGenerated">
+                <span class="material-icons">{{ rec.isAIGenerated ? 'psychology' : 'recommend' }}</span>
+                {{ rec.isAIGenerated ? 'IA' : 'Recommandé' }}
+              </span>
+              <span class="rec-type">{{ rec.type }}</span>
+            </div>
+            <h4>{{ rec.title }}</h4>
+            <p>{{ rec.description }}</p>
+            <p class="rec-reason">{{ rec.reason }}</p>
+            <button class="btn btn-sm btn-secondary">Découvrir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Activité Récente</h2>
+        <span class="material-icons">history</span>
+      </div>
+      <div class="card-body">
+        <div class="activity-list" *ngIf="(userProgress?.recentActivity || []).length > 0">
+          <div class="activity-item" *ngFor="let activity of (userProgress?.recentActivity || []).slice(0, 5)">
+            <span class="activity-icon" [class]="'activity-' + activity.type">
+              <span class="material-icons">
+                {{ activity.type === 'lesson_completed' ? 'check_circle' :
+                   activity.type === 'quiz_passed' ? 'psychology' :
+                   activity.type === 'exercise_submitted' ? 'assignment_turned_in' :
+                   activity.type === 'chat_session' ? 'chat' : 'school' }}
+              </span>
+            </span>
+            <div class="activity-content">
+              <strong>{{ activity.title }}</strong>
+              <p>{{ activity.description }}</p>
+              <span class="activity-time">{{ activity.timestamp | date:'short' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-secondary" [routerLink]="['/user/progress']">
+          Voir tout
+        </button>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Notifications</h2>
+        <span class="material-icons">notifications</span>
+      </div>
+      <div class="card-body">
+        <div class="notifications-list" *ngIf="recentNotifications.length > 0">
+          <div class="notification-item" *ngFor="let notif of recentNotifications" [class]="'notif-' + notif.priority">
+            <span class="material-icons">{{ getNotificationIcon(notif.type) }}</span>
+            <div class="notification-content">
+              <strong>{{ notif.title }}</strong>
+              <p>{{ notif.message }}</p>
+            </div>
+          </div>
+        </div>
+        <p *ngIf="recentNotifications.length === 0" class="empty-state">
+          Aucune nouvelle notification
+        </p>
+      </div>
+      <div class="card-footer">
+        <button class="btn btn-secondary" [routerLink]="['/user/notifications']">
+          Voir toutes
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card card-actions">
+      <div class="card-header">
+        <h2>Actions Rapides</h2>
+      </div>
+      <div class="card-body">
+        <div class="actions-grid">
+          <button class="action-btn" [routerLink]="['/user/chat']">
+            <span class="material-icons">psychology</span>
+            <span>Coach IA</span>
+          </button>
+          <button class="action-btn" [routerLink]="['/user/assessments']">
+            <span class="material-icons">quiz</span>
+            <span>Quiz</span>
+          </button>
+          <button class="action-btn" [routerLink]="['/user/search']">
+            <span class="material-icons">search</span>
+            <span>Rechercher</span>
+          </button>
+          <button class="action-btn" [routerLink]="['/user/support']">
+            <span class="material-icons">support_agent</span>
+            <span>Support</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+

@@ -1,0 +1,244 @@
+<div class="evaluation-container">
+  <header class="page-header">
+    <h1>
+      <span class="material-icons">fact_check</span>
+      Évaluation
+    </h1>
+    <p>Consultez et évaluez les résultats des apprenants</p>
+  </header>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-nav">
+    <button 
+      class="tab-btn"
+      [class.active]="activeTab === 'exercises'"
+      (click)="activeTab = 'exercises'">
+      <span class="material-icons">assignment</span>
+      Exercices ({{ exerciseReviews.length }})
+    </button>
+    <button 
+      class="tab-btn"
+      [class.active]="activeTab === 'quizzes'"
+      (click)="activeTab = 'quizzes'">
+      <span class="material-icons">quiz</span>
+      Quiz ({{ quizReviews.length }})
+    </button>
+    <button 
+      class="tab-btn"
+      [class.active]="activeTab === 'pending'"
+      (click)="activeTab = 'pending'">
+      <span class="material-icons">pending_actions</span>
+      En Attente ({{ pendingReviews }})
+    </button>
+  </div>
+
+  <!-- Exercises Tab -->
+  <div *ngIf="activeTab === 'exercises'" class="tab-content">
+    <div class="filters-card">
+      <div class="filter-group">
+        <label>Formation</label>
+        <select [(ngModel)]="selectedFormation" class="form-control" (change)="filterResults()">
+          <option value="all">Toutes les formations</option>
+          <option *ngFor="let formation of formations" [value]="formation.id">{{ formation.title }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Statut</label>
+        <select [(ngModel)]="selectedStatus" class="form-control" (change)="filterResults()">
+          <option value="all">Tous les statuts</option>
+          <option value="pending">En attente</option>
+          <option value="reviewed">Corrigé</option>
+          <option value="validated">Validé</option>
+        </select>
+      </div>
+
+      <div class="search-group">
+        <span class="material-icons">search</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm"
+          (input)="filterResults()"
+          placeholder="Rechercher un apprenant..."
+          class="search-input">
+      </div>
+    </div>
+
+    <div class="reviews-grid">
+      <div *ngFor="let review of filteredExercises" class="review-card">
+        <div class="review-header">
+          <div class="student-info">
+            <div class="student-avatar">
+              <span class="material-icons">person</span>
+            </div>
+            <div>
+              <h3>{{ review.studentName }}</h3>
+              <p>{{ review.exerciseTitle || review.exerciseName }}</p>
+            </div>
+          </div>
+          <span class="status-badge" [class]="review.status">
+            {{ getStatusLabel(review.status) }}
+          </span>
+        </div>
+
+        <div class="review-content">
+          <div class="info-row">
+            <div class="info-item">
+              <span class="material-icons">event</span>
+              <span>{{ review.submittedAt | date:'short' }}</span>
+            </div>
+            <div class="info-item" *ngIf="review.timeSpent">
+              <span class="material-icons">timer</span>
+              <span>{{ review.timeSpent }} min</span>
+            </div>
+            <div class="info-item" *ngIf="review.score">
+              <span class="material-icons">star</span>
+              <span>{{ review.score }}/100</span>
+            </div>
+          </div>
+
+          <div class="answer-preview" *ngIf="review.answerPreview">
+            <p>{{ review.answerPreview }}</p>
+          </div>
+          <div class="answer-preview" *ngIf="!review.answerPreview && review.content">
+            <p>{{ getContentPreview(review.content) }}</p>
+          </div>
+        </div>
+
+        <div class="review-actions">
+          <button class="btn btn-secondary" (click)="viewDetail(review.id, 'exercise')">
+            <span class="material-icons">visibility</span>
+            Voir Détails
+          </button>
+          <button class="btn btn-primary" (click)="startReview(review.id, 'exercise')" *ngIf="review.status === 'pending'">
+            <span class="material-icons">rate_review</span>
+            Corriger
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filteredExercises.length === 0" class="empty-state">
+      <span class="material-icons">inbox</span>
+      <h3>Aucun exercice trouvé</h3>
+      <p>Il n'y a pas d'exercices correspondant à vos critères</p>
+    </div>
+  </div>
+
+  <!-- Quizzes Tab -->
+  <div *ngIf="activeTab === 'quizzes'" class="tab-content">
+    <div class="filters-card">
+      <div class="filter-group">
+        <label>Formation</label>
+        <select [(ngModel)]="selectedFormation" class="form-control" (change)="filterResults()">
+          <option value="all">Toutes les formations</option>
+          <option *ngFor="let formation of formations" [value]="formation.id">{{ formation.title }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Score minimum</label>
+        <input type="number" [(ngModel)]="minScore" class="form-control" (change)="filterResults()" min="0" max="100">
+      </div>
+
+      <div class="search-group">
+        <span class="material-icons">search</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm"
+          (input)="filterResults()"
+          placeholder="Rechercher un apprenant..."
+          class="search-input">
+      </div>
+    </div>
+
+    <div class="reviews-grid">
+      <div *ngFor="let review of filteredQuizzes" class="review-card">
+        <div class="review-header">
+          <div class="student-info">
+            <div class="student-avatar">
+              <span class="material-icons">person</span>
+            </div>
+            <div>
+              <h3>{{ review.studentName }}</h3>
+              <p>{{ review.quizTitle || review.quizName }}</p>
+            </div>
+          </div>
+          <span class="score-badge" [class.high]="review.score >= 80" [class.medium]="review.score >= 60 && review.score < 80" [class.low]="review.score < 60">
+            {{ review.score }}/100
+          </span>
+        </div>
+
+        <div class="review-content">
+          <div class="info-row">
+            <div class="info-item">
+              <span class="material-icons">event</span>
+              <span>{{ review.completedAt | date:'short' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="material-icons">timer</span>
+              <span>{{ review.timeSpent }} min</span>
+            </div>
+            <div class="info-item">
+              <span class="material-icons">help</span>
+              <span>{{ review.correctAnswers }}/{{ review.totalQuestions }}</span>
+            </div>
+          </div>
+
+          <div class="progress-bar-container">
+            <div class="progress-bar" [style.width.%]="review.score"></div>
+          </div>
+        </div>
+
+        <div class="review-actions">
+          <button class="btn btn-secondary" (click)="viewDetail(review.id, 'quiz')">
+            <span class="material-icons">visibility</span>
+            Voir Détails
+          </button>
+          <button class="btn btn-primary" (click)="addFeedback(review.id)" *ngIf="review.hasFeedback === false || !review.feedback">
+            <span class="material-icons">comment</span>
+            Ajouter un Commentaire
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="filteredQuizzes.length === 0" class="empty-state">
+      <span class="material-icons">inbox</span>
+      <h3>Aucun quiz trouvé</h3>
+      <p>Il n'y a pas de quiz correspondant à vos critères</p>
+    </div>
+  </div>
+
+  <!-- Pending Tab -->
+  <div *ngIf="activeTab === 'pending'" class="tab-content">
+    <div class="pending-section">
+      <h3>Corrections en Attente</h3>
+      <div class="pending-list">
+        <div *ngFor="let item of pendingItems" class="pending-item" [class.urgent]="item.isUrgent">
+          <div class="pending-icon">
+            <span class="material-icons">{{ item.type === 'exercise' ? 'assignment' : 'quiz' }}</span>
+          </div>
+          <div class="pending-info">
+            <h4>{{ item.title }}</h4>
+            <p>{{ item.studentName }} • {{ item.submittedAt | date:'short' }}</p>
+          </div>
+          <span class="urgent-badge" *ngIf="item.isUrgent">Urgent</span>
+          <button class="btn btn-primary" (click)="startReview(item.id, item.type)">
+            <span class="material-icons">rate_review</span>
+            Corriger Maintenant
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des évaluations...</p>
+  </div>
+</div>
+
+
+

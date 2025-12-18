@@ -1,0 +1,699 @@
+@import '../../../styles/variables';
+
+// ========== HERO SECTION ==========
+.hero {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8fffe 0%, #ffffff 100%);
+}
+
+// ========== ANIMATED BACKGROUND ==========
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.6;
+    animation: float 20s ease-in-out infinite;
+
+    &.orb-1 {
+        width: 500px;
+        height: 500px;
+        background: linear-gradient(135deg, rgba($coursera-blue, 0.3), rgba($coursera-blue, 0.1));
+        top: -10%;
+        right: -5%;
+        animation-delay: 0s;
+    }
+
+    &.orb-2 {
+        width: 400px;
+        height: 400px;
+        background: linear-gradient(135deg, rgba($coursera-blue, 0.2), rgba($coursera-success, 0.1));
+        bottom: 10%;
+        left: -5%;
+        animation-delay: 7s;
+    }
+
+    &.orb-3 {
+        width: 350px;
+        height: 350px;
+        background: linear-gradient(135deg, rgba($coursera-success, 0.2), rgba($coursera-blue, 0.1));
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation-delay: 14s;
+    }
+}
+
+.grid-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba($coursera-blue, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba($coursera-blue, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.5;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(30px, -30px) scale(1.1);
+    }
+
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+}
+
+// ========== HERO CONTENT ==========
+.hero-content {
+    position: relative;
+    z-index: 1;
+    padding: 20px 0 80px;
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+}
+
+// ========== LEFT SIDE: TEXT ==========
+.hero-text {
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 20px;
+        background: linear-gradient(135deg, rgba($coursera-blue, 0.1), rgba($coursera-blue, 0.05));
+        border: 1px solid rgba($coursera-blue, 0.2);
+        border-radius: 50px;
+        color: $coursera-blue;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-semibold;
+        margin-bottom: 24px;
+        animation: slideInLeft 0.8s ease-out;
+
+        .material-icons {
+            font-size: 18px;
+        }
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: $font-weight-bold;
+        line-height: 1.2;
+        color: $coursera-text;
+        margin-bottom: 24px;
+        animation: slideInLeft 0.8s ease-out 0.2s both;
+
+        .gradient-text {
+            background: linear-gradient(135deg, $coursera-blue, $coursera-success);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: -8px;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(90deg, $coursera-blue, $coursera-success);
+                border-radius: 2px;
+                opacity: 0.3;
+            }
+        }
+
+        .highlight-text {
+            color: $coursera-text;
+            position: relative;
+
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: 8px;
+                left: 0;
+                width: 100%;
+                height: 12px;
+                background: rgba($coursera-warning, 0.3);
+                z-index: -1;
+                border-radius: 4px;
+            }
+        }
+    }
+
+    .hero-subtitle {
+        font-size: $font-size-lg;
+        line-height: 1.7;
+        color: $coursera-text-secondary;
+        margin-bottom: 40px;
+        max-width: 600px;
+        animation: slideInLeft 0.8s ease-out 0.4s both;
+    }
+}
+
+// ========== HERO ACTIONS ==========
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 48px;
+    animation: slideInLeft 0.8s ease-out 0.6s both;
+}
+
+.btn-primary-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    background: linear-gradient(135deg, $coursera-blue, $coursera-success);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    cursor: pointer;
+    transition: all $transition-normal;
+    box-shadow: 0 8px 24px rgba($coursera-blue, 0.3);
+
+    .material-icons {
+        font-size: 20px;
+        transition: transform $transition-normal;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba($coursera-blue, 0.4);
+
+        .material-icons {
+            transform: translateX(4px);
+        }
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+.btn-outline-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    background: transparent;
+    color: $coursera-blue;
+    border: 2px solid $coursera-blue;
+    border-radius: 50px;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    cursor: pointer;
+    transition: all $transition-normal;
+
+    .material-icons {
+        font-size: 24px;
+    }
+
+    &:hover {
+        background: rgba($coursera-blue, 0.05);
+        transform: translateY(-2px);
+    }
+}
+
+// ========== TRUST SECTION ==========
+.trust-section {
+    animation: slideInLeft 0.8s ease-out 0.8s both;
+
+    .trust-label {
+        font-size: $font-size-sm;
+        color: $coursera-text-muted;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .trust-logos {
+        display: flex;
+        gap: 32px;
+        flex-wrap: wrap;
+    }
+
+    .trust-logo {
+        font-size: $font-size-sm;
+        color: $coursera-text-secondary;
+        font-weight: $font-weight-semibold;
+        opacity: 0.7;
+        transition: opacity $transition-normal;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+}
+
+// ========== RIGHT SIDE: VISUAL ==========
+.hero-visual {
+    position: relative;
+    height: 600px;
+}
+
+.visual-card {
+    position: absolute;
+    background: white;
+    border-radius: $radius-lg;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    transition: all $transition-normal;
+
+    &:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: $radius-md;
+        background: linear-gradient(135deg, rgba($coursera-blue, 0.1), rgba($coursera-success, 0.1));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+
+        .material-icons {
+            font-size: 28px;
+            color: $coursera-blue;
+        }
+    }
+
+    h4 {
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $coursera-text;
+        margin-bottom: 8px;
+    }
+
+    p {
+        font-size: $font-size-sm;
+        color: $coursera-text-secondary;
+        margin-bottom: 16px;
+    }
+}
+
+.card-1 {
+    top: 0;
+    left: 0;
+    width: 280px;
+    animation: slideInRight 0.8s ease-out 0.3s both;
+}
+
+.card-2 {
+    top: 180px;
+    right: 0;
+    width: 260px;
+    animation: slideInRight 0.8s ease-out 0.5s both;
+}
+
+.card-3 {
+    bottom: 0;
+    left: 40px;
+    width: 240px;
+    animation: slideInRight 0.8s ease-out 0.7s both;
+}
+
+// Progress Bar
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba($coursera-blue, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, $coursera-blue, $coursera-success);
+    border-radius: 4px;
+    animation: fillProgress 2s ease-out;
+}
+
+@keyframes fillProgress {
+    from {
+        width: 0;
+    }
+}
+
+// AI Indicator
+.ai-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: $font-size-xs;
+    color: $coursera-success;
+    font-weight: $font-weight-semibold;
+
+    .pulse {
+        width: 8px;
+        height: 8px;
+        background: $coursera-success;
+        border-radius: 50%;
+        animation: pulse 2s ease-in-out infinite;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+// Stats Mini
+.stats-mini {
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .stat-value {
+        font-size: $font-size-xl;
+        font-weight: $font-weight-bold;
+        color: $coursera-success;
+    }
+
+    .stat-label {
+        font-size: $font-size-xs;
+        color: $coursera-text-muted;
+    }
+}
+
+// Floating Elements
+.floating-element {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba($coursera-blue, 0.1), rgba($coursera-success, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+    .material-icons {
+        font-size: 32px;
+        color: $coursera-blue;
+    }
+
+    &.element-1 {
+        top: 60px;
+        right: 60px;
+        animation: floatSlow 6s ease-in-out infinite;
+    }
+
+    &.element-2 {
+        bottom: 120px;
+        right: 180px;
+        animation: floatSlow 8s ease-in-out infinite 2s;
+    }
+}
+
+@keyframes floatSlow {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+
+
+// ========== FEATURES SECTION ==========
+.features-section {
+    position: relative;
+    z-index: 1;
+    padding: 100px 0;
+    background: white;
+}
+
+.section-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 64px;
+
+    h2 {
+        font-size: $font-size-xxxl;
+        font-weight: $font-weight-bold;
+        color: $coursera-text;
+        margin-bottom: 24px;
+        line-height: 1.3;
+    }
+
+    .section-subtitle {
+        font-size: $font-size-lg;
+        color: $coursera-text-secondary;
+        line-height: 1.7;
+    }
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-bottom: 64px;
+}
+
+.feature-card {
+    padding: 40px 32px;
+    background: white;
+    border: 2px solid $coursera-border;
+    border-radius: $radius-lg;
+    transition: all $transition-normal;
+
+    &:hover {
+        border-color: $coursera-blue;
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba($coursera-blue, 0.1);
+
+        .feature-icon {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, $coursera-blue, $coursera-success);
+
+            .material-icons {
+                color: white;
+            }
+        }
+    }
+
+    .feature-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: $radius-md;
+        background: linear-gradient(135deg, rgba($coursera-blue, 0.1), rgba($coursera-success, 0.1));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        transition: all $transition-normal;
+
+        .material-icons {
+            font-size: 36px;
+            color: $coursera-blue;
+            transition: color $transition-normal;
+        }
+    }
+
+    h3 {
+        font-size: $font-size-xl;
+        font-weight: $font-weight-semibold;
+        color: $coursera-text;
+        margin-bottom: 12px;
+    }
+
+    p {
+        font-size: $font-size-base;
+        color: $coursera-text-secondary;
+        line-height: 1.7;
+    }
+}
+
+// ========== CTA SECTION ==========
+.cta-section {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.btn-primary-large {
+    padding: 18px 48px;
+    background: linear-gradient(135deg, $coursera-blue, $coursera-success);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    cursor: pointer;
+    transition: all $transition-normal;
+    box-shadow: 0 8px 24px rgba($coursera-blue, 0.3);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba($coursera-blue, 0.4);
+    }
+}
+
+.btn-text-large {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 32px;
+    background: transparent;
+    color: $coursera-blue;
+    border: none;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    cursor: pointer;
+    transition: all $transition-normal;
+
+    .material-icons {
+        font-size: 24px;
+        transition: transform $transition-normal;
+    }
+
+    &:hover {
+        .material-icons {
+            transform: translateX(4px);
+        }
+    }
+}
+
+// ========== ANIMATIONS ==========
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+// ========== RESPONSIVE DESIGN ==========
+@media (max-width: $breakpoint-lg) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 60px;
+    }
+
+    .hero-visual {
+        height: 400px;
+        margin: 0 auto;
+        max-width: 500px;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: $breakpoint-md) {
+    .hero-content {
+        padding: 20px 0 60px;
+    }
+
+    .hero-text .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .cta-section {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media (max-width: $breakpoint-sm) {
+    .hero-text .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-text .hero-subtitle {
+        font-size: $font-size-base;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .visual-card {
+        width: 100% !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        margin-bottom: 16px;
+    }
+
+    .hero-visual {
+        height: auto;
+    }
+
+    .floating-element {
+        display: none;
+    }
+}

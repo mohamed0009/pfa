@@ -49,7 +49,7 @@ if vectorizer is None:
 
 
 class PredictionRequest(BaseModel):
-    question: str = Field(..., min_length=5, description="Learner question text")
+    question: str = Field(..., min_length=1, description="Learner question text")
     answer: Optional[str] = Field("", description="Reference answer or explanation")
     subject: Optional[str] = Field("unknown")
     topic: Optional[str] = Field("unknown")
@@ -205,9 +205,13 @@ def predict(request: PredictionRequest):
 
 async def call_ollama(question: str, difficulty: str, confidence: float) -> str:
     """Call Ollama API for educational response with context."""
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            prompt = f"""You are an educational AI coach. A student asked: "{question}"
+    max_retries = 2
+    
+    for attempt in range(max_retries):
+        try:
+            # Increased timeout for cold starts (60s)
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                prompt = f"""You are an educational AI coach. A student asked: "{question}"
 
 Based on analysis, this question is assessed as {difficulty} difficulty with {confidence:.1%} confidence.
 
@@ -217,30 +221,36 @@ Provide a helpful, educational response that:
 3. Is encouraging and supportive
 4. Offers learning guidance appropriate for this level"""
 
-            response = await client.post(
-                "http://localhost:11434/api/generate",
-                json={
-                    "model": "qwen2.5:0.5b",
-                    "prompt": prompt,
-                    "stream": False,
-                    "options": {
-                        "temperature": 0.7,
-                        "top_p": 0.9,
-                        "max_tokens": 500
+                response = await client.post(
+                    "http://localhost:11434/api/generate",
+                    json={
+                        "model": "qwen2.5:0.5b",
+                        "prompt": prompt,
+                        "stream": False,
+                        "options": {
+                            "temperature": 0.7,
+                            "top_p": 0.9,
+                            "max_tokens": 500
+                        }
                     }
-                }
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                return result.get("response", "I'm here to help with your educational journey!")
-            else:
-                logger.warning(f"Ollama API error: {response.status_code}")
-                return f"I'd rate this as {difficulty} difficulty. Let me help you understand this topic better..."
+                )
                 
-    except Exception as e:
-        logger.exception("Failed to call Ollama")
-        return f"Based on my analysis, this is a {difficulty} level question. I'm here to guide you through it!"
+                if response.status_code == 200:
+                    result = response.json()
+                    return result.get("response", "I'm here to help with your educational journey!")
+                else:
+                    logger.warning(f"Ollama API error: {response.status_code}")
+                    # Don't retry client errors (4xx), only server errors (5xx)
+                    if response.status_code < 500:
+                         return f"I'd rate this as {difficulty} difficulty. Let me help you understand this topic better..."
+                    
+        except Exception as e:
+            logger.warning(f"Attempt {attempt+1}/{max_retries} failed to call Ollama: {str(e)}")
+            if attempt == max_retries - 1:
+                logger.exception("All attempts to call Ollama failed")
+                return f"Based on my analysis, this is a {difficulty} level question. I'm here to guide you through it!"
+    
+    return f"Based on my analysis, this is a {difficulty} level question. I'm here to guide you through it!"
 
 
 @app.post("/coach/hybrid", response_model=HybridResponse)
@@ -266,9 +276,88 @@ async def hybrid_coach(request: PredictionRequest):
             source="hybrid_ai_coach"
         )
         
+        
     except Exception as exc:
         logger.exception("Failed to generate hybrid response")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/generate/quiz")
+async def generate_quiz(topic: str, difficulty: str = "MOYEN", count: int = 3):
+    """Generate quiz questions at a specific difficulty level using Ollama."""
+    try:
+        valid_difficulties = ["FACILE", "MOYEN", "DIFFICILE"]
+        if difficulty.upper() not in valid_difficulties:
+            difficulty = "MOYEN"
+        
+        difficulty = difficulty.upper()
+        
+        prompt = f"""Generate {count} multiple-choice quiz questions about {topic} at {difficulty} difficulty level.
+
+Format each question as:
+Q1: [Question]  
+A) [Option A]
+B) [Option B]
+C) [Option C]
+D) [Option D]
+ANSWER: [A/B/C/D]
+
+Generate all {count} questions:"""
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                "http://localhost:11434/api/generate",
+                json={"model": "qwen2.5:0.5b", "prompt": prompt, "stream": False}
+            )
+            
+            if response.status_code == 200:
+                return {
+                    "topic": topic,
+                    "difficulty": difficulty,
+                    "quiz_content": response.json().get("response", ""),
+                    "status": "success"
+                }
+            raise HTTPException(status_code=500, detail="Failed to generate quiz")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/generate/exercise")
+async def generate_exercise(topic: str, difficulty: str = "MOYEN", count: int = 2):
+    """Generate practical exercises at a specific difficulty level."""
+    try:
+        valid_difficulties = ["FACILE", "MOYEN", "DIFFICILE"]
+        if difficulty.upper() not in valid_difficulties:
+            difficulty = "MOYEN"
+        
+        difficulty = difficulty.upper()
+        
+        prompt = f"""Generate {count} programming exercises about {topic} at {difficulty} difficulty.
+
+Format:
+EXERCISE 1:
+TITLE: [Title]
+TASKS:
+1. [Task 1]
+2. [Task 2]""" 
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                "http://localhost:11434/api/generate",
+                json={"model": "qwen2.5:0.5b", "prompt": prompt, "stream": False}
+            )
+            
+            if response.status_code == 200:
+                return {
+                    "topic": topic,
+                    "difficulty": difficulty,
+                    "exercise_content": response.json().get("response", ""),
+                    "status": "success"
+                }
+            raise HTTPException(status_code=500, detail="Failed to generate exercises")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 if __name__ == "__main__":  # pragma: no cover

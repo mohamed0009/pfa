@@ -1,0 +1,135 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Tableau de Bord Administrateur</h1>
+    <p class="subtitle">Bienvenue sur votre panneau de contrôle</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement des données...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading && analytics">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #4A90E2;">
+          <span class="material-icons">people</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ analytics.totalUsers }}</h3>
+          <p>Total Users</p>
+          <span class="stat-change positive">+{{ analytics.userGrowth }}%</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #2DD4A4;">
+          <span class="material-icons">school</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ analytics.publishedCourses }}</h3>
+          <p>Published Courses</p>
+          <span class="stat-subtitle">of {{ analytics.totalCourses }} total</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #FFB800;">
+          <span class="material-icons">trending_up</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ analytics.averageCompletion }}%</h3>
+          <p>Avg Completion Rate</p>
+          <span class="stat-subtitle">{{ analytics.courseEnrollments }} enrollments</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #9B51E0;">
+          <span class="material-icons">schedule</span>
+        </div>
+        <div class="stat-content">
+          <h3>{{ analytics.totalStudyHours.toLocaleString() }}</h3>
+          <p>Total Study Hours</p>
+          <span class="stat-subtitle">Across all users</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Metrics & Activities -->
+    <div class="dashboard-grid">
+      <!-- Performance Metrics -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>Performance Metrics</h2>
+          <button class="btn-text">View All</button>
+        </div>
+        <div class="metrics-list">
+          <div class="metric-item" *ngFor="let metric of performanceMetrics">
+            <div class="metric-info">
+              <span class="metric-label">{{ metric.label }}</span>
+              <span class="metric-value">{{ metric.value }}</span>
+            </div>
+            <div class="metric-trend" [ngClass]="getTrendClass(metric.trend)">
+              <span class="material-icons">{{ getTrendIcon(metric.trend) }}</span>
+              <span>{{ metric.change > 0 ? '+' : '' }}{{ metric.change }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activities -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>Activités Récentes</h2>
+          <a routerLink="/admin/analytics" class="btn-text">Voir Tout</a>
+        </div>
+        <div class="activities-list">
+          <div class="activity-item" *ngFor="let activity of recentActivities">
+            <div class="activity-icon" [style.background]="getActivityColor(activity.action)">
+              <span class="material-icons">{{ getActivityIcon(activity.action) }}</span>
+            </div>
+            <div class="activity-content">
+              <p class="activity-title">
+                <strong>{{ activity.userName }}</strong> {{ activity.action.replace('_', ' ') }}
+              </p>
+              <p class="activity-subtitle">{{ activity.courseName }}</p>
+              <span class="activity-time">{{ activity.date | date: 'short' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <h2>Actions Rapides</h2>
+      <div class="actions-grid">
+        <a routerLink="/admin/users" class="action-card">
+          <span class="material-icons">person_add</span>
+          <span>Ajouter un Apprenant</span>
+        </a>
+        <a routerLink="/admin/courses" class="action-card">
+          <span class="material-icons">add_circle</span>
+          <span>Créer une Formation</span>
+        </a>
+        <a routerLink="/admin/analytics" class="action-card">
+          <span class="material-icons">assessment</span>
+          <span>Voir les Analytiques</span>
+        </a>
+        <a routerLink="/admin/notifications" class="action-card">
+          <span class="material-icons">notifications_active</span>
+          <span>Voir les Alertes</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+

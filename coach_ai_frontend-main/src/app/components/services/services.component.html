@@ -1,0 +1,54 @@
+<section class="services-section" id="services">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">
+        Formations Intelligentes<br>
+        Adaptées à Vos Objectifs
+      </h2>
+      <p class="section-subtitle">
+        Découvrez notre gamme complète de formations propulsées par l'IA pour votre réussite professionnelle
+      </p>
+    </div>
+
+    <div class="services-grid">
+      <div class="service-card" *ngFor="let service of services">
+        <div class="service-image">
+          <img [src]="service.imageUrl" [alt]="service.title">
+          <div class="service-overlay">
+            <button class="btn btn-learn">En Savoir Plus</button>
+          </div>
+        </div>
+        
+        <div class="service-content">
+          <h3>{{ service.title }}</h3>
+          <p class="service-description">{{ service.description }}</p>
+          
+          <ul class="service-features">
+            <li *ngFor="let feature of service.features">
+              <span class="material-icons">check_circle</span>
+              <span>{{ feature }}</span>
+            </li>
+          </ul>
+
+          <div class="service-meta">
+            <div class="meta-item">
+              <span class="material-icons">schedule</span>
+              <span>{{ service.duration }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="material-icons">devices</span>
+              <span>{{ service.format }}</span>
+            </div>
+          </div>
+
+          <button class="btn btn-book">Démarrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+

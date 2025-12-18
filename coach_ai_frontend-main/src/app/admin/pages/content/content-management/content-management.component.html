@@ -1,0 +1,239 @@
+<div class="content-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Gestion des Contenus Pédagogiques</h1>
+      <p class="subtitle">Gérez formations, modules, cours et ressources</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="viewMode = viewMode === 'list' ? 'hierarchy' : 'list'">
+        <span class="material-icons">{{ viewMode === 'list' ? 'account_tree' : 'view_list' }}</span>
+        {{ viewMode === 'list' ? 'Vue Hiérarchique' : 'Vue Liste' }}
+      </button>
+      <button class="btn btn-primary" (click)="openCreateFormationModal()">
+        <span class="material-icons">add</span>
+        Nouvelle Formation
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="material-icons">school</span>
+      <div>
+        <h3>{{ contentStats.totalFormations }}</h3>
+        <p>Formations</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">check_circle</span>
+      <div>
+        <h3>{{ contentStats.approvedCourses }}</h3>
+        <p>Cours Approuvés</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">pending</span>
+      <div>
+        <h3>{{ contentStats.pendingCourses }}</h3>
+        <p>En Validation</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons">emoji_events</span>
+      <div>
+        <h3>{{ contentStats.totalCourses }}</h3>
+        <p>Total Cours</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Validations Alert -->
+  <div class="validation-alert" *ngIf="pendingValidations.length > 0">
+    <span class="material-icons">warning</span>
+    <div class="alert-content">
+      <strong>{{ pendingValidations.length }} contenus en attente de validation</strong>
+      <p>Des formateurs ont soumis du contenu nécessitant votre approbation</p>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="showValidationModal = true">
+      Valider Maintenant
+    </button>
+  </div>
+
+  <!-- Breadcrumb Navigation -->
+  <div class="breadcrumb" *ngIf="selectedFormation">
+    <button class="breadcrumb-item" (click)="backToFormations()">
+      <span class="material-icons">home</span>
+      Formations
+    </button>
+    <span class="material-icons">chevron_right</span>
+    <button class="breadcrumb-item" [class.active]="!selectedModule">
+      {{ selectedFormation.title }}
+    </button>
+    <ng-container *ngIf="selectedModule">
+      <span class="material-icons">chevron_right</span>
+      <button class="breadcrumb-item active">
+        {{ selectedModule.title }}
+      </button>
+    </ng-container>
+  </div>
+
+  <!-- Formations Grid (Default View) -->
+  <div class="content-grid" *ngIf="!selectedFormation">
+    <div class="formation-card" *ngFor="let formation of formations" (click)="selectFormation(formation)">
+      <img [src]="formation.thumbnail" [alt]="formation.title" class="formation-thumbnail">
+      <span class="status-badge" [ngClass]="getStatusBadgeClass(formation.status)">
+        {{ getStatusLabel(formation.status) }}
+      </span>
+      <div class="formation-content">
+        <h3>{{ formation.title }}</h3>
+        <p>{{ formation.description }}</p>
+        <div class="formation-meta">
+          <span><span class="material-icons">schedule</span> {{ formation.duration }}h</span>
+          <span><span class="material-icons">people</span> {{ formation.enrolledCount }}</span>
+          <span><span class="material-icons">category</span> {{ formation.level }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modules List (Formation Selected) -->
+  <div class="modules-section" *ngIf="selectedFormation && !selectedModule">
+    <div class="section-header">
+      <h2>Modules de la Formation</h2>
+      <button class="btn btn-primary" (click)="openCreateModuleModal()">
+        <span class="material-icons">add</span>
+        Nouveau Module
+      </button>
+    </div>
+
+    <div class="modules-list">
+      <div class="module-card" *ngFor="let module of modules" (click)="selectModule(module)">
+        <div class="module-order">{{ module.order }}</div>
+        <div class="module-content">
+          <h3>{{ module.title }}</h3>
+          <p>{{ module.description }}</p>
+          <div class="module-meta">
+            <span><span class="material-icons">schedule</span> {{ module.duration }}h</span>
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(module.status)">
+              {{ getStatusLabel(module.status) }}
+            </span>
+          </div>
+        </div>
+        <span class="material-icons chevron">chevron_right</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Courses List (Module Selected) -->
+  <div class="courses-section" *ngIf="selectedModule">
+    <div class="section-header">
+      <h2>Cours du Module</h2>
+      <button class="btn btn-primary" (click)="openCreateCourseModal()">
+        <span class="material-icons">add</span>
+        Nouveau Cours
+      </button>
+    </div>
+
+    <div class="courses-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Ordre</th>
+            <th>Titre</th>
+            <th>Durée</th>
+            <th>Statut</th>
+            <th>Inscrits</th>
+            <th>Taux</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let course of courses">
+            <td>{{ course.order }}</td>
+            <td>
+              <div class="course-title">
+                <strong>{{ course.title }}</strong>
+                <span class="course-desc">{{ course.description }}</span>
+              </div>
+            </td>
+            <td>{{ course.duration }} min</td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(course.status)">
+                {{ getStatusLabel(course.status) }}
+              </span>
+            </td>
+            <td>{{ course.enrolledStudents }}</td>
+            <td>{{ course.completionRate }}%</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-icon" title="Modifier">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="btn-icon" title="Ressources">
+                  <span class="material-icons">folder</span>
+                </button>
+                <button class="btn-icon btn-danger" title="Supprimer">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Validation Modal -->
+<div class="modal-overlay" *ngIf="showValidationModal">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>Contenus en Attente de Validation</h2>
+      <button class="btn-close" (click)="closeValidationModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="validation-list">
+        <div class="validation-item" *ngFor="let validation of pendingValidations">
+          <div class="validation-info">
+            <h4>{{ getContentName(validation) }}</h4>
+            <p>Type: {{ validation.contentType }} • En attente depuis {{ validation.contentId }}</p>
+          </div>
+          <div class="validation-actions">
+            <button class="btn btn-success" (click)="selectedValidation = validation; approveContent()">
+              <span class="material-icons">check</span>
+              Approuver
+            </button>
+            <button class="btn btn-danger" (click)="selectedValidation = validation">
+              <span class="material-icons">close</span>
+              Rejeter
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="pendingValidations.length === 0" class="no-validations">
+          <span class="material-icons">check_circle</span>
+          <p>Aucun contenu en attente de validation</p>
+        </div>
+      </div>
+
+      <div class="feedback-section" *ngIf="selectedValidation">
+        <label>Feedback (optionnel pour approbation, requis pour rejet)</label>
+        <textarea 
+          [(ngModel)]="validationFeedback" 
+          placeholder="Entrez votre feedback..."
+          rows="4"
+          class="form-control">
+        </textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+

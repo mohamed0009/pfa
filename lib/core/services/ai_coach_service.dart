@@ -87,12 +87,12 @@ class AICoachService {
         },
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        logger.logApiResponse('/coach/hybrid', response.data!);
-        return CoachRecommendation.fromJson(response.data!);
+      if (response != null) {
+        logger.logApiResponse('POST', '/coach/hybrid', 200, data: response);
+        return CoachRecommendation.fromJson(response);
       }
     } catch (e) {
-      logger.logError('Failed to fetch hybrid recommendation', e);
+      logger.error('Failed to fetch hybrid recommendation', e);
     }
     return null;
   }

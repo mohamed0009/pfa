@@ -1,0 +1,224 @@
+<div class="course-player" *ngIf="course">
+  <!-- Top Navigation Bar -->
+  <header class="player-header">
+    <div class="header-left">
+      <button class="nav-btn" [routerLink]="['/user/courses']" title="Retour aux cours">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div class="course-info">
+        <h2>{{ course.title }}</h2>
+        <p *ngIf="currentLesson">{{ currentLesson.title }}</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="icon-btn" (click)="toggleAIChat()" title="Coach IA">
+        <span class="material-icons">psychology</span>
+        <span class="badge" *ngIf="aiSession && aiSession.messages.length > 1">{{aiSession.messages.length - 1}}</span>
+      </button>
+      <button class="icon-btn" title="Notes">
+        <span class="material-icons">note_add</span>
+      </button>
+      <button class="icon-btn" title="Ressources">
+        <span class="material-icons">folder</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <div class="player-container">
+    <!-- Sidebar (Course Navigation) -->
+    <aside class="player-sidebar" [class.closed]="!sidebarOpen">
+      <div class="sidebar-header">
+        <h3>Contenu du cours</h3>
+        <button class="close-btn" (click)="toggleSidebar()">
+          <span class="material-icons">{{ sidebarOpen ? 'chevron_left' : 'chevron_right' }}</span>
+        </button>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="module" *ngFor="let module of course.syllabus">
+          <div class="module-header">
+            <div class="module-title">
+              <h4>Module {{ module.moduleNumber }}</h4>
+              <p>{{ module.title }}</p>
+            </div>
+            <div class="module-progress">
+              <span class="progress-text">{{ getModuleProgress(module) }}%</span>
+            </div>
+          </div>
+
+          <div class="lessons-list">
+            <button 
+              class="lesson-item" 
+              *ngFor="let lesson of module.lessons"
+              [class.active]="isLessonActive(lesson)"
+              [class.completed]="lesson.isCompleted"
+              (click)="selectLesson(lesson)">
+              <span class="material-icons lesson-icon">
+                {{ getLessonIcon(lesson.type) }}
+              </span>
+              <div class="lesson-info">
+                <p class="lesson-title">{{ lesson.title }}</p>
+                <p class="lesson-meta">{{ lesson.duration }} min</p>
+              </div>
+              <span class="material-icons check-icon" *ngIf="lesson.isCompleted">
+                check_circle
+              </span>
+              <span class="material-icons play-icon" *ngIf="isLessonActive(lesson)">
+                play_arrow
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Player Area -->
+    <main class="player-main">
+      <!-- Video Player -->
+      <div class="video-container" *ngIf="currentLesson && currentLesson.type === 'video'">
+        <iframe 
+          *ngIf="safeVideoUrl"
+          [src]="safeVideoUrl"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <!-- Lesson Content -->
+      <div class="lesson-content">
+        <div class="lesson-header">
+          <div class="lesson-title-section">
+            <h1>{{ currentLesson?.title }}</h1>
+            <p class="lesson-description">{{ currentLesson?.description }}</p>
+          </div>
+
+          <div class="lesson-actions">
+            <button 
+              class="btn btn-outline" 
+              *ngIf="currentLesson && !currentLesson.isCompleted"
+              (click)="markLessonComplete()">
+              <span class="material-icons">check</span>
+              Marquer comme terminé
+            </button>
+            <button 
+              class="btn btn-completed" 
+              *ngIf="currentLesson && currentLesson.isCompleted"
+              disabled>
+              <span class="material-icons">check_circle</span>
+              Terminé
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs for Notes, Transcript, etc. -->
+        <div class="lesson-tabs">
+          <button class="tab active">
+            <span class="material-icons">description</span>
+            Transcription
+          </button>
+          <button class="tab">
+            <span class="material-icons">note</span>
+            Mes notes
+          </button>
+          <button class="tab">
+            <span class="material-icons">forum</span>
+            Discussions
+          </button>
+        </div>
+
+        <!-- Transcript/Notes Content -->
+        <div class="lesson-body">
+          <div class="transcript" *ngIf="currentLesson?.transcript">
+            <h3>Transcription de la vidéo</h3>
+            <p>{{ currentLesson?.transcript }}</p>
+          </div>
+          <div class="transcript" *ngIf="!currentLesson?.transcript">
+            <p class="empty-state">La transcription sera disponible prochainement.</p>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="lesson-navigation">
+          <button 
+            class="btn btn-nav" 
+            (click)="goToPreviousLesson()"
+            [disabled]="!hasPreviousLesson()">
+            <span class="material-icons">chevron_left</span>
+            Leçon précédente
+          </button>
+          <button 
+            class="btn btn-nav btn-next" 
+            (click)="goToNextLesson()"
+            [disabled]="!hasNextLesson()">
+            Leçon suivante
+            <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- AI Chat Panel (Floating) -->
+    <div class="ai-chat-panel" *ngIf="aiChatOpen" [class.open]="aiChatOpen">
+      <div class="chat-header">
+        <div class="chat-title">
+          <span class="material-icons">psychology</span>
+          <h3>Coach IA</h3>
+        </div>
+        <button class="close-chat-btn" (click)="toggleAIChat()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="chat-messages">
+        <div 
+          class="message" 
+          *ngFor="let message of aiSession?.messages"
+          [class.user-message]="message.role === 'user'"
+          [class.ai-message]="message.role === 'ai'">
+          <div class="message-avatar">
+            <span class="material-icons" *ngIf="message.role === 'ai'">psychology</span>
+            <span class="material-icons" *ngIf="message.role === 'user'">person</span>
+          </div>
+          <div class="message-content">
+            <p>{{ message.content }}</p>
+            <span class="message-time">{{ message.timestamp | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <input 
+          type="text" 
+          [(ngModel)]="aiMessage"
+          (keyup.enter)="sendAIMessage()"
+          placeholder="Posez une question au coach IA...">
+        <button class="send-btn" (click)="sendAIMessage()" [disabled]="!aiMessage.trim()">
+          <span class="material-icons">send</span>
+        </button>
+      </div>
+
+      <div class="chat-suggestions">
+        <p>Suggestions :</p>
+        <button class="suggestion-chip" (click)="aiMessage = 'Peux-tu m\'expliquer ce concept ?'; sendAIMessage()">
+          Expliquer ce concept
+        </button>
+        <button class="suggestion-chip" (click)="aiMessage = 'Donne-moi un exemple pratique'; sendAIMessage()">
+          Exemple pratique
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-state" *ngIf="!course">
+  <div class="spinner"></div>
+  <p>Chargement du cours...</p>
+</div>
+
+
+
+

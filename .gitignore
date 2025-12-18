@@ -119,3 +119,23 @@ node_modules/
 package-lock.json
 yarn.lock
 
+# ML/AI Datasets and Models (large files)
+datasets/
+*.json
+*.csv
+models/
+processed_datasets/
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.pt
+*.pth
+
+# Log files
+*.log
+pipeline.log
+training_4gb.log
+generation_output.txt
+build_log.txt
+

@@ -1,0 +1,460 @@
+@import '../../../../../styles/variables';
+
+.trainers-page {
+  max-width: 1600px;
+}
+
+.page-header {
+  margin-bottom: 32px;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: $dark-text;
+    margin-bottom: 8px;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+  .material-icons {
+    font-size: 40px;
+    color: $primary-green;
+  }
+
+  h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $dark-text;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: $text-secondary;
+  }
+}
+
+.filters-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.filter-btn {
+  padding: 10px 20px;
+  background: white;
+  border: 2px solid $light-bg;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+
+  &.active {
+    background: $primary-green;
+    color: white;
+    border-color: $primary-green;
+  }
+}
+
+.trainers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.trainer-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: relative;
+
+  .trainer-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 16px;
+  }
+
+  .status-dot {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .trainer-info {
+    margin-bottom: 16px;
+
+    h3 {
+      font-weight: 700;
+      color: $dark-text;
+      margin-bottom: 6px;
+    }
+
+    .email {
+      font-size: 0.85rem;
+      color: $text-secondary;
+      margin-bottom: 12px;
+    }
+
+    .specializations {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .spec-tag {
+      padding: 4px 10px;
+      background: rgba($primary-green, 0.1);
+      color: $primary-green;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .bio {
+      font-size: 0.9rem;
+      color: $text-secondary;
+      line-height: 1.5;
+    }
+  }
+
+  .trainer-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid $light-bg;
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: $text-secondary;
+
+      .material-icons {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .trainer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+
+  &.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  &.btn-primary {
+    background: $primary-green;
+    color: white;
+  }
+
+  &.btn-secondary {
+    background: $light-bg;
+    color: $dark-text;
+  }
+
+  &.btn-danger {
+    background: #dc2626;
+    color: white;
+  }
+}
+
+// Modal styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  &.modal-confirm {
+    max-width: 500px;
+  }
+
+  .modal-header {
+    padding: 24px;
+    border-bottom: 1px solid $light-bg;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      font-weight: 700;
+      color: $dark-text;
+      font-size: 1.5rem;
+    }
+  }
+
+  .modal-body {
+    padding: 24px;
+
+    .confirm-icon {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+
+      .material-icons {
+        font-size: 72px;
+        color: #f59e0b;
+      }
+    }
+
+    p {
+      text-align: center;
+      margin-bottom: 12px;
+
+      &.warning-text {
+        color: #dc2626;
+        font-weight: 600;
+      }
+    }
+
+    .trainer-preview {
+      background: $light-bg;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+
+      p {
+        text-align: left;
+        margin-bottom: 8px;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+
+      label {
+        display: block;
+        font-weight: 600;
+        color: $dark-text;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #E5E7EB;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-green;
+          box-shadow: 0 0 0 3px rgba($primary-green, 0.1);
+        }
+      }
+
+      textarea.form-control {
+        resize: vertical;
+      }
+
+      .specializations-input {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+
+        .form-control {
+          flex: 1;
+        }
+      }
+
+      .spec-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        .spec-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          background: rgba($primary-green, 0.1);
+          color: $primary-green;
+          border-radius: 8px;
+          font-size: 0.85rem;
+          font-weight: 600;
+
+          .remove-spec {
+            background: none;
+            border: none;
+            color: $primary-green;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+
+            &:hover {
+              color: darken($primary-green, 15%);
+            }
+          }
+        }
+      }
+    }
+
+    .formations-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .formation-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: $light-bg;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: darken($light-bg, 3%);
+      }
+
+      input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      span {
+        font-weight: 500;
+      }
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+
+      .metric-item {
+        background: $light-bg;
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+
+        .metric-label {
+          display: block;
+          font-size: 0.85rem;
+          color: $text-secondary;
+          margin-bottom: 8px;
+        }
+
+        .metric-value {
+          display: block;
+          font-size: 1.75rem;
+          font-weight: 700;
+          color: $primary-green;
+        }
+      }
+    }
+  }
+
+  .modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid $light-bg;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: $text-secondary;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: $light-bg;
+    color: $dark-text;
+  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+
+  .header-left {
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: $dark-text;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: $text-secondary;
+    }
+  }
+}
+
+
+
+

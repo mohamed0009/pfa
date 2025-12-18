@@ -1,0 +1,254 @@
+<div class="support-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Assistance et Support</h1>
+    <p class="subtitle">Gérez les demandes de support des utilisateurs</p>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="material-icons">confirmation_number</span>
+      <div>
+        <h3>{{ ticketStats.total }}</h3>
+        <p>Total Tickets</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons" style="color: #3b82f6;">inbox</span>
+      <div>
+        <h3>{{ ticketStats.open }}</h3>
+        <p>Ouverts</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons" style="color: #f59e0b;">pending</span>
+      <div>
+        <h3>{{ ticketStats.inProgress }}</h3>
+        <p>En Cours</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons" style="color: #10b981;">check_circle</span>
+      <div>
+        <h3>{{ ticketStats.resolved }}</h3>
+        <p>Résolus</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-card">
+    <div class="filter-group">
+      <label>Statut:</label>
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+        <option value="all">Tous</option>
+        <option value="open">Ouvert</option>
+        <option value="in_progress">En cours</option>
+        <option value="waiting_response">En attente</option>
+        <option value="resolved">Résolu</option>
+        <option value="closed">Fermé</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Priorité:</label>
+      <select [(ngModel)]="priorityFilter" (change)="applyFilters()">
+        <option value="all">Toutes</option>
+        <option value="urgent">Urgent</option>
+        <option value="high">Haute</option>
+        <option value="medium">Moyenne</option>
+        <option value="low">Basse</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Catégorie:</label>
+      <select [(ngModel)]="categoryFilter" (change)="applyFilters()">
+        <option value="all">Toutes</option>
+        <option value="technical">Technique</option>
+        <option value="pedagogical">Pédagogique</option>
+        <option value="account">Compte</option>
+        <option value="payment">Paiement</option>
+        <option value="other">Autre</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Tickets Table -->
+  <div class="tickets-table-card">
+    <table class="tickets-table">
+      <thead>
+        <tr>
+          <th>Ticket</th>
+          <th>Utilisateur</th>
+          <th>Titre</th>
+          <th>Catégorie</th>
+          <th>Priorité</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ticket of filteredTickets" (click)="selectTicket(ticket)" class="ticket-row">
+          <td><strong>{{ ticket.ticketNumber }}</strong></td>
+          <td>
+            <div class="user-cell">
+              <strong>{{ ticket.userName }}</strong>
+              <span class="user-email">{{ ticket.userEmail }}</span>
+            </div>
+          </td>
+          <td>{{ ticket.title }}</td>
+          <td>
+            <span class="category-badge">{{ getCategoryLabel(ticket.category) }}</span>
+          </td>
+          <td>
+            <span 
+              class="priority-badge" 
+              [style.background]="getPriorityColor(ticket.priority)">
+              {{ getPriorityLabel(ticket.priority) }}
+            </span>
+          </td>
+          <td>
+            <span 
+              class="status-badge" 
+              [style.background]="getStatusColor(ticket.status)">
+              {{ getStatusLabel(ticket.status) }}
+            </span>
+          </td>
+          <td>{{ ticket.createdAt | date: 'short' }}</td>
+          <td (click)="$event.stopPropagation()">
+            <div class="quick-actions">
+              <select 
+                class="status-select"
+                [value]="ticket.status"
+                (change)="updateStatus(ticket, $any($event.target).value)">
+                <option value="open">Ouvert</option>
+                <option value="in_progress">En cours</option>
+                <option value="waiting_response">En attente</option>
+                <option value="resolved">Résolu</option>
+                <option value="closed">Fermé</option>
+              </select>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Ticket Detail Modal -->
+<div class="modal-overlay" *ngIf="showTicketDetail && selectedTicket" (click)="closeTicketDetail()">
+  <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2>{{ selectedTicket.ticketNumber }} - {{ selectedTicket.title }}</h2>
+        <div class="header-badges">
+          <span class="priority-badge" [style.background]="getPriorityColor(selectedTicket.priority)">
+            {{ getPriorityLabel(selectedTicket.priority) }}
+          </span>
+          <span class="status-badge" [style.background]="getStatusColor(selectedTicket.status)">
+            {{ getStatusLabel(selectedTicket.status) }}
+          </span>
+        </div>
+      </div>
+      <button class="btn-close" (click)="closeTicketDetail()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Ticket Info -->
+      <div class="ticket-info">
+        <div class="info-row">
+          <span class="label">Utilisateur:</span>
+          <span>{{ selectedTicket.userName }} ({{ selectedTicket.userEmail }})</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Catégorie:</span>
+          <span>{{ getCategoryLabel(selectedTicket.category) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Créé le:</span>
+          <span>{{ selectedTicket.createdAt | date: 'medium' }}</span>
+        </div>
+        <div class="info-row" *ngIf="selectedTicket.assignedToName">
+          <span class="label">Assigné à:</span>
+          <span>{{ selectedTicket.assignedToName }}</span>
+        </div>
+      </div>
+
+      <!-- Original Description -->
+      <div class="ticket-description">
+        <h4>Description</h4>
+        <p>{{ selectedTicket.description }}</p>
+      </div>
+
+      <!-- Conversation -->
+      <div class="conversation">
+        <h4>Conversation ({{ selectedTicket.messages.length }})</h4>
+        <div class="messages-list">
+          <div 
+            *ngFor="let message of selectedTicket.messages" 
+            class="message"
+            [class.admin-message]="message.senderRole === 'Administrateur' || message.senderRole === 'Formateur'"
+            [class.user-message]="message.senderRole === 'Apprenant'">
+            <div class="message-header">
+              <strong>{{ message.senderName }}</strong>
+              <span class="role-badge">{{ message.senderRole }}</span>
+              <span class="timestamp">{{ message.timestamp | date: 'short' }}</span>
+            </div>
+            <div class="message-body">
+              {{ message.message }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Reply Box -->
+        <div class="reply-box">
+          <textarea 
+            [(ngModel)]="newMessage" 
+            placeholder="Tapez votre réponse..."
+            rows="3"
+            class="form-control">
+          </textarea>
+          <button 
+            class="btn btn-primary" 
+            (click)="sendMessage()"
+            [disabled]="!newMessage.trim()">
+            <span class="material-icons">send</span>
+            Envoyer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <select 
+        class="status-select"
+        [value]="selectedTicket.status"
+        (change)="updateStatus(selectedTicket, $any($event.target).value)">
+        <option value="open">Ouvert</option>
+        <option value="in_progress">En cours</option>
+        <option value="waiting_response">En attente de réponse</option>
+        <option value="resolved">Résolu</option>
+        <option value="closed">Fermé</option>
+      </select>
+
+      <select 
+        class="priority-select"
+        [value]="selectedTicket.priority"
+        (change)="updatePriority(selectedTicket, $any($event.target).value)">
+        <option value="urgent">Urgent</option>
+        <option value="high">Haute</option>
+        <option value="medium">Moyenne</option>
+        <option value="low">Basse</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+
+
+

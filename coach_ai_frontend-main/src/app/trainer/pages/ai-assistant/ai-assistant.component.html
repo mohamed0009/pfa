@@ -1,0 +1,160 @@
+<div class="ai-assistant-container">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>
+        <span class="material-icons">psychology</span>
+        Assistant IA
+      </h1>
+      <p>Générez du contenu pédagogique avec l'intelligence artificielle</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="showHistory = !showHistory">
+        <span class="material-icons">history</span>
+        Historique
+      </button>
+    </div>
+  </header>
+
+  <div class="content-layout">
+    <!-- Generation Form -->
+    <div class="generation-form">
+      <div class="form-section">
+        <h3>Type de Contenu</h3>
+        <div class="content-types-grid">
+          <button 
+            *ngFor="let type of contentTypes"
+            class="content-type-btn"
+            [class.active]="contentType === type.value"
+            (click)="setContentType(type.value)">
+            <span class="material-icons">{{ type.icon }}</span>
+            <span>{{ type.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Paramètres</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Difficulté</label>
+            <select [(ngModel)]="difficulty" class="form-control">
+              <option *ngFor="let diff of difficulties" [value]="diff">{{ diff }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Ton</label>
+            <select [(ngModel)]="tone" class="form-control">
+              <option *ngFor="let t of tones" [value]="t.value">{{ t.label }}</option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="contentType === 'quiz'">
+            <label>Nombre de questions</label>
+            <input type="number" [(ngModel)]="numberOfQuestions" class="form-control" min="1" max="20">
+          </div>
+        </div>
+
+        <div class="form-checkboxes">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="includeExamples">
+            <span>Inclure des exemples</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="includeExplanations">
+            <span>Inclure des explications</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Description</h3>
+        <textarea 
+          [(ngModel)]="prompt"
+          class="form-textarea"
+          placeholder="Décrivez le contenu que vous souhaitez générer... (ex: Créer un exercice sur les fonctions JavaScript ES6)"
+          rows="4"></textarea>
+      </div>
+
+      <div class="form-section">
+        <h3>Contexte (optionnel)</h3>
+        <textarea 
+          [(ngModel)]="context"
+          class="form-textarea"
+          placeholder="Ajoutez du contexte additionnel... (ex: Les étudiants ont déjà vu les bases de JavaScript)"
+          rows="3"></textarea>
+      </div>
+
+      <button 
+        class="btn btn-primary btn-large"
+        [disabled]="!prompt.trim() || isGenerating"
+        (click)="generateContent()">
+        <span class="material-icons" *ngIf="!isGenerating">auto_fix_high</span>
+        <span class="material-icons spinning" *ngIf="isGenerating">sync</span>
+        <span>{{ isGenerating ? 'Génération en cours...' : 'Générer le Contenu' }}</span>
+      </button>
+    </div>
+
+    <!-- Generated Content Preview -->
+    <div class="preview-section" *ngIf="generatedContent || isGenerating">
+      <div *ngIf="isGenerating" class="generating-state">
+        <div class="spinner-large"></div>
+        <h3>Génération en cours...</h3>
+        <p>L'IA crée votre contenu personnalisé</p>
+      </div>
+
+      <div *ngIf="generatedContent && !isGenerating" class="content-preview">
+        <div class="preview-header">
+          <h3>Contenu Généré</h3>
+          <div class="preview-actions">
+            <button class="btn-icon" (click)="regenerateContent()" title="Régénérer">
+              <span class="material-icons">refresh</span>
+            </button>
+            <button class="btn-icon" (click)="clearGeneration()" title="Effacer">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="preview-content">
+          <pre>{{ generatedContent.content | json }}</pre>
+        </div>
+
+        <div class="preview-footer">
+          <button class="btn btn-secondary" (click)="regenerateContent()">
+            <span class="material-icons">refresh</span>
+            Régénérer
+          </button>
+          <button class="btn btn-primary" (click)="approveContent()">
+            <span class="material-icons">check_circle</span>
+            Approuver et Utiliser
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Sidebar -->
+    <div class="history-sidebar" *ngIf="showHistory">
+      <div class="history-header">
+        <h3>Historique</h3>
+        <button class="btn-icon" (click)="showHistory = false">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="history-list">
+        <div *ngFor="let item of generationHistory" class="history-item">
+          <div class="history-item-header">
+            <span class="material-icons">{{ getContentTypeIcon(item.type) }}</span>
+            <span class="type-label">{{ getContentTypeLabel(item.type) }}</span>
+          </div>
+          <p class="history-prompt">{{ item.requestId }}</p>
+          <span class="history-date">{{ item.generatedAt | date:'short' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+

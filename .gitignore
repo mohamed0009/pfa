@@ -121,16 +121,23 @@ yarn.lock
 
 # ML/AI Datasets and Models (large files)
 datasets/
-*.json
-*.csv
-models/
 processed_datasets/
 *.pkl
-*.joblib
 *.h5
 *.onnx
 *.pt
 *.pth
+
+# Ignore all files in models/ directory
+models/*
+
+# But allow gradient boosting model and related files
+!models/gradient_boosting_model_*.joblib
+!models/gradient_boosting_metadata_*.json
+!models/confusion_matrix_gradient_boosting_*.png
+!models/learning_curve_gradient_boosting_*.png
+!models/model_comparison_*.png
+!models/training_report_*.json
 
 # Log files
 *.log

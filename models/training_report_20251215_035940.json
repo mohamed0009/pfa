@@ -1,0 +1,77 @@
+{
+  "training_timestamp": "2025-12-15T03:59:40.332613",
+  "models_trained": [
+    "random_forest",
+    "gradient_boosting",
+    "logistic_regression",
+    "svm",
+    "neural_network"
+  ],
+  "successful_models": [
+    "random_forest",
+    "gradient_boosting",
+    "logistic_regression",
+    "svm",
+    "neural_network"
+  ],
+  "failed_models": [],
+  "best_model": {
+    "name": "gradient_boosting",
+    "performance": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "auc": 1.0,
+      "cv_mean": 1.0
+    }
+  },
+  "model_performance": {
+    "random_forest": {
+      "accuracy": 0.9811320754716981,
+      "precision": 0.9811586126369981,
+      "recall": 0.9811320754716981,
+      "f1_score": 0.9809874645132318,
+      "auc": 0.9993228996292968,
+      "cv_mean": 0.9826878288505023
+    },
+    "gradient_boosting": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "auc": 1.0,
+      "cv_mean": 1.0
+    },
+    "logistic_regression": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "auc": 1.0,
+      "cv_mean": 1.0
+    },
+    "svm": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "auc": 1.0,
+      "cv_mean": 0.9995725568586558
+    },
+    "neural_network": {
+      "accuracy": 0.8387650085763293,
+      "precision": 0.8875636693330703,
+      "recall": 0.8387650085763293,
+      "f1_score": 0.847659338147031,
+      "auc": 0.9304414171197326,
+      "cv_mean": 0.7229103604510321
+    }
+  },
+  "training_summary": {
+    "total_models": 5,
+    "successful": 5,
+    "failed": 0,
+    "success_rate": 100.0
+  }
+}

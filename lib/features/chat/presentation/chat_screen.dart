@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/models/chat_message.dart';
-import '../../../core/services/ai_coach_service.dart';
+import '../../../core/models/conversation_model.dart';
+import '../../../core/services/conversation_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_dimensions.dart';
-import '../../../core/di/dependency_injection.dart';
+import '../../../core/di/service_locator.dart';
 import '../../../widgets/custom_card.dart';
-import 'package:uuid/uuid.dart';
 import 'dart:ui';
 
+/// Chat screen with backend conversation integration
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final String? conversationId;
+
+  const ChatScreen({
+    Key? key,
+    this.conversationId,
+  }) : super(key: key);
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -19,25 +25,52 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  late final AICoachService _aiService;
-  final List<ChatMessage> _messages = [];
-  final _uuid = const Uuid();
-  bool _isLoading = false;
+  late final ConversationService _conversationService;
+  
+  List<ChatMessage> _messages = [];
+  Conversation? _conversation;
+  bool _isLoading = true;
+  bool _isSending = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _aiService = getIt<AICoachService>();
-    _addWelcomeMessage();
+    _conversationService = getIt<ConversationService>();
+    _loadConversation();
   }
 
-  void _addWelcomeMessage() {
-    _messages.add(ChatMessage(
-      id: _uuid.v4(),
-      content: "Bonjour ! Je suis votre coach virtuel. Comment puis-je vous aider aujourd'hui dans votre apprentissage ?",
-      type: MessageType.assistant,
-      timestamp: DateTime.now(),
-    ));
+  Future<void> _loadConversation() async{
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      if (widget.conversationId != null) {
+        // Load existing conversation messages
+        final messages = await _conversationService.getMessages(widget.conversationId!);
+        setState(() {
+          _messages = messages;
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      } else {
+        // Create new conversation
+        final conversation = await _conversationService.createConversation(
+          'Nouvelle conversation',
+        );
+        setState(() {
+          _conversation = conversation;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erreur: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -48,44 +81,44 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty || _isLoading) return;
+    if (_messageController.text.trim().isEmpty || _isSending) return;
+
+    final conversationId = widget.conversationId ?? _conversation?.id;
+    if (conversationId == null) return;
 
     final userMessage = _messageController.text.trim();
     _messageController.clear();
 
-    // Add user message
-    final userMsg = ChatMessage(
-      id: _uuid.v4(),
-      content: userMessage,
-      type: MessageType.user,
-      timestamp: DateTime.now(),
-    );
     setState(() {
-      _messages.add(userMsg);
-      _isLoading = true;
+      _isSending = true;
     });
 
-    // Scroll to bottom
-    _scrollToBottom();
-
-    // Get AI response
     try {
-      final response = await _aiService.generateResponse(userMessage, null);
-      final aiMsg = ChatMessage(
-        id: _uuid.v4(),
-        content: response,
-        type: MessageType.assistant,
-        timestamp: DateTime.now(),
+      // Send message to backend - it will auto-generate AI response
+      final message = await _conversationService.sendMessage(
+        conversationId,
+        userMessage,
       );
+
+      // Reload messages to get both user message and AI response
+      final messages = await _conversationService.getMessages(conversationId);
+      
       setState(() {
-        _messages.add(aiMsg);
-        _isLoading = false;
+        _messages = messages;
+        _isSending = false;
       });
+      
       _scrollToBottom();
     } catch (e) {
       setState(() {
-        _isLoading = false;
+        _isSending = false;
       });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -146,6 +179,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       child: Row(
                         children: [
+                          // Back button
+                          IconButton(
+                            icon: Icon(Icons.arrow_back_ios_rounded),
+                            onPressed: () => Navigator.pop(context),
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppTheme.primaryColor,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          
                           // AI Avatar with gradient
                           Container(
                             width: 48,
@@ -215,29 +259,6 @@ class _ChatScreenState extends State<ChatScreen> {
                           )
                               .animate()
                               .fadeIn(delay: 200.ms, duration: 600.ms),
-
-                          // More options button
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: Icon(Icons.more_vert_rounded, color: AppTheme.primaryColor),
-                              onPressed: () {
-                                // Show options menu
-                              },
-                            ),
-                          )
-                              .animate()
-                              .fadeIn(delay: 300.ms, duration: 600.ms),
                         ],
                       ),
                     ),
@@ -245,181 +266,235 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
 
-              // Messages list
+              // Messages list or loading/error state
               Expanded(
-                child: _messages.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                gradient: AppTheme.primaryGradient,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.primaryColor.withOpacity(0.3),
-                                    blurRadius: 30,
-                                    offset: Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.chat_bubble_outline_rounded,
-                                size: 56,
-                                color: Colors.white,
-                              ),
-                            )
-                                .animate()
-                                .scale(delay: 100.ms, duration: 800.ms, curve: Curves.elasticOut),
-                            SizedBox(height: 32),
-                            Text(
-                              'Start a Conversation',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
-                              ),
-                            )
-                                .animate()
-                                .fadeIn(delay: 300.ms, duration: 600.ms),
-                            SizedBox(height: 12),
-                            Text(
-                              'Ask me anything about your learning',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: AppTheme.textSecondary,
-                              ),
-                            )
-                                .animate()
-                                .fadeIn(delay: 400.ms, duration: 600.ms),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(20),
-                        itemCount: _messages.length + (_isLoading ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _messages.length) {
-                            return _buildTypingIndicator();
-                          }
-                          return _buildMessage(_messages[index], index);
-                        },
-                      ),
+                child: _buildBody(),
               ),
 
               // Quick action chips
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildQuickActionChip('💡 Explain', Icons.lightbulb_rounded),
-                      _buildQuickActionChip('📝 Example', Icons.explore_rounded),
-                      _buildQuickActionChip('🎯 Help', Icons.help_rounded),
-                      _buildQuickActionChip('📊 Summary', Icons.summarize_rounded),
-                    ],
+              if (!_isLoading && _error == null)
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildQuickActionChip('💡 Explain', Icons.lightbulb_rounded),
+                        _buildQuickActionChip('📝 Example', Icons.explore_rounded),
+                        _buildQuickActionChip('🎯 Help', Icons.help_rounded),
+                        _buildQuickActionChip('📊 Summary', Icons.summarize_rounded),
+                      ],
+                    ),
                   ),
-                ),
-              )
-                  .animate()
-                  .fadeIn(delay: 500.ms, duration: 600.ms),
+                )
+                    .animate()
+                    .fadeIn(delay: 500.ms, duration: 600.ms),
 
               // Modern input area
-              SafeArea(
-                top: false,
-                child: Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 20,
-                        offset: Offset(0, -5),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      // Message input field
-                      Expanded(
-                        child: Container(
+              if (!_isLoading && _error == null)
+                SafeArea(
+                  top: false,
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 20,
+                          offset: Offset(0, -5),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Message input field
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.backgroundColor,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: AppTheme.borderColor.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: _messageController,
+                              decoration: InputDecoration(
+                                hintText: 'Type your message...',
+                                hintStyle: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 15,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 14,
+                                ),
+                              ),
+                              maxLines: null,
+                              textCapitalization: TextCapitalization.sentences,
+                              onSubmitted: (_) => _sendMessage(),
+                            ),
+                          ),
+                        ),
+                        
+                        SizedBox(width: 12),
+                        
+                        // Send button with gradient
+                        Container(
+                          width: 56,
+                          height: 56,
                           decoration: BoxDecoration(
-                            color: AppTheme.backgroundColor,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: AppTheme.borderColor.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: TextField(
-                            controller: _messageController,
-                            decoration: InputDecoration(
-                              hintText: 'Type your message...',
-                              hintStyle: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 15,
+                            gradient: _isSending ? null : AppTheme.primaryGradient,
+                            color: _isSending ? AppTheme.borderColor : null,
+                            shape: BoxShape.circle,
+                            boxShadow: _isSending ? [] : [
+                              BoxShadow(
+                                color: AppTheme.primaryColor.withOpacity(0.4),
+                                blurRadius: 16,
+                                offset: Offset(0, 6),
                               ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 14,
-                              ),
-                            ),
-                            maxLines: null,
-                            textCapitalization: TextCapitalization.sentences,
-                            onSubmitted: (_) => _sendMessage(),
+                            ],
                           ),
-                        ),
-                      ),
-                      
-                      SizedBox(width: 12),
-                      
-                      // Send button with gradient
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: _isLoading ? null : AppTheme.primaryGradient,
-                          color: _isLoading ? AppTheme.borderColor : null,
-                          shape: BoxShape.circle,
-                          boxShadow: _isLoading ? [] : [
-                            BoxShadow(
-                              color: AppTheme.primaryColor.withOpacity(0.4),
-                              blurRadius: 16,
-                              offset: Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: _isLoading
-                              ? SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
-                                )
-                              : Icon(Icons.send_rounded, color: Colors.white, size: 24),
-                          onPressed: _isLoading ? null : _sendMessage,
-                        ),
-                      )
-                          .animate()
-                          .scale(delay: 600.ms, duration: 400.ms),
-                    ],
+                          child: IconButton(
+                            icon: _isSending
+                                ? SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : Icon(Icons.send_rounded, color: Colors.white, size: 24),
+                            onPressed: _isSending ? null : _sendMessage,
+                          ),
+                        )
+                            .animate()
+                            .scale(delay: 600.ms, duration: 400.ms),
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text(
+              'Chargement...',
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: Colors.red.withOpacity(0.5),
+            ),
+            SizedBox(height: 16),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppTheme.textColor.withOpacity(0.7),
+              ),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadConversation,
+              child: Text('Réessayer'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_messages.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    blurRadius: 30,
+                    offset: Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 56,
+                color: Colors.white,
+              ),
+            )
+                .animate()
+                .scale(delay: 100.ms, duration: 800.ms, curve: Curves.elasticOut),
+            SizedBox(height: 32),
+            Text(
+              'Start a Conversation',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            )
+                .animate()
+                .fadeIn(delay: 300.ms, duration: 600.ms),
+            SizedBox(height: 12),
+            Text(
+              'Ask me anything about your learning',
+              style: TextStyle(
+                fontSize: 15,
+                color: AppTheme.textSecondary,
+              ),
+            )
+                .animate()
+                .fadeIn(delay: 400.ms, duration: 600.ms),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(20),
+      itemCount: _messages.length + (_isSending ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == _messages.length) {
+          return _buildTypingIndicator();
+        }
+        return _buildMessage(_messages[index], index);
+      },
     );
   }
 
@@ -667,4 +742,3 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
-

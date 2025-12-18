@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 
 import '../services/auth_service.dart';
 import '../services/ai_coach_service.dart';
+import '../services/conversation_service.dart';
 import '../services/learning_service.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
@@ -78,6 +79,13 @@ Future<void> setupDependencyInjection() async {
 
   getIt.registerLazySingleton<AICoachService>(
     () => AICoachService(
+      apiService: getIt<ApiService>(),
+      logger: getIt<LoggerService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<ConversationService>(
+    () => ConversationService(
       apiService: getIt<ApiService>(),
       logger: getIt<LoggerService>(),
     ),

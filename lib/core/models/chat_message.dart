@@ -1,4 +1,4 @@
-enum MessageType {
+﻿enum MessageType {
   user,
   assistant,
   system,
@@ -19,27 +19,37 @@ class ChatMessage {
     this.isGenerating = false,
   });
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+  factory ChatMessage.fromJson(Map&lt;String, dynamic&gt; json) {
+    // Backend uses 'sender' field with values 'USER' or 'AI'
+    String senderStr = (json['sender'] ?? 'USER').toString().toUpperCase();
+    MessageType messageType;
+    if (senderStr == 'USER') {
+      messageType = MessageType.user;
+    } else if (senderStr == 'AI') {
+      messageType = MessageType.assistant;
+    } else {
+      messageType = MessageType.user;
+    }
+
     return ChatMessage(
       id: json['id'] ?? '',
       content: json['content'] ?? '',
-      type: MessageType.values.firstWhere(
-        (e) => e.toString() == 'MessageType.${json['type']}',
-        orElse: () => MessageType.user,
-      ),
+      type: messageType,
       timestamp: DateTime.parse(json['timestamp']),
       isGenerating: json['isGenerating'] ?? false,
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map&lt;String, dynamic&gt; toJson() {
+    // Convert to backend format
+    String sender = type == MessageType.user ? 'USER' : 'AI';
+    
     return {
       'id': id,
       'content': content,
-      'type': type.toString().split('.').last,
+      'sender': sender,
       'timestamp': timestamp.toIso8601String(),
       'isGenerating': isGenerating,
     };
   }
 }
-

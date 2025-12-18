@@ -7,6 +7,7 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/chat/presentation/chat_screen.dart';
+import '../../features/chat/presentation/conversations_screen.dart';
 import '../../features/learning/presentation/learning_modules_screen.dart';
 import '../../features/dashboard/presentation/learner_dashboard.dart';
 
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String profile = '/profile';
   static const String settings = '/settings';
+  static const String conversations = '/conversations';
   static const String chat = '/chat';
   static const String learningModules = '/learning-modules';
   static const String learnerDashboard = '/learner-dashboard';
@@ -38,8 +40,11 @@ class AppRoutes {
         return _buildRoute(const ProfileScreen());
       case settings:
         return _buildRoute(const SettingsScreen());
+      case conversations:
+        return _buildRoute(const ConversationsScreen());
       case chat:
-        return _buildRoute(const ChatScreen());
+        final conversationId = routeSettings.arguments as String?;
+        return _buildRoute(ChatScreen(conversationId: conversationId));
       case learningModules:
         return _buildRoute(const LearningModulesScreen());
       case learnerDashboard:

@@ -51,11 +51,6 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-<<<<<<< HEAD
-            System.out.println("JWT Validation Failed: " + e.getMessage());
-            e.printStackTrace();
-=======
->>>>>>> 6cda151b2eff42f2d8a1da1f1935bfdc111bbe6d
             return false;
         }
     }

@@ -18,7 +18,7 @@ class Conversation {
     required this.createdAt,
   });
 
-  factory Conversation.fromJson(Map&lt;String, dynamic&gt; json) {
+  factory Conversation.fromJson(Map<String, dynamic> json) {
     return Conversation(
       id: json['id'] ?? '',
       title: json['title'] ?? 'Nouvelle conversation',
@@ -34,7 +34,7 @@ class Conversation {
     );
   }
 
-  Map&lt;String, dynamic&gt; toJson() {
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'title': title,

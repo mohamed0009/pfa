@@ -25,27 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = getTokenFromRequest(request);
         
-<<<<<<< HEAD
-        if (token != null) {
-            boolean isValid = tokenProvider.validateToken(token);
-            System.out.println("Filter: Token found. Valid? " + isValid);
-            
-            if (isValid) {
-                String email = tokenProvider.getEmailFromToken(token);
-                System.out.println("Filter: Email from token: " + email);
-                
-                // You can extract role from token if needed
-                UsernamePasswordAuthenticationToken authentication = 
-                    new UsernamePasswordAuthenticationToken(email, null, 
-                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                 System.out.println("Filter: Token invalid.");
-            }
-        } else {
-             System.out.println("Filter: No token found in request to: " + request.getRequestURI());
-=======
         if (token != null && tokenProvider.validateToken(token)) {
             String email = tokenProvider.getEmailFromToken(token);
             // You can extract role from token if needed
@@ -54,7 +33,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
->>>>>>> 6cda151b2eff42f2d8a1da1f1935bfdc111bbe6d
         }
         
         filterChain.doFilter(request, response);

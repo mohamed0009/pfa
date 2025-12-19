@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../widgets/custom_card.dart';
 import '../../../core/di/dependency_injection.dart';
 import 'dart:ui';
+import 'module_details_screen.dart';
 
 class LearningModulesScreen extends StatefulWidget {
   const LearningModulesScreen({super.key});
@@ -247,7 +248,12 @@ class _LearningModulesScreenState extends State<LearningModulesScreen> {
       padding: const EdgeInsets.only(bottom: 16),
       child: CustomCard(
         onTap: () {
-          // Navigate to module details
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ModuleDetailsScreen(module: module),
+            ),
+          );
         },
         gradient: module.isCompleted
             ? LinearGradient(

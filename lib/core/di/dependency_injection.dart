@@ -12,6 +12,8 @@ import '../services/storage_service.dart';
 import '../services/api_service.dart';
 import '../services/logger_service.dart';
 import '../providers/user_provider.dart';
+import '../services/trainer_service.dart';
+import '../../features/dashboard/services/admin_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -96,6 +98,14 @@ Future<void> setupDependencyInjection() async {
       storage: getIt<StorageService>(),
       logger: getIt<LoggerService>(),
     ),
+  );
+
+  getIt.registerLazySingleton<TrainerService>(
+    () => TrainerService(),
+  );
+
+  getIt.registerLazySingleton<AdminService>(
+    () => AdminService(),
   );
 
   // Providers

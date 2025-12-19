@@ -26,12 +26,9 @@ public class ChatController {
     private ChatMessageRepository chatMessageRepository;
     
     @Autowired
-<<<<<<< HEAD
     private com.coachai.service.AiService aiService;
 
     @Autowired
-=======
->>>>>>> 6cda151b2eff42f2d8a1da1f1935bfdc111bbe6d
     private UserRepository userRepository;
     
     @GetMapping("/conversations")
@@ -159,10 +156,7 @@ public class ChatController {
                 return ResponseEntity.status(404).body(Map.of("error", "Conversation not found"));
             }
             
-<<<<<<< HEAD
             // 1. Save User Message
-=======
->>>>>>> 6cda151b2eff42f2d8a1da1f1935bfdc111bbe6d
             ChatMessage message = new ChatMessage();
             message.setConversation(conversation.get());
             message.setSender(ChatMessage.MessageSender.USER);
@@ -170,17 +164,12 @@ public class ChatController {
             
             ChatMessage saved = chatMessageRepository.save(message);
             
-<<<<<<< HEAD
             // Update conversation with user message
-=======
-            // Update conversation
->>>>>>> 6cda151b2eff42f2d8a1da1f1935bfdc111bbe6d
             Conversation conv = conversation.get();
             conv.setLastMessage(message.getContent());
             conv.setMessagesCount(conv.getMessagesCount() + 1);
             conversationRepository.save(conv);
             
-<<<<<<< HEAD
             // 2. Get AI Response (Synchronous for now)
             try {
                 String aiResponseText = aiService.getAiResponse(message.getContent());
@@ -203,15 +192,12 @@ public class ChatController {
             }
             
             
-=======
->>>>>>> 6cda151b2eff42f2d8a1da1f1935bfdc111bbe6d
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "Error sending message", "message", e.getMessage() != null ? e.getMessage() : "Unknown error"));
         }
     }
-<<<<<<< HEAD
 
     @DeleteMapping("/conversations/{conversationId}")
     public ResponseEntity<?> deleteConversation(
@@ -251,7 +237,4 @@ public class ChatController {
             return ResponseEntity.status(500).body(Map.of("error", "Error deleting conversation", "message", e.getMessage() != null ? e.getMessage() : "Unknown error"));
         }
     }
-=======
->>>>>>> 6cda151b2eff42f2d8a1da1f1935bfdc111bbe6d
 }
-

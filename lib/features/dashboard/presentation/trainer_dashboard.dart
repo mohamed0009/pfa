@@ -4,6 +4,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../widgets/custom_card.dart';
 import '../../../widgets/stat_card.dart';
 import '../../learning/presentation/learning_modules_screen.dart';
+import 'pages/trainer_content_screen.dart';
+import 'pages/trainer_students_screen.dart';
 
 class TrainerDashboard extends StatelessWidget {
   const TrainerDashboard({super.key});
@@ -134,7 +136,14 @@ class TrainerDashboard extends StatelessWidget {
                         'Suivi des apprenants',
                         Icons.people_outlined,
                         AppTheme.secondaryColor,
-                        () {},
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TrainerStudentsScreen(),
+                            ),
+                          );
+                        },
                       )
                           .animate()
                           .fadeIn(delay: 800.ms)
@@ -144,7 +153,14 @@ class TrainerDashboard extends StatelessWidget {
                         'Créer du contenu',
                         Icons.add_circle_outline,
                         AppTheme.accentColor,
-                        () {},
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TrainerContentScreen(),
+                            ),
+                          );
+                        },
                       )
                           .animate()
                           .fadeIn(delay: 900.ms)

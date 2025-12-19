@@ -18,11 +18,11 @@ class ConversationService {
   static const String _baseEndpoint = '/api/user/chat';
 
   /// Get all user conversations
-  Future&lt;List&lt;Conversation&gt;&gt; getConversations() async {
+  Future<List<Conversation>> getConversations() async {
     try {
       logger.logApiRequest('GET', '$_baseEndpoint/conversations');
       
-      final response = await apiService.get&lt;List&lt;dynamic&gt;&gt;(
+      final response = await apiService.get<List<dynamic>>(
         '$_baseEndpoint/conversations',
       );
 
@@ -31,7 +31,7 @@ class ConversationService {
       }
 
       final conversations = (response as List)
-          .map((json) =&gt; Conversation.fromJson(json as Map&lt;String, dynamic&gt;))
+          .map((json) => Conversation.fromJson(json as Map<String, dynamic>))
           .toList();
 
       logger.logApiResponse('GET', '$_baseEndpoint/conversations', 200);
@@ -43,12 +43,12 @@ class ConversationService {
   }
 
   /// Create a new conversation
-  Future&lt;Conversation&gt; createConversation(String title) async {
+  Future<Conversation> createConversation(String title) async {
     try {
       logger.logApiRequest('POST', '$_baseEndpoint/conversations', 
           data: {'title': title});
 
-      final response = await apiService.post&lt;Map&lt;String, dynamic&gt;&gt;(
+      final response = await apiService.post<Map<String, dynamic>>(
         '$_baseEndpoint/conversations',
         data: {'title': title},
       );
@@ -67,19 +67,19 @@ class ConversationService {
   }
 
   /// Get messages for a specific conversation
-  Future&lt;List&lt;ChatMessage&gt;&gt; getMessages(String conversationId) async {
+  Future<List<ChatMessage>> getMessages(String conversationId) async {
     try {
       final endpoint = '$_baseEndpoint/conversations/$conversationId/messages';
       logger.logApiRequest('GET', endpoint);
 
-      final response = await apiService.get&lt;List&lt;dynamic&gt;&gt;(endpoint);
+      final response = await apiService.get<List<dynamic>>(endpoint);
 
       if (response == null) {
         return [];
       }
 
       final messages = (response as List)
-          .map((json) =&gt; ChatMessage.fromJson(json as Map&lt;String, dynamic&gt;))
+          .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
           .toList();
 
       logger.logApiResponse('GET', endpoint, 200);
@@ -92,12 +92,12 @@ class ConversationService {
 
   /// Send a message to a conversation
   /// Backend automatically generates and saves AI response
-  Future&lt;ChatMessage&gt; sendMessage(String conversationId, String content) async {
+  Future<ChatMessage> sendMessage(String conversationId, String content) async {
     try {
       final endpoint = '$_baseEndpoint/conversations/$conversationId/messages';
       logger.logApiRequest('POST', endpoint, data: {'content': content});
 
-      final response = await apiService.post&lt;Map&lt;String, dynamic&gt;&gt;(
+      final response = await apiService.post<Map<String, dynamic>>(
         endpoint,
         data: {'content': content},
       );
@@ -116,7 +116,7 @@ class ConversationService {
   }
 
   /// Delete a conversation
-  Future&lt;void&gt; deleteConversation(String conversationId) async {
+  Future<void> deleteConversation(String conversationId) async {
     try {
       final endpoint = '$_baseEndpoint/conversations/$conversationId';
       logger.logApiRequest('DELETE', endpoint);

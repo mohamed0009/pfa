@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Environment configuration for the application
 class AppConfig {
   // API Configuration
-  static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000';
+  static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:8080';
   static int get apiTimeout => int.parse(dotenv.env['API_TIMEOUT'] ?? '30000');
 
   // OpenAI Configuration

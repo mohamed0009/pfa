@@ -8,7 +8,8 @@ plugins {
 android {
     namespace = "com.example.pfa"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // NDK not required for Flutter apps - commenting out to avoid download issues
+    // ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

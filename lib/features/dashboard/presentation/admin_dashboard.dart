@@ -7,6 +7,8 @@ import '../../../widgets/stat_card.dart';
 import 'models/admin_models.dart';
 import '../services/admin_service.dart';
 import 'pages/user_management_screen.dart';
+import '../../admin/screens/ai_supervision/ai_supervision_screen.dart';
+
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -170,14 +172,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           .scale(),
                       _buildActionCard(
                         context,
-                        'Gestion contenus',
-                        Icons.library_books_outlined,
-                        AppTheme.secondaryColor,
+                        'Supervision IA',
+                        Icons.psychology_outlined,
+                        const Color(0xFF8B5CF6),
                         () {
-                           // TODO: Admin content management
-                           ScaffoldMessenger.of(context).showSnackBar(
-                             const SnackBar(content: Text('Bientôt disponible')),
-                           );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AISupervisionScreen(),
+                            ),
+                          );
                         },
                       )
                           .animate()
@@ -185,20 +189,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           .scale(),
                       _buildActionCard(
                         context,
-                        'Paramètres système',
-                        Icons.settings_outlined,
-                        AppTheme.accentColor,
-                        () {},
+                        'Gestion contenus',
+                        Icons.library_books_outlined,
+                        AppTheme.secondaryColor,
+                        () {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             const SnackBar(content: Text('Bientôt disponible')),
+                           );
+                        },
                       )
                           .animate()
                           .fadeIn(delay: 900.ms)
                           .scale(),
                       _buildActionCard(
                         context,
-                        'Rapports',
-                        Icons.assessment_outlined,
-                        AppTheme.successColor,
-                        () {},
+                        'Paramètres système',
+                        Icons.settings_outlined,
+                        AppTheme.accentColor,
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Bientôt disponible')),
+                          );
+                        },
                       )
                           .animate()
                           .fadeIn(delay: 1000.ms)

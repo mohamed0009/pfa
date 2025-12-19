@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/models/chat_message.dart';
 import '../../../core/models/conversation_model.dart';
 import '../../../core/services/conversation_service.dart';
+import '../../../core/services/audio_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/di/dependency_injection.dart';
@@ -26,17 +27,20 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final ConversationService _conversationService;
+  late final AudioService _audioService;
   
   List<ChatMessage> _messages = [];
   Conversation? _conversation;
   bool _isLoading = true;
   bool _isSending = false;
   String? _error;
+  bool _autoPlayAudio = false;
 
   @override
   void initState() {
     super.initState();
     _conversationService = getIt<ConversationService>();
+    _audioService = getIt<AudioService>();
     _loadConversation();
   }
 
@@ -77,7 +81,65 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _audioService.dispose();
     super.dispose();
+  }
+
+  /// Start voice input (speech-to-text)
+  Future<void> _startVoiceInput() async {
+    try {
+      final recognizedText = await _audioService.startListening(
+        onResult: (text) {
+          setState(() {
+            _messageController.text = text;
+          });
+        },
+        onDone: () {
+          setState(() {});
+          // Auto-send if text is recognized
+          if (_messageController.text.trim().isNotEmpty) {
+            _sendMessage();
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur de reconnaissance vocale: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  /// Stop voice input
+  Future<void> _stopVoiceInput() async {
+    await _audioService.stopListening();
+    setState(() {});
+  }
+
+  /// Toggle audio playback for AI responses
+  void _toggleAudioPlayback() {
+    setState(() {
+      _autoPlayAudio = !_autoPlayAudio;
+    });
+    
+    if (_autoPlayAudio && _messages.isNotEmpty) {
+      // Play the last AI message
+      final lastAiMessage = _messages.reversed
+          .firstWhere((m) => m.type == MessageType.assistant, orElse: () => _messages.last);
+      if (lastAiMessage.type == MessageType.assistant) {
+        _audioService.speak(lastAiMessage.content);
+      }
+    } else {
+      _audioService.stopSpeaking();
+    }
+  }
+
+  /// Play audio for a specific message
+  Future<void> _playMessageAudio(ChatMessage message) async {
+    if (message.type == MessageType.assistant) {
+      await _audioService.speak(message.content);
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -109,6 +171,15 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       
       _scrollToBottom();
+      
+      // Auto-play audio if enabled
+      if (_autoPlayAudio && messages.isNotEmpty) {
+        final lastAiMessage = messages.reversed
+            .firstWhere((m) => m.type == MessageType.assistant, orElse: () => messages.last);
+        if (lastAiMessage.type == MessageType.assistant) {
+          _audioService.speak(lastAiMessage.content);
+        }
+      }
     } catch (e) {
       setState(() {
         _isSending = false;
@@ -308,6 +379,42 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     child: Row(
                       children: [
+                        // Voice input button
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _audioService.isListening 
+                                ? AppTheme.errorColor 
+                                : AppTheme.secondaryColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _audioService.isListening 
+                                  ? AppTheme.errorColor 
+                                  : AppTheme.secondaryColor.withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _audioService.isListening 
+                                  ? Icons.mic_rounded 
+                                  : Icons.mic_none_rounded,
+                              color: _audioService.isListening 
+                                  ? Colors.white 
+                                  : AppTheme.secondaryColor,
+                              size: 22,
+                            ),
+                            onPressed: _audioService.isListening 
+                                ? _stopVoiceInput 
+                                : _startVoiceInput,
+                          ),
+                        )
+                            .animate()
+                            .scale(delay: 500.ms, duration: 400.ms),
+                        
+                        SizedBox(width: 8),
+                        
                         // Message input field
                         Expanded(
                           child: Container(
@@ -315,14 +422,18 @@ class _ChatScreenState extends State<ChatScreen> {
                               color: AppTheme.backgroundColor,
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
-                                color: AppTheme.borderColor.withOpacity(0.3),
-                                width: 1,
+                                color: _audioService.isListening
+                                    ? AppTheme.errorColor.withOpacity(0.5)
+                                    : AppTheme.borderColor.withOpacity(0.3),
+                                width: _audioService.isListening ? 2 : 1,
                               ),
                             ),
                             child: TextField(
                               controller: _messageController,
                               decoration: InputDecoration(
-                                hintText: 'Type your message...',
+                                hintText: _audioService.isListening 
+                                    ? 'Listening...' 
+                                    : 'Type your message...',
                                 hintStyle: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontSize: 15,
@@ -340,7 +451,41 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         ),
                         
-                        SizedBox(width: 12),
+                        SizedBox(width: 8),
+                        
+                        // Audio playback toggle button
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _autoPlayAudio 
+                                ? AppTheme.primaryColor.withOpacity(0.1)
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _autoPlayAudio 
+                                  ? AppTheme.primaryColor 
+                                  : AppTheme.borderColor.withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _audioService.isSpeaking 
+                                  ? Icons.volume_up_rounded 
+                                  : Icons.volume_off_rounded,
+                              color: _autoPlayAudio 
+                                  ? AppTheme.primaryColor 
+                                  : AppTheme.textSecondary,
+                              size: 22,
+                            ),
+                            onPressed: _toggleAudioPlayback,
+                          ),
+                        )
+                            .animate()
+                            .scale(delay: 550.ms, duration: 400.ms),
+                        
+                        SizedBox(width: 8),
                         
                         // Send button with gradient
                         Container(
@@ -569,15 +714,38 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         ),
                         SizedBox(height: 6),
-                        Text(
-                          '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
-                          style: TextStyle(
-                            color: isUser
-                                ? Colors.white.withOpacity(0.8)
-                                : AppTheme.textSecondary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        Row(
+                          mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                color: isUser
+                                    ? Colors.white.withOpacity(0.8)
+                                    : AppTheme.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (!isUser) ...[
+                              SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => _playMessageAudio(message),
+                                child: Container(
+                                  padding: EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.volume_up_rounded,
+                                    size: 14,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),

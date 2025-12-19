@@ -6,6 +6,8 @@ import '../../../widgets/stat_card.dart';
 import '../../learning/presentation/learning_modules_screen.dart';
 import 'pages/trainer_content_screen.dart';
 import 'pages/trainer_students_screen.dart';
+import '../../trainer/screens/ai_assistant/trainer_ai_assistant_screen.dart';
+
 
 class TrainerDashboard extends StatelessWidget {
   const TrainerDashboard({super.key});
@@ -167,10 +169,17 @@ class TrainerDashboard extends StatelessWidget {
                           .scale(),
                       _buildActionCard(
                         context,
-                        'Analyses',
-                        Icons.analytics_outlined,
-                        AppTheme.successColor,
-                        () {},
+                        'Assistant IA',
+                        Icons.psychology_outlined,
+                        const Color(0xFF8B5CF6),
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const TrainerAIAssistantScreen(),
+                            ),
+                          );
+                        },
                       )
                           .animate()
                           .fadeIn(delay: 1000.ms)

@@ -13,6 +13,7 @@ import '../services/api_service.dart';
 import '../services/logger_service.dart';
 import '../providers/user_provider.dart';
 import '../services/trainer_service.dart';
+import '../services/audio_service.dart';
 import '../../features/dashboard/services/admin_service.dart';
 
 final getIt = GetIt.instance;
@@ -106,6 +107,10 @@ Future<void> setupDependencyInjection() async {
 
   getIt.registerLazySingleton<AdminService>(
     () => AdminService(),
+  );
+
+  getIt.registerLazySingleton<AudioService>(
+    () => AudioService(logger: getIt<LoggerService>()),
   );
 
   // Providers

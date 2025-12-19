@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
+import 'package:dio/dio.dart';
 import '../models/user_model.dart';
 import 'storage_service.dart';
 import 'api_service.dart';
@@ -74,35 +75,81 @@ class AuthService {
     try {
       logger.logUserAction('login_attempt', metadata: {'email': email});
 
-      // Simulate API delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      // In production, replace with:
-      // final response = await apiService.post<Map<String, dynamic>>(
-      //   '/auth/login',
-      //   data: {'email': email, 'password': password},
-      // );
-      // final user = UserModel.fromJson(response['user']);
-      // await storage.saveAccessToken(response['accessToken']);
-      // await storage.saveRefreshToken(response['refreshToken']);
-
-      final users = await _getAllUsers();
-      final user = users.firstWhere(
-        (u) => u.email == email,
-        orElse: () => throw NotFoundException('User not found'),
+      // Real API call to backend
+      logger.debug('Calling login API: /api/auth/login', {'email': email});
+      
+      final response = await apiService.post<Map<String, dynamic>>(
+        '/api/auth/login',
+        data: {'email': email, 'password': password},
       );
 
-      // In real app, verify password here
+      logger.debug('Login API response received', response);
+
+      if (response == null) {
+        logger.error('Login failed: null response', null);
+        throw ServerException('No response from server');
+      }
+
+      // Save JWT token
+      final token = response['token'] as String?;
+      if (token != null) {
+        await storage.saveAccessToken(token);
+        logger.debug('JWT token saved', null);
+      } else {
+        logger.warning('No token in response', response);
+      }
+
+      // Create user model from response
+      final user = UserModel(
+        id: response['id']?.toString() ?? '',
+        email: response['email']?.toString() ?? email,
+        name: '${response['firstName'] ?? ''} ${response['lastName'] ?? ''}'.trim(),
+        role: _mapRoleFromString(response['role']?.toString() ?? 'USER'),
+        createdAt: DateTime.now(),
+        preferences: {},
+      );
+
       await _saveCurrentUser(user);
       logger.info('User logged in successfully: ${user.email}');
 
       return Success(user);
     } on AppException catch (e) {
       logger.error('Login failed', e);
+      if (e is UnauthorizedException || e.message.contains('401') || e.message.contains('incorrect') || e.message.contains('Authentication failed')) {
+        return Failure('Email ou mot de passe incorrect');
+      }
       return Failure(e.message, e);
+    } on DioException catch (e) {
+      logger.error('Login failed (DioException)', e);
+      if (e.response?.statusCode == 401) {
+        return Failure('Email ou mot de passe incorrect');
+      }
+      // Check if it's a network error
+      if (e.type == DioExceptionType.connectionTimeout || 
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        return Failure('Impossible de se connecter au serveur. Vérifiez votre connexion.');
+      }
+      return Failure('Login failed: ${e.message ?? 'Unknown error'}');
     } catch (e) {
       logger.error('Unexpected login error', e);
       return Failure('Login failed: ${e.toString()}');
+    }
+  }
+
+  UserRole _mapRoleFromString(String role) {
+    switch (role.toUpperCase()) {
+      case 'ADMIN':
+      case 'ADMINISTRATEUR':
+        return UserRole.admin;
+      case 'TRAINER':
+      case 'FORMATEUR':
+        return UserRole.trainer;
+      case 'USER':
+      case 'APPRENANT':
+      case 'LEARNER':
+      default:
+        return UserRole.learner;
     }
   }
 
@@ -116,45 +163,74 @@ class AuthService {
     try {
       logger.logUserAction('register_attempt', metadata: {'email': email});
 
-      await Future.delayed(const Duration(seconds: 1));
+      // Split name into first and last name
+      final nameParts = name.trim().split(' ');
+      final firstName = nameParts.isNotEmpty ? nameParts.first : name;
+      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-      // In production, replace with:
-      // final response = await apiService.post<Map<String, dynamic>>(
-      //   '/auth/register',
-      //   data: {
-      //     'email': email,
-      //     'password': password,
-      //     'name': name,
-      //     'role': role.toString(),
-      //   },
-      // );
+      // Real API call to backend
+      final response = await apiService.post<Map<String, dynamic>>(
+        '/api/auth/signup',
+        data: {
+          'email': email,
+          'password': password,
+          'firstName': firstName,
+          'lastName': lastName,
+          'role': _mapRoleToString(role),
+        },
+      );
 
-      final users = await _getAllUsers();
-      if (users.any((u) => u.email == email)) {
-        throw BadRequestException('Email already exists');
+      if (response == null) {
+        throw ServerException('No response from server');
       }
 
+      // Save JWT token
+      final token = response['token'] as String?;
+      if (token != null) {
+        await storage.saveAccessToken(token);
+      }
+
+      // Create user model from response
       final newUser = UserModel(
-        id: _uuid.v4(),
-        email: email,
-        name: name,
-        role: role,
+        id: response['id'] ?? '',
+        email: response['email'] ?? email,
+        name: '${response['firstName'] ?? ''} ${response['lastName'] ?? ''}'.trim(),
+        role: _mapRoleFromString(response['role']?.toString() ?? 'USER'),
         createdAt: DateTime.now(),
         preferences: {},
       );
 
-      users.add(newUser);
-      await _saveAllUsers(users);
       await _saveCurrentUser(newUser);
-
       logger.info('User registered successfully: ${newUser.email}');
       return Success(newUser);
     } on AppException catch (e) {
       logger.error('Registration failed', e);
+      if (e is BadRequestException || e.message.contains('already') || e.message.contains('taken')) {
+        return Failure('Cet email est déjà utilisé');
+      }
       return Failure(e.message, e);
+    } on DioException catch (e) {
+      logger.error('Registration failed (DioException)', e);
+      if (e.response?.statusCode == 400) {
+        final errorMessage = e.response?.data?.toString() ?? 'Email already exists';
+        return Failure(errorMessage);
+      }
+      return Failure('Registration failed: ${e.message ?? 'Unknown error'}');
     } catch (e) {
       logger.error('Unexpected registration error', e);
       return Failure('Registration failed: ${e.toString()}');
+    }
+  }
+
+  String _mapRoleToString(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return 'ADMIN';
+      case UserRole.trainer:
+        return 'TRAINER';
+      case UserRole.learner:
+      default:
+        return 'USER';
     }
   }
 

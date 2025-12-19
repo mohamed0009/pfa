@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 import 'storage_service.dart';
@@ -20,7 +21,9 @@ class ApiService {
   }
 
   void _setupInterceptors() {
-    _dio.options.baseUrl = AppConfig.apiBaseUrl;
+    final baseUrl = AppConfig.apiBaseUrl;
+    logger.info('Setting API base URL: $baseUrl', null);
+    _dio.options.baseUrl = baseUrl;
     _dio.options.connectTimeout = Duration(milliseconds: AppConfig.apiTimeout);
     _dio.options.receiveTimeout = Duration(milliseconds: AppConfig.apiTimeout);
 
@@ -255,12 +258,43 @@ class ApiService {
     }
 
     final statusCode = response.statusCode ?? 0;
-    final message = response.data?['message'] ?? 'An error occurred';
+    // Try to extract error message from different possible formats
+    String message = 'An error occurred';
+    if (response.data != null) {
+      try {
+        if (response.data is Map) {
+          message = response.data['message'] ?? 
+                    response.data['error'] ?? 
+                    response.data.toString();
+        } else if (response.data is String) {
+          // Try to parse JSON string
+          try {
+            final parsed = json.decode(response.data);
+            if (parsed is Map) {
+              message = parsed['message'] ?? parsed['error'] ?? response.data;
+            } else {
+              message = response.data;
+            }
+          } catch (e) {
+            message = response.data;
+          }
+        }
+      } catch (e) {
+        message = response.data.toString();
+      }
+    }
 
     switch (statusCode) {
       case 400:
         return BadRequestException(message);
       case 401:
+        // For login, return a more specific message
+        final lowerMessage = message.toLowerCase();
+        if (lowerMessage.contains('authentication failed') || 
+            lowerMessage.contains('incorrect') ||
+            lowerMessage.contains('bad credentials')) {
+          return UnauthorizedException('Email ou mot de passe incorrect');
+        }
         return UnauthorizedException('Session expired. Please login again.');
       case 403:
         return ForbiddenException('You don\'t have permission to access this resource');

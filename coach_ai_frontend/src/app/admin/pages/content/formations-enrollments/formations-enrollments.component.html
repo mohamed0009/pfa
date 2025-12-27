@@ -1,0 +1,112 @@
+<div class="formations-enrollments-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <h1>Inscriptions aux Formations</h1>
+      <p class="subtitle">Consultez toutes les inscriptions et la progression des étudiants</p>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des formations...</p>
+  </div>
+
+  <!-- Formations List -->
+  <div *ngIf="!isLoading" class="content-container">
+    <div class="formations-sidebar">
+      <h3>Formations</h3>
+      <div class="formations-list">
+        <button 
+          *ngFor="let formation of formations"
+          class="formation-item"
+          [class.active]="selectedFormation?.id === formation.id"
+          (click)="selectFormation(formation)">
+          <div class="formation-item-content">
+            <span class="formation-title">{{ formation.title }}</span>
+            <span class="formation-count">{{ formation.enrolledCount }} inscrits</span>
+          </div>
+        </button>
+      </div>
+      <div *ngIf="formations.length === 0" class="empty-formations">
+        <p>Aucune formation disponible</p>
+      </div>
+    </div>
+
+    <!-- Enrollments Panel -->
+    <div class="enrollments-panel">
+      <div *ngIf="!selectedFormation" class="select-formation-prompt">
+        <span class="material-icons">info</span>
+        <h3>Sélectionnez une formation</h3>
+        <p>Choisissez une formation dans la liste pour voir les inscriptions</p>
+      </div>
+
+      <div *ngIf="selectedFormation && !isLoadingEnrollments" class="enrollments-content">
+        <div class="panel-header">
+          <h2>{{ selectedFormation.title }}</h2>
+          <div class="stats-bar">
+            <div class="stat-item">
+              <span class="stat-value">{{ getTotalEnrollments() }}</span>
+              <span class="stat-label">Inscriptions</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ getAverageProgress() }}%</span>
+              <span class="stat-label">Progression moyenne</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ getCompletedCount() }}</span>
+              <span class="stat-label">Terminées</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="enrollments.length > 0" class="enrollments-list">
+          <div *ngFor="let enrollment of enrollments" class="enrollment-card">
+            <div class="enrollment-header">
+              <div class="student-info">
+                <h3>{{ enrollment.studentName }}</h3>
+                <p class="enrollment-meta">
+                  Inscrit le {{ enrollment.enrolledAt | date:'dd/MM/yyyy' }}
+                  <span class="status-badge" [style.background]="getStatusColor(enrollment.status)">
+                    {{ getStatusBadge(enrollment.status) }}
+                  </span>
+                </p>
+              </div>
+              <div class="progress-circle" 
+                   [style.background]="'conic-gradient(' + getProgressColor(enrollment.overallProgress) + ' ' + enrollment.overallProgress + '%, #e5e7eb 0%)'">
+                <span>{{ enrollment.overallProgress }}%</span>
+              </div>
+            </div>
+
+            <div class="progress-bar-container">
+              <div class="progress-bar">
+                <div class="progress-fill" 
+                     [style.width.%]="enrollment.overallProgress"
+                     [style.background]="getProgressColor(enrollment.overallProgress)"></div>
+              </div>
+              <div class="progress-stats">
+                <span>{{ enrollment.completedModules }} / {{ enrollment.totalModules }} modules</span>
+                <span *ngIf="enrollment.averageQuizScore > 0">
+                  Score moyen: {{ enrollment.averageQuizScore | number:'1.1-1' }}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="enrollments.length === 0" class="empty-enrollments">
+          <span class="material-icons">people_outline</span>
+          <h3>Aucune inscription</h3>
+          <p>Cette formation n'a pas encore d'étudiants inscrits</p>
+        </div>
+      </div>
+
+      <div *ngIf="selectedFormation && isLoadingEnrollments" class="loading-enrollments">
+        <div class="spinner"></div>
+        <p>Chargement des inscriptions...</p>
+      </div>
+    </div>
+  </div>
+</div>
+

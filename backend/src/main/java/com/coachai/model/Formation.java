@@ -29,6 +29,11 @@ public class Formation {
     @Column(columnDefinition = "TEXT")
     private String description;
     
+    @ElementCollection
+    @CollectionTable(name = "formation_objectives", joinColumns = @JoinColumn(name = "formation_id"))
+    @Column(name = "objective", columnDefinition = "TEXT")
+    private List<String> objectives = new ArrayList<>();
+    
     private String thumbnail;
     
     @Enumerated(EnumType.STRING)
@@ -42,19 +47,25 @@ public class Formation {
     
     private double duration; // en heures
     
-    @OneToMany(mappedBy = "formation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "formation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("order ASC")
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "formation", "createdBy"})
     private List<Module> modules = new ArrayList<>();
     
     private int enrolledCount = 0;
     
     private double completionRate = 0.0;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by")
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "enrollments", "conversations", "preferences", "password"})
     private User createdBy;
+    
+    // Formateur assigné à cette formation
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "assigned_to")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "enrollments", "conversations", "preferences", "password"})
+    private User assignedTo;
     
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -64,6 +75,8 @@ public class Formation {
     private LocalDateTime updatedAt;
     
     private LocalDateTime submittedForValidationAt;
+    
+    private LocalDateTime publishedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "validated_by")

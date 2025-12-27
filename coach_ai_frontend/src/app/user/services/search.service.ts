@@ -1,12 +1,16 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { delay, map, catchError } from 'rxjs/operators';
 import { SearchResult, SearchFilters, Favorite } from '../models/user.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SearchService {
+  private apiUrl = 'http://localhost:8081/api/user/search';
+  
+  constructor(private http: HttpClient) {}
   private mockSearchResults: SearchResult[] = [
     {
       id: 'res1',
@@ -97,36 +101,55 @@ export class SearchService {
     }
   ];
 
-  constructor() {}
-
   // Recherche globale
   search(query: string, filters?: SearchFilters): Observable<SearchResult[]> {
     if (!query || query.trim() === '') {
       return of([]).pipe(delay(200));
     }
 
-    let results = this.mockSearchResults.filter(result => 
-      result.title.toLowerCase().includes(query.toLowerCase()) ||
-      result.description.toLowerCase().includes(query.toLowerCase())
-    );
-
-    // Appliquer les filtres
+    let params = new HttpParams().set('query', query);
+    
     if (filters) {
       if (filters.type && filters.type.length > 0) {
-        results = results.filter(r => filters.type!.includes(r.type));
+        filters.type.forEach(t => params = params.append('type', t));
       }
-      
       if (filters.niveau && filters.niveau.length > 0) {
-        results = results.filter(r => 
-          r.metadata?.niveau && filters.niveau!.includes(r.metadata.niveau)
-        );
+        filters.niveau.forEach(n => params = params.append('niveau', n));
       }
     }
 
-    // Trier par pertinence
-    results.sort((a, b) => b.relevance - a.relevance);
-
-    return of(results).pipe(delay(400));
+    return this.http.get<any[]>(this.apiUrl, { params }).pipe(
+      map((results: any[]) => results.map(r => ({
+        id: r.id || '',
+        type: r.type || 'module',
+        title: r.title || '',
+        description: r.description || '',
+        url: r.url || '',
+        relevance: r.relevance || 0,
+        category: r.category || '',
+        metadata: r.metadata || {}
+      }))),
+      catchError((error) => {
+        console.error('Error performing search:', error);
+        // Fallback to mock search
+        let results = this.mockSearchResults.filter(result => 
+          result.title.toLowerCase().includes(query.toLowerCase()) ||
+          result.description.toLowerCase().includes(query.toLowerCase())
+        );
+        if (filters) {
+          if (filters.type && filters.type.length > 0) {
+            results = results.filter(r => filters.type!.includes(r.type));
+          }
+          if (filters.niveau && filters.niveau.length > 0) {
+            results = results.filter(r => 
+              r.metadata?.niveau && filters.niveau!.includes(r.metadata.niveau)
+            );
+          }
+        }
+        results.sort((a, b) => b.relevance - a.relevance);
+        return of(results).pipe(delay(400));
+      })
+    );
   }
 
   // Recherche rapide (autocomplete)

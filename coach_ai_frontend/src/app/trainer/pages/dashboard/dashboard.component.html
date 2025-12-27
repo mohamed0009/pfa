@@ -150,6 +150,92 @@
           </div>
         </div>
       </div>
+
+      <!-- Recent Courses -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span class="material-icons">menu_book</span>
+            Cours Récents
+          </h2>
+          <a routerLink="/trainer/content/courses" class="link">Voir tout</a>
+        </div>
+        <div class="card-body">
+          <div *ngIf="recentCourses.length === 0" class="empty-state">
+            <span class="material-icons">book</span>
+            <p>Aucun cours disponible</p>
+          </div>
+
+          <div *ngIf="recentCourses.length > 0" class="courses-list">
+            <div *ngFor="let course of recentCourses" class="course-item" [routerLink]="['/trainer/content/courses', course.id]">
+              <div class="course-header">
+                <h4>{{ course.title }}</h4>
+                <span class="status-badge" [class]="'status-' + course.status">
+                  {{ course.status === 'draft' ? 'Brouillon' : course.status === 'pending' ? 'En attente' : course.status === 'approved' ? 'Approuvé' : course.status === 'published' ? 'Publié' : course.status }}
+                </span>
+              </div>
+              <p class="course-description">{{ course.description || 'Aucune description' }}</p>
+              <div class="course-meta">
+                <span class="meta-item">
+                  <span class="material-icons">schedule</span>
+                  {{ course.duration || 0 }}h
+                </span>
+                <span class="meta-item" *ngIf="course.difficulty">
+                  <span class="material-icons">trending_up</span>
+                  {{ course.difficulty }}
+                </span>
+                <span class="meta-item">
+                  <span class="material-icons">people</span>
+                  {{ course.enrolledCount || course.enrolledStudents || 0 }} inscrits
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Statistics -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <span class="material-icons">psychology</span>
+            Assistant IA
+          </h2>
+          <a routerLink="/trainer/ai-assistant" class="link">Utiliser</a>
+        </div>
+        <div class="card-body">
+          <div class="ai-stats-grid">
+            <div class="ai-stat-item">
+              <span class="material-icons">auto_awesome</span>
+              <div class="ai-stat-content">
+                <h3>{{ aiStats.totalGenerated }}</h3>
+                <p>Contenus générés</p>
+              </div>
+            </div>
+            <div class="ai-stat-item">
+              <span class="material-icons">quiz</span>
+              <div class="ai-stat-content">
+                <h3>{{ aiStats.quizzesGenerated }}</h3>
+                <p>Quiz générés</p>
+              </div>
+            </div>
+            <div class="ai-stat-item">
+              <span class="material-icons">assignment</span>
+              <div class="ai-stat-content">
+                <h3>{{ aiStats.exercisesGenerated }}</h3>
+                <p>Exercices générés</p>
+              </div>
+            </div>
+            <div class="ai-stat-item">
+              <span class="material-icons">summarize</span>
+              <div class="ai-stat-content">
+                <h3>{{ aiStats.summariesGenerated }}</h3>
+                <p>Résumés générés</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Quick Actions -->

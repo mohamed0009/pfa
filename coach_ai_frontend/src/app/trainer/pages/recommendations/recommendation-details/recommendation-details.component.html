@@ -1,0 +1,162 @@
+<div class="recommendation-details-container">
+  <button class="btn-back" (click)="router.navigate(['/trainer/recommendations'])" type="button">
+    <span class="material-icons">arrow_back</span>
+    Retour aux recommandations
+  </button>
+
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <div *ngIf="!isLoading && recommendation" class="recommendation-details">
+    <!-- Header -->
+    <div class="details-header">
+      <div>
+        <h1>Détails de la Recommandation</h1>
+        <div class="status-badge" 
+             [style.background-color]="getStatusColor(recommendation.status) + '20'"
+             [style.color]="getStatusColor(recommendation.status)">
+          {{ getStatusLabel(recommendation.status) }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Info -->
+    <div class="info-section">
+      <h2>
+        <span class="material-icons">person</span>
+        Informations de l'Apprenant
+      </h2>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="label">Nom:</span>
+          <span class="value">{{ recommendation.studentName || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Email:</span>
+          <span class="value">{{ recommendation.studentEmail || 'N/A' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Course Info -->
+    <div class="info-section" *ngIf="recommendation.course">
+      <h2>
+        <span class="material-icons">school</span>
+        Cours Recommandé
+      </h2>
+      <div class="course-card">
+        <h3>{{ recommendation.course.title }}</h3>
+        <p *ngIf="recommendation.course.description" class="course-description">
+          {{ recommendation.course.description }}
+        </p>
+        <div class="course-meta">
+          <span *ngIf="recommendation.course.category" class="meta-item">
+            <span class="material-icons">category</span>
+            {{ recommendation.course.category }}
+          </span>
+          <span *ngIf="recommendation.course.difficulty" class="meta-item">
+            <span class="material-icons">trending_up</span>
+            {{ recommendation.course.difficulty }}
+          </span>
+          <span *ngIf="recommendation.course.duration" class="meta-item">
+            <span class="material-icons">schedule</span>
+            {{ (recommendation.course.duration / 60).toFixed(1) }}h
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendation Reason -->
+    <div class="info-section">
+      <h2>
+        <span class="material-icons">lightbulb</span>
+        Raison de la Recommandation
+      </h2>
+      <div class="reason-box">
+        <p>{{ recommendation.reason }}</p>
+      </div>
+    </div>
+
+    <!-- Conversation Excerpt -->
+    <div class="info-section" *ngIf="recommendation.conversationExcerpt">
+      <h2>
+        <span class="material-icons">chat_bubble</span>
+        Extrait de Conversation
+      </h2>
+      <div class="excerpt-box">
+        <p>"{{ recommendation.conversationExcerpt }}"</p>
+      </div>
+    </div>
+
+    <!-- Confidence Score -->
+    <div class="info-section">
+      <h2>
+        <span class="material-icons">analytics</span>
+        Score de Confiance
+      </h2>
+      <div class="confidence-display">
+        <div class="score-bar-large">
+          <div class="score-fill" 
+               [style.width.%]="recommendation.confidenceScore"
+               [style.background-color]="getConfidenceColor(recommendation.confidenceScore)"></div>
+        </div>
+        <div class="score-value-large">
+          {{ recommendation.confidenceScore.toFixed(1) }}%
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Notes -->
+    <div class="info-section">
+      <h2>
+        <span class="material-icons">note</span>
+        Notes de Révision
+      </h2>
+      <textarea 
+        [(ngModel)]="reviewNotes"
+        placeholder="Ajoutez vos notes ici..."
+        rows="4"
+        [disabled]="recommendation.status !== 'PENDING'"
+        class="notes-textarea"></textarea>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-section" *ngIf="recommendation.status === 'PENDING'">
+      <button 
+        class="btn-accept" 
+        (click)="acceptRecommendation()"
+        [disabled]="isProcessing">
+        <span class="material-icons">check</span>
+        {{ isProcessing ? 'Traitement...' : 'Accepter la Recommandation' }}
+      </button>
+      <button 
+        class="btn-reject" 
+        (click)="rejectRecommendation()"
+        [disabled]="isProcessing">
+        <span class="material-icons">close</span>
+        {{ isProcessing ? 'Traitement...' : 'Rejeter la Recommandation' }}
+      </button>
+    </div>
+
+    <!-- Review Info -->
+    <div class="info-section" *ngIf="recommendation.status !== 'PENDING' && recommendation.reviewedAt">
+      <h2>
+        <span class="material-icons">verified</span>
+        Informations de Révision
+      </h2>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="label">Révisé le:</span>
+          <span class="value">{{ recommendation.reviewedAt | date:'dd/MM/yyyy à HH:mm' }}</span>
+        </div>
+        <div class="info-item" *ngIf="recommendation.reviewNotes">
+          <span class="label">Notes:</span>
+          <span class="value">{{ recommendation.reviewNotes }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -52,7 +52,7 @@
 
         <div class="message-items">
           <div 
-            *ngFor="let message of messages"
+            *ngFor="let message of filteredMessages"
             class="message-item"
             [class.active]="selectedMessage?.id === message.id"
             [class.unread]="!message.read"
@@ -63,12 +63,16 @@
             </div>
             <div class="message-info">
               <div class="message-header">
-                <strong>{{ message.senderRole === 'student' ? message.senderName : message.recipientName }}</strong>
+                <strong>{{ message.senderRole === 'student' ? message.senderName : message.recipientName || message.senderName }}</strong>
                 <span class="message-time">{{ message.sentAt | date:'short' }}</span>
               </div>
-              <p class="message-subject">{{ message.subject || 'Sans objet' }}</p>
+              <p class="message-subject">{{ message.subject || message.content?.substring(0, 30) || 'Sans objet' }}</p>
               <p class="message-preview">{{ getMessagePreview(message.content) }}</p>
             </div>
+          </div>
+          <div *ngIf="messages.length === 0" class="empty-messages">
+            <span class="material-icons">inbox</span>
+            <p>Aucun message</p>
           </div>
         </div>
       </div>
@@ -97,7 +101,25 @@
 
         <div class="detail-body">
           <h2>{{ selectedMessage.subject }}</h2>
-          <p>{{ selectedMessage.content }}</p>
+          
+          <!-- Conversation Messages -->
+          <div class="conversation-messages" *ngIf="!isLoadingMessages">
+            <div 
+              *ngFor="let msg of selectedConversationMessages" 
+              class="message-bubble"
+              [class.sent-by-user]="msg.sender === 'USER'"
+              [class.sent-by-ai]="msg.sender === 'AI'">
+              <div class="message-content">
+                <p>{{ msg.content }}</p>
+                <span class="message-time">{{ msg.timestamp | date:'short' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="isLoadingMessages" class="loading-messages">
+            <span class="spinner"></span>
+            <p>Chargement des messages...</p>
+          </div>
         </div>
 
         <div class="detail-reply">
@@ -194,6 +216,113 @@
             <span class="material-icons">delete</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Message Modal -->
+  <div class="modal-overlay" *ngIf="showNewMessageModal" (click)="closeNewMessageModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <span class="material-icons">email</span>
+          Nouveau Message
+        </h2>
+        <button class="btn-icon" (click)="closeNewMessageModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Destinataire</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newMessageData.recipientName"
+            class="form-control"
+            placeholder="Nom de l'apprenant">
+        </div>
+
+        <div class="form-group">
+          <label>Sujet</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newMessageData.subject"
+            class="form-control"
+            placeholder="Sujet du message">
+        </div>
+
+        <div class="form-group">
+          <label>Message *</label>
+          <textarea 
+            [(ngModel)]="newMessageData.content"
+            class="form-control"
+            rows="6"
+            placeholder="Écrivez votre message..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeNewMessageModal()" [disabled]="isSending">
+          Annuler
+        </button>
+        <button class="btn btn-primary" (click)="sendNewMessage()" [disabled]="isSending || !newMessageData.content.trim()">
+          <span *ngIf="isSending" class="spinner"></span>
+          <span *ngIf="!isSending">
+            <span class="material-icons">send</span>
+            Envoyer
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Answer Question Modal -->
+  <div class="modal-overlay" *ngIf="showAnswerModal" (click)="closeAnswerModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <span class="material-icons">help</span>
+          Répondre à la Question
+        </h2>
+        <button class="btn-icon" (click)="closeAnswerModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedQuestion">
+        <div class="question-display">
+          <h3>{{ selectedQuestion.studentName }}</h3>
+          <p class="question-text">{{ selectedQuestion.question }}</p>
+          <div class="question-meta">
+            <span class="material-icons">label</span>
+            <span>{{ selectedQuestion.category }}</span>
+            <span class="material-icons">schedule</span>
+            <span>{{ selectedQuestion.createdAt | date:'short' }}</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Votre Réponse *</label>
+          <textarea 
+            [(ngModel)]="answerContent"
+            class="form-control"
+            rows="6"
+            placeholder="Écrivez votre réponse..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeAnswerModal()" [disabled]="isSending">
+          Annuler
+        </button>
+        <button class="btn btn-primary" (click)="submitAnswer()" [disabled]="isSending || !answerContent.trim()">
+          <span *ngIf="isSending" class="spinner"></span>
+          <span *ngIf="!isSending">
+            <span class="material-icons">send</span>
+            Envoyer la Réponse
+          </span>
+        </button>
       </div>
     </div>
   </div>

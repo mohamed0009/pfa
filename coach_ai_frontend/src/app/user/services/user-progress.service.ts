@@ -1,12 +1,17 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { map, catchError, delay } from 'rxjs/operators';
 import { UserProgress, Achievement, ActivityLog, LearningStats } from '../models/user.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserProgressService {
+  private apiUrl = 'http://localhost:8081/api/user/progress';
+
+  constructor(private http: HttpClient) {}
+
   private mockProgress: UserProgress = {
     userId: 'user1',
     overallProgress: 37,
@@ -122,27 +127,97 @@ export class UserProgressService {
     ]
   };
 
-  constructor() {}
-
   // Récupérer la progression utilisateur
   getUserProgress(): Observable<UserProgress> {
-    return of(this.mockProgress).pipe(delay(350));
+    return this.http.get<any>(this.apiUrl).pipe(
+      map((data: any) => {
+        const progress: UserProgress = {
+          userId: data.userId || '',
+          overallProgress: data.overallProgress || 0,
+          modulesCompleted: data.modulesCompleted || 0,
+          totalModules: data.totalModules || 0,
+          lessonsCompleted: data.lessonsCompleted || 0,
+          totalLessons: data.totalLessons || 0,
+          quizzesCompleted: data.quizzesCompleted || 0,
+          averageQuizScore: data.averageQuizScore || 0,
+          totalStudyTime: data.totalStudyTime || 0,
+          currentStreak: data.currentStreak || 0,
+          longestStreak: data.longestStreak || 0,
+          weeklyGoalProgress: data.weeklyGoalProgress || 0,
+          achievements: data.achievements || [],
+          recentActivity: data.recentActivity || []
+        };
+        return progress;
+      }),
+      catchError((error) => {
+        console.error('Error fetching user progress:', error);
+        // Return mock data as fallback
+        return of(this.mockProgress);
+      })
+    );
   }
 
   // Récupérer les statistiques détaillées
   getLearningStats(): Observable<LearningStats> {
-    return of(this.mockStats).pipe(delay(400));
+    return this.http.get<any>(`${this.apiUrl}/stats`).pipe(
+      map((data: any) => ({
+        weeklyStudyTime: data.weeklyStudyTime || [0, 0, 0, 0, 0, 0, 0],
+        moduleProgress: (data.moduleProgress || []).map((mp: any) => ({
+          moduleName: mp.moduleName || '',
+          progress: mp.progress || 0
+        })),
+        quizPerformance: (data.quizPerformance || []).map((qp: any) => ({
+          quizName: qp.quizName || '',
+          score: qp.score || 0,
+          date: qp.date ? new Date(qp.date) : new Date()
+        })),
+        skillsProgress: (data.skillsProgress || []).map((sp: any) => ({
+          skill: sp.skill || '',
+          level: sp.level || 0
+        }))
+      })),
+      catchError((error) => {
+        console.error('Error fetching learning stats:', error);
+        return of(this.mockStats).pipe(delay(400));
+      })
+    );
   }
 
   // Récupérer l'activité récente
   getRecentActivity(limit: number = 10): Observable<ActivityLog[]> {
-    const activities = this.mockProgress.recentActivity.slice(0, limit);
-    return of(activities).pipe(delay(300));
+    return this.http.get<any[]>(`${this.apiUrl}/activity?limit=${limit}`).pipe(
+      map((activities: any[]) => activities.map(a => ({
+        id: a.id || '',
+        userId: a.userId || '',
+        type: a.type || 'info',
+        title: a.title || '',
+        description: a.description || '',
+        timestamp: a.timestamp ? new Date(a.timestamp) : new Date()
+      }))),
+      catchError((error) => {
+        console.error('Error fetching recent activity:', error);
+        const activities = this.mockProgress.recentActivity.slice(0, limit);
+        return of(activities).pipe(delay(300));
+      })
+    );
   }
 
   // Récupérer les achievements
   getAchievements(): Observable<Achievement[]> {
-    return of(this.mockProgress.achievements).pipe(delay(300));
+    return this.http.get<any[]>(`${this.apiUrl}/achievements`).pipe(
+      map((achievements: any[]) => achievements.map(a => ({
+        id: a.id || '',
+        title: a.title || '',
+        description: a.description || '',
+        icon: a.icon || 'emoji_events',
+        earnedAt: a.earnedAt ? new Date(a.earnedAt) : new Date(),
+        category: a.category || 'progression'
+      }))),
+      catchError((error) => {
+        console.error('Error fetching achievements:', error);
+        return of(this.mockProgress.achievements).pipe(delay(300));
+      })
+    );
   }
 
   // Ajouter une nouvelle activité

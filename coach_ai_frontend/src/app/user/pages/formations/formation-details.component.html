@@ -1,0 +1,200 @@
+<div class="formation-details" *ngIf="formation && !isLoading">
+  <!-- Hero Header -->
+  <div class="formation-hero">
+    <div class="hero-background" [style.background-image]="'url(' + formation.thumbnail + ')'"></div>
+    <div class="hero-overlay"></div>
+    
+    <div class="hero-content">
+      <button class="back-btn" [routerLink]="['/user/courses']">
+        <span class="material-icons">arrow_back</span>
+        Retour au catalogue
+      </button>
+
+      <div class="formation-header">
+        <div class="formation-info">
+          <span class="category-badge">{{ formation.category }}</span>
+          <h1>{{ formation.title }}</h1>
+          <p class="formation-subtitle">{{ formation.description }}</p>
+
+          <!-- Stats Row -->
+          <div class="stats-row">
+            <div class="stat">
+              <span class="material-icons">signal_cellular_alt</span>
+              <span>{{ getLevelLabel(formation.level) }}</span>
+            </div>
+            <div class="stat">
+              <span class="material-icons">schedule</span>
+              <span>{{ formation.duration }}h de contenu</span>
+            </div>
+            <div class="stat">
+              <span class="material-icons">people</span>
+              <span>{{ formation.enrolledCount }} inscrits</span>
+            </div>
+            <div class="stat">
+              <span class="material-icons">check_circle</span>
+              <span>{{ formation.completionRate }}% de réussite</span>
+            </div>
+          </div>
+
+          <!-- Enrollment Button -->
+          <div class="enrollment-actions">
+            <button 
+              *ngIf="!isEnrolled" 
+              class="btn btn-enroll"
+              (click)="enrollInFormation()">
+              <span class="material-icons">add_circle</span>
+              S'inscrire à cette formation
+            </button>
+            <button 
+              *ngIf="isEnrolled" 
+              class="btn btn-continue"
+              (click)="continueFormation()">
+              <span class="material-icons">play_arrow</span>
+              Accéder à la formation
+            </button>
+            <button 
+              *ngIf="isEnrolled" 
+              class="btn btn-secondary"
+              [routerLink]="['/user/my-formations']"
+              style="margin-left: 12px;">
+              <span class="material-icons">list</span>
+              Mes formations
+            </button>
+          </div>
+        </div>
+
+        <!-- Trainer Card -->
+        <div class="trainer-card" *ngIf="formation.trainer">
+          <div class="trainer-header">
+            <img 
+              [src]="formation.trainer.avatarUrl || 'assets/images/default-avatar.png'" 
+              [alt]="getTrainerFullName()"
+              class="trainer-avatar-large"
+              onerror="this.src='assets/images/default-avatar.png'">
+            <div>
+              <h3>{{ getTrainerFullName() || 'Formateur' }}</h3>
+              <p>Formateur</p>
+            </div>
+          </div>
+          <p class="trainer-bio" *ngIf="formation.trainer.bio">
+            {{ formation.trainer.bio }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="formation-content">
+    <div class="content-container">
+      
+      <!-- About Section -->
+      <section class="about-section">
+        <h2>À propos de cette formation</h2>
+        <p>{{ formation.description }}</p>
+        
+        <div class="formation-highlights">
+          <div class="highlight">
+            <span class="material-icons">layers</span>
+            <div>
+              <strong>{{ formation.modulesCount }} modules</strong>
+              <p>Organisés de manière progressive</p>
+            </div>
+          </div>
+          <div class="highlight">
+            <span class="material-icons">menu_book</span>
+            <div>
+              <strong>{{ formation.coursesCount }} cours</strong>
+              <p>Avec vidéos, textes et exercices</p>
+            </div>
+          </div>
+          <div class="highlight">
+            <span class="material-icons">quiz</span>
+            <div>
+              <strong>{{ formation.quizzesCount }} quiz</strong>
+              <p>Pour valider vos connaissances</p>
+            </div>
+          </div>
+          <div class="highlight">
+            <span class="material-icons">workspace_premium</span>
+            <div>
+              <strong>Certificat</strong>
+              <p>À l'issue de la formation</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Syllabus Section -->
+      <section class="syllabus-section modules-section">
+        <h2>Programme de la formation</h2>
+        <p class="section-subtitle">{{ getTotalLessons() }} leçons • {{ formation.duration }} heures</p>
+
+        <!-- Message d'accueil pour les nouveaux inscrits -->
+        <div *ngIf="isEnrolled && formation.modules && formation.modules.length > 0" class="welcome-message">
+          <span class="material-icons">celebration</span>
+          <div>
+            <h3>Bienvenue dans cette formation !</h3>
+            <p>Commencez par le premier module ci-dessous. Les modules se débloquent progressivement au fur et à mesure de votre progression.</p>
+          </div>
+        </div>
+
+        <div class="modules-list">
+          <div 
+            class="module-item" 
+            *ngFor="let module of formation.modules; let i = index"
+            [class.expanded]="isModuleExpanded(i)">
+            
+            <!-- Module Header -->
+            <div class="module-header" (click)="toggleModule(i)">
+              <div class="module-title-section">
+                <h3>
+                  <span class="module-number">Module {{ module.order }}</span>
+                  {{ module.title }}
+                </h3>
+                <p class="module-meta">
+                  {{ module.duration }}h • {{ module.quiz ? '1 quiz' : 'Pas de quiz' }}
+                </p>
+              </div>
+              <span class="material-icons expand-icon">
+                {{ isModuleExpanded(i) ? 'expand_less' : 'expand_more' }}
+              </span>
+            </div>
+
+            <!-- Module Content (Nouvelle Architecture) -->
+            <div class="module-content" *ngIf="isModuleExpanded(i)">
+              <p class="module-description">{{ module.description }}</p>
+
+              <div class="module-content-list">
+                <div class="content-item" *ngIf="module.textContent">
+                  <span class="material-icons">article</span>
+                  <span>Contenu texte</span>
+                </div>
+                <div class="content-item" *ngIf="module.videoUrl">
+                  <span class="material-icons">play_circle_outline</span>
+                  <span>Vidéo</span>
+                </div>
+                <div class="content-item" *ngIf="module.labContent">
+                  <span class="material-icons">code</span>
+                  <span>Lab/TP</span>
+                </div>
+                <div class="content-item" *ngIf="module.quiz" (click)="goToModule(module.id)">
+                  <span class="material-icons">quiz</span>
+                  <span>Quiz: {{ module.quiz.title }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Chargement de la formation...</p>
+</div>
+

@@ -9,8 +9,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "modules")
@@ -40,13 +38,26 @@ public class Module {
     @Column(nullable = false)
     private com.coachai.model.ContentStatus status = com.coachai.model.ContentStatus.DRAFT;
     
-    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("order ASC")
-    private List<Course> courses = new ArrayList<>();
+    // Contenu du module (remplace les cours)
+    @Column(columnDefinition = "TEXT")
+    private String textContent; // Contenu texte/lecture
+    
+    @Column(columnDefinition = "TEXT")
+    private String videoUrl; // URL de la vidéo
+    
+    @Column(columnDefinition = "TEXT")
+    private String labContent; // Contenu du lab/TP
+    
+    // Quiz associé au module (relation bidirectionnelle)
+    @OneToOne(mappedBy = "module", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "module", "questions", "attempts", "course"})
+    private Quiz quiz;
+    
+    // Le module est verrouillé jusqu'à ce que le précédent soit validé
+    @Column(nullable = false)
+    private boolean isLocked = false;
     
     private double duration; // en heures
-    
-    private int enrolledStudents = 0;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")

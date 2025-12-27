@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UsersAdminService } from '../../../services/users-admin.service';
-import { User, UserRole, UserStatus } from '../../../models/admin.interfaces';
+import { ContentManagementService } from '../../../services/content-management.service';
+import { User, UserRole, UserStatus, Formation } from '../../../models/admin.interfaces';
 
 @Component({
   selector: 'app-users-list',
@@ -40,12 +41,27 @@ export class UsersListComponent implements OnInit {
     formateurs: 0,
     administrateurs: 0
   };
+  
+  // Formations list
+  formations: Formation[] = [];
+  newPassword: string = '';
+  showPasswordField: boolean = false;
 
-  constructor(private usersService: UsersAdminService) {}
+  constructor(
+    private usersService: UsersAdminService,
+    private contentService: ContentManagementService
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
     this.loadStats();
+    this.loadFormations();
+  }
+  
+  loadFormations(): void {
+    this.contentService.getFormations().subscribe(formations => {
+      this.formations = formations.filter(f => f.status === 'published' || f.status === 'approved');
+    });
   }
 
   loadUsers(): void {
@@ -97,15 +113,39 @@ export class UsersListComponent implements OnInit {
 
   // Modal actions
   openCreateModal(): void {
-    this.selectedUser = null;
+    this.selectedUser = {
+      id: '',
+      fullName: '',
+      email: '',
+      role: 'Apprenant',
+      status: 'active',
+      training: '',
+      level: 'Débutant',
+      avatarUrl: '',
+      coursesEnrolled: 0,
+      coursesCompleted: 0,
+      lastActive: new Date(),
+      createdAt: new Date()
+    };
+    this.newPassword = '';
+    this.showPasswordField = true;
     this.modalMode = 'create';
     this.showUserModal = true;
   }
 
   openEditModal(user: User): void {
     this.selectedUser = { ...user };
+    this.newPassword = '';
+    this.showPasswordField = false;
     this.modalMode = 'edit';
     this.showUserModal = true;
+  }
+  
+  togglePasswordField(): void {
+    this.showPasswordField = !this.showPasswordField;
+    if (!this.showPasswordField) {
+      this.newPassword = '';
+    }
   }
 
   openViewModal(user: User): void {
@@ -117,22 +157,68 @@ export class UsersListComponent implements OnInit {
   closeModal(): void {
     this.showUserModal = false;
     this.selectedUser = null;
+    this.newPassword = '';
+    this.showPasswordField = false;
   }
 
   // CRUD operations
   saveUser(): void {
     if (!this.selectedUser) return;
-
+    
+    // Validation
+    if (!this.selectedUser.fullName || !this.selectedUser.email) {
+      alert('Veuillez remplir le nom complet et l\'email');
+      return;
+    }
+    
     if (this.modalMode === 'create') {
-      this.usersService.createUser(this.selectedUser).subscribe(() => {
-        this.loadUsers();
-        this.loadStats();
-        this.closeModal();
+      // Pour la création, inclure le mot de passe si fourni
+      const userData: any = { ...this.selectedUser };
+      
+      // Le mot de passe est requis pour la création
+      if (!this.newPassword || this.newPassword.trim() === '') {
+        alert('⚠️ Le mot de passe est requis pour créer un utilisateur');
+        return;
+      }
+      
+      userData.password = this.newPassword;
+      
+      console.log('Creating user with data:', { ...userData, password: '***' }); // Log sans le mot de passe
+      
+      this.usersService.createUser(userData).subscribe({
+        next: (createdUser) => {
+          console.log('User created successfully:', createdUser);
+          this.loadUsers();
+          this.loadStats();
+          this.closeModal();
+          alert('✅ Utilisateur créé avec succès !');
+        },
+        error: (error) => {
+          console.error('Error creating user:', error);
+          console.error('Error details:', JSON.stringify(error, null, 2));
+          const errorMessage = error?.error?.error || error?.error?.message || error?.message || 'Erreur lors de la création de l\'utilisateur';
+          alert('❌ Erreur: ' + errorMessage);
+        }
       });
     } else if (this.modalMode === 'edit') {
-      this.usersService.updateUser(this.selectedUser.id, this.selectedUser).subscribe(() => {
-        this.loadUsers();
-        this.closeModal();
+      // Pour la modification, inclure le mot de passe si fourni
+      const updateData: any = { ...this.selectedUser };
+      if (this.newPassword && this.newPassword.trim() !== '') {
+        updateData.password = this.newPassword;
+      }
+      delete updateData.id; // Ne pas envoyer l'ID dans les données de mise à jour
+      
+      this.usersService.updateUser(this.selectedUser.id, updateData).subscribe({
+        next: () => {
+          this.loadUsers();
+          this.closeModal();
+          alert('✅ Utilisateur modifié avec succès !');
+        },
+        error: (error) => {
+          console.error('Error updating user:', error);
+          const errorMessage = error?.error?.error || error?.error?.message || 'Erreur lors de la modification de l\'utilisateur';
+          alert('❌ Erreur: ' + errorMessage);
+        }
       });
     }
   }
@@ -145,17 +231,28 @@ export class UsersListComponent implements OnInit {
   deleteUser(): void {
     if (!this.selectedUser) return;
 
-    this.usersService.deleteUser(this.selectedUser.id).subscribe(() => {
-      this.loadUsers();
-      this.loadStats();
-      this.showDeleteConfirm = false;
-      this.selectedUser = null;
+    this.usersService.deleteUser(this.selectedUser.id).subscribe({
+      next: (success) => {
+        if (success) {
+          this.loadUsers();
+          this.loadStats();
+          this.showDeleteConfirm = false;
+          this.selectedUser = null;
+          alert('✅ Utilisateur supprimé avec succès !');
+        } else {
+          alert('❌ Erreur lors de la suppression de l\'utilisateur');
+        }
+      },
+      error: (error) => {
+        console.error('Error deleting user:', error);
+        alert('❌ Erreur lors de la suppression de l\'utilisateur');
+      }
     });
   }
 
   toggleUserStatus(user: User): void {
     const newStatus: UserStatus = user.status === 'active' ? 'inactive' : 'active';
-    this.usersService.updateUser(user.id, { status: newStatus }).subscribe(() => {
+    this.usersService.updateUserStatus(user.id, newStatus).subscribe(() => {
       this.loadUsers();
     });
   }

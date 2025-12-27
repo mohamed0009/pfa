@@ -34,12 +34,24 @@ export const trainerRoutes: Routes = [
         loadComponent: () => import('./pages/content/formation-details/formation-details.component').then(m => m.FormationDetailsComponent)
       },
       {
+        path: 'content/formations/:id/students',
+        loadComponent: () => import('./pages/content/formation-students/formation-students.component').then(m => m.FormationStudentsComponent)
+      },
+      {
         path: 'content/modules',
         loadComponent: () => import('./pages/content/modules/modules.component').then(m => m.ModulesComponent)
       },
       {
+        path: 'content/modules/:id',
+        loadComponent: () => import('./pages/content/module-details/module-details.component').then(m => m.ModuleDetailsComponent)
+      },
+      {
         path: 'content/courses',
         loadComponent: () => import('./pages/content/courses/courses.component').then(m => m.CoursesComponent)
+      },
+      {
+        path: 'content/courses/:id',
+        loadComponent: () => import('./pages/content/course-details/course-details.component').then(m => m.CourseDetailsComponent)
       },
       {
         path: 'content/exercises',
@@ -50,8 +62,20 @@ export const trainerRoutes: Routes = [
         loadComponent: () => import('./pages/content/quizzes/quizzes.component').then(m => m.QuizzesComponent)
       },
       {
+        path: 'content/quizzes/:id',
+        loadComponent: () => import('./pages/content/quiz-details/quiz-details.component').then(m => m.QuizDetailsComponent)
+      },
+      {
         path: 'ai-assistant',
         loadComponent: () => import('./pages/ai-assistant/ai-assistant.component').then(m => m.AiAssistantComponent)
+      },
+      {
+        path: 'ai-recommendations',
+        loadComponent: () => import('./pages/ai-recommendations/ai-recommendations-list.component').then(m => m.AIRecommendationsListComponent)
+      },
+      {
+        path: 'ai-analysis',
+        loadComponent: () => import('./pages/ai-analysis/conversations-analysis.component').then(m => m.ConversationsAnalysisComponent)
       },
       {
         path: 'students',
@@ -96,6 +120,14 @@ export const trainerRoutes: Routes = [
       {
         path: 'statistics',
         loadComponent: () => import('./pages/statistics/statistics.component').then(m => m.StatisticsComponent)
+      },
+      {
+        path: 'recommendations',
+        loadComponent: () => import('./pages/recommendations/recommendations.component').then(m => m.RecommendationsComponent)
+      },
+      {
+        path: 'recommendations/:id',
+        loadComponent: () => import('./pages/recommendations/recommendation-details/recommendation-details.component').then(m => m.RecommendationDetailsComponent)
       }
     ]
   }

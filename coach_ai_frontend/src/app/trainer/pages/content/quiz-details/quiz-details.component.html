@@ -1,0 +1,386 @@
+<div class="page-container" *ngIf="quiz">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <button class="btn-back" (click)="router.navigate(['/trainer/content/quizzes'])" type="button">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div>
+        <h1>{{ quiz.title }}</h1>
+        <p class="subtitle">{{ quiz.description || 'Aucune description' }}</p>
+      </div>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateQuestionModal()">
+      <span class="material-icons">add</span>
+      Ajouter une Question
+    </button>
+  </header>
+
+  <!-- Quiz Info -->
+  <div class="quiz-info">
+    <div class="info-item">
+      <span class="material-icons">schedule</span>
+      <div>
+        <span class="label">Durée</span>
+        <span class="value">{{ quiz.duration || 30 }} min</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">help</span>
+      <div>
+        <span class="label">Questions</span>
+        <span class="value">{{ questions.length }}</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">check_circle</span>
+      <div>
+        <span class="label">Score de passage</span>
+        <span class="value">{{ quiz.passingScore || 60 }}%</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">repeat</span>
+      <div>
+        <span class="label">Tentatives max</span>
+        <span class="value">{{ quiz.maxAttempts || 3 }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions Section -->
+  <section class="questions-section">
+    <div class="section-header">
+      <h2>Questions du Quiz</h2>
+      <span class="questions-count">{{ questions.length }} question(s)</span>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des questions...</p>
+    </div>
+
+    <!-- Questions List -->
+    <div *ngIf="!isLoading && questions.length > 0" class="questions-list">
+      <div *ngFor="let question of questions; let i = index" class="question-card">
+        <div class="question-header">
+          <div class="question-number">{{ i + 1 }}</div>
+          <div class="question-content">
+            <div class="question-title">
+              <h3>{{ question.question }}</h3>
+              <span class="question-type-badge" [class]="'type-' + question.type.toLowerCase()">
+                {{ question.type === 'MULTIPLE_CHOICE' ? 'QCM' : question.type === 'TRUE_FALSE' ? 'Vrai/Faux' : 'Réponse courte' }}
+              </span>
+            </div>
+            <div class="question-meta">
+              <span class="meta-item">
+                <span class="material-icons">star</span>
+                {{ question.points }} point(s)
+              </span>
+              <span class="meta-item" *ngIf="question.explanation">
+                <span class="material-icons">info</span>
+                Explication disponible
+              </span>
+            </div>
+            
+            <!-- Options QCM -->
+            <div *ngIf="question.type === 'MULTIPLE_CHOICE' && question.options.length > 0" class="question-options">
+              <div *ngFor="let option of question.options; let optIndex = index" class="option-item" [class.correct]="optIndex === parseInt(question.correctAnswer)">
+                <span class="option-letter">{{ getOptionLetter(optIndex) }}</span>
+                <span class="option-text">{{ option.text }}</span>
+                <span class="correct-badge" *ngIf="optIndex === parseInt(question.correctAnswer)">
+                  <span class="material-icons">check_circle</span>
+                  Correcte
+                </span>
+              </div>
+            </div>
+            
+            <!-- Réponse courte ou Vrai/Faux -->
+            <div *ngIf="question.type !== 'MULTIPLE_CHOICE'" class="question-answer">
+              <p><strong>Réponse correcte:</strong> {{ question.correctAnswer }}</p>
+            </div>
+            
+            <!-- Explanation -->
+            <div *ngIf="question.explanation" class="question-explanation">
+              <p><strong>Explication:</strong> {{ question.explanation }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="question-actions">
+          <button class="btn btn-secondary" (click)="openEditQuestionModal(question)">
+            <span class="material-icons">edit</span>
+            Modifier
+          </button>
+          <button class="btn btn-danger" (click)="deleteQuestion(question.id)">
+            <span class="material-icons">delete</span>
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && questions.length === 0" class="empty-state">
+      <span class="material-icons">help</span>
+      <h3>Aucune question</h3>
+      <p>Ajoutez votre première question QCM pour ce quiz</p>
+      <button class="btn btn-primary" (click)="openCreateQuestionModal()">
+        <span class="material-icons">add</span>
+        Ajouter une Question
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- Modal de Création de Question -->
+<div *ngIf="showCreateQuestionModal" class="modal-overlay" (click)="closeCreateQuestionModal()">
+  <div class="modal-content question-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Ajouter une Question QCM</h2>
+      <button class="btn-close" (click)="closeCreateQuestionModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="createQuestion()" class="modal-body">
+      <div class="form-group">
+        <label>Question *</label>
+        <textarea 
+          [(ngModel)]="newQuestion.question" 
+          name="question"
+          rows="3"
+          placeholder="Ex: Quelle est la syntaxe correcte pour déclarer une variable en JavaScript ?"
+          required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Type de question</label>
+        <select [(ngModel)]="newQuestion.type" name="type" (change)="onQuestionTypeChange()">
+          <option value="MULTIPLE_CHOICE">QCM (Choix Multiple)</option>
+          <option value="TRUE_FALSE">Vrai/Faux</option>
+          <option value="SHORT_ANSWER">Réponse courte</option>
+        </select>
+      </div>
+
+      <!-- Options QCM -->
+      <div *ngIf="newQuestion.type === 'MULTIPLE_CHOICE'" class="options-section">
+        <div class="form-group">
+          <label>Options de réponse *</label>
+          <div class="options-list">
+            <div *ngFor="let option of newQuestion.options; let i = index" class="option-input-group">
+              <div class="option-header">
+                <span class="option-letter">{{ getOptionLetter(i) }}</span>
+                <button type="button" class="btn-remove-option" (click)="removeOption(i)" *ngIf="newQuestion.options.length > 2">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+              <input 
+                type="text" 
+                [(ngModel)]="option.text" 
+                [name]="'option' + i"
+                placeholder="Texte de l'option..."
+                class="option-input">
+              <label class="radio-label">
+                <input 
+                  type="radio" 
+                  [name]="'correctAnswer'"
+                  [value]="i.toString()"
+                  [(ngModel)]="newQuestion.correctAnswer">
+                <span>Bonne réponse</span>
+              </label>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-add-option" (click)="addOption()">
+            <span class="material-icons">add</span>
+            Ajouter une option
+          </button>
+        </div>
+      </div>
+
+      <!-- Réponse pour Vrai/Faux ou Réponse courte -->
+      <div *ngIf="newQuestion.type !== 'MULTIPLE_CHOICE'" class="form-group">
+        <label>Réponse correcte *</label>
+        <input 
+          *ngIf="newQuestion.type === 'TRUE_FALSE'"
+          type="text" 
+          [(ngModel)]="newQuestion.correctAnswer" 
+          name="correctAnswer"
+          placeholder="true ou false"
+          required>
+        <textarea 
+          *ngIf="newQuestion.type === 'SHORT_ANSWER'"
+          [(ngModel)]="newQuestion.correctAnswer" 
+          name="correctAnswer"
+          rows="2"
+          placeholder="Réponse attendue..."
+          required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Points</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newQuestion.points" 
+            name="points"
+            min="1"
+            value="1">
+        </div>
+
+        <div class="form-group">
+          <label>Ordre</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newQuestion.order" 
+            name="order"
+            min="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Explication (optionnel)</label>
+        <textarea 
+          [(ngModel)]="newQuestion.explanation" 
+          name="explanation"
+          rows="3"
+          placeholder="Explication de la réponse..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateQuestionModal()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isCreatingQuestion || !newQuestion.question.trim()">
+          <span *ngIf="isCreatingQuestion" class="spinner-small"></span>
+          <span *ngIf="!isCreatingQuestion">Ajouter la Question</span>
+          <span *ngIf="isCreatingQuestion">Ajout...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal d'Édition de Question -->
+<div *ngIf="showEditQuestionModal && editingQuestion" class="modal-overlay" (click)="closeEditQuestionModal()">
+  <div class="modal-content question-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Modifier la Question</h2>
+      <button class="btn-close" (click)="closeEditQuestionModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="updateQuestion()" class="modal-body">
+      <div class="form-group">
+        <label>Question *</label>
+        <textarea 
+          [(ngModel)]="editingQuestion.question" 
+          name="editQuestion"
+          rows="3"
+          required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Type de question</label>
+        <select [(ngModel)]="editingQuestion.type" name="editType" (change)="onEditQuestionTypeChange()">
+          <option value="MULTIPLE_CHOICE">QCM (Choix Multiple)</option>
+          <option value="TRUE_FALSE">Vrai/Faux</option>
+          <option value="SHORT_ANSWER">Réponse courte</option>
+        </select>
+      </div>
+
+      <!-- Options QCM -->
+      <div *ngIf="editingQuestion.type === 'MULTIPLE_CHOICE'" class="options-section">
+        <div class="form-group">
+          <label>Options de réponse *</label>
+          <div class="options-list">
+            <div *ngFor="let option of editingQuestion.options; let i = index" class="option-input-group">
+              <div class="option-header">
+                <span class="option-letter">{{ getOptionLetter(i) }}</span>
+                <button type="button" class="btn-remove-option" (click)="removeEditOption(i)" *ngIf="editingQuestion.options.length > 2">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+              <input 
+                type="text" 
+                [(ngModel)]="option.text" 
+                [name]="'editOption' + i"
+                placeholder="Texte de l'option..."
+                class="option-input">
+              <label class="radio-label">
+                <input 
+                  type="radio" 
+                  [name]="'editCorrectAnswer'"
+                  [value]="i.toString()"
+                  [(ngModel)]="editingQuestion.correctAnswer">
+                <span>Bonne réponse</span>
+              </label>
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-add-option" (click)="addEditOption()">
+            <span class="material-icons">add</span>
+            Ajouter une option
+          </button>
+        </div>
+      </div>
+
+      <!-- Réponse pour autres types -->
+      <div *ngIf="editingQuestion.type !== 'MULTIPLE_CHOICE'" class="form-group">
+        <label>Réponse correcte *</label>
+        <input 
+          *ngIf="editingQuestion.type === 'TRUE_FALSE'"
+          type="text" 
+          [(ngModel)]="editingQuestion.correctAnswer" 
+          name="editCorrectAnswer"
+          required>
+        <textarea 
+          *ngIf="editingQuestion.type === 'SHORT_ANSWER'"
+          [(ngModel)]="editingQuestion.correctAnswer" 
+          name="editCorrectAnswer"
+          rows="2"
+          required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Points</label>
+          <input 
+            type="number" 
+            [(ngModel)]="editingQuestion.points" 
+            name="editPoints"
+            min="1">
+        </div>
+
+        <div class="form-group">
+          <label>Ordre</label>
+          <input 
+            type="number" 
+            [(ngModel)]="editingQuestion.order" 
+            name="editOrder"
+            min="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Explication (optionnel)</label>
+        <textarea 
+          [(ngModel)]="editingQuestion.explanation" 
+          name="editExplanation"
+          rows="3"></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditQuestionModal()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isUpdatingQuestion || !editingQuestion.question.trim()">
+          <span *ngIf="isUpdatingQuestion" class="spinner-small"></span>
+          <span *ngIf="!isUpdatingQuestion">Enregistrer</span>
+          <span *ngIf="isUpdatingQuestion">Enregistrement...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

@@ -160,12 +160,35 @@
   font-size: 0.95rem;
 
   &.alert-error {
-    background: rgba(#dc2626, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(#dc2626, 0.2);
+    background: linear-gradient(135deg, rgba(#dc2626, 0.15) 0%, rgba(#dc2626, 0.1) 100%);
+    color: #991b1b;
+    border: 2px solid #dc2626;
+    box-shadow: 0 4px 12px rgba(#dc2626, 0.25);
+    font-weight: 500;
+    padding: 16px 20px;
 
     .material-icons {
-      font-size: 20px;
+      font-size: 24px;
+      color: #dc2626;
+      flex-shrink: 0;
+    }
+
+    .error-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+
+      strong {
+        font-size: 1rem;
+        color: #991b1b;
+      }
+
+      small {
+        font-size: 0.85rem;
+        color: #b91c1c;
+        font-style: italic;
+      }
     }
   }
 }

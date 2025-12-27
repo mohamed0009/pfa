@@ -12,6 +12,7 @@ public interface QuizRepository extends JpaRepository<Quiz, String> {
     List<Quiz> findByCourse(Course course);
     List<Quiz> findByIsAIGeneratedTrue();
     List<Quiz> findByCourseId(String courseId);
+    long countByCourse(Course course);
 }
 
 

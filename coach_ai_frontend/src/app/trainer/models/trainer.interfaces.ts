@@ -65,9 +65,12 @@ export interface TrainerFormation {
   enrolledCount: number;
   completionRate: number;
   createdBy: string;
+  assignedTo?: string; // ⭐ NOUVEAU - Formateur assigné
+  assignedToName?: string; // Nom du formateur assigné
   createdAt: Date;
   updatedAt: Date;
   submittedForValidationAt?: Date;
+  publishedAt?: Date; // ⭐ NOUVEAU
   validatedBy?: string;
   validatedAt?: Date;
   rejectionReason?: string;
@@ -80,11 +83,18 @@ export interface TrainerModule {
   description: string;
   order: number;
   status: ContentStatus;
-  courses: TrainerCourse[];
-  coursesCount?: number; // Nombre de cours (peut être calculé depuis courses.length)
+  // ⭐ NOUVELLE STRUCTURE - Contenu direct dans le module
+  textContent?: string; // Contenu texte/lecture
+  videoUrl?: string; // URL de la vidéo
+  labContent?: string; // Contenu du lab/TP
+  quiz?: TrainerQuiz; // Quiz associé au module
+  isLocked?: boolean; // Module verrouillé jusqu'à validation du précédent
+  // ⚠️ ANCIEN SYSTÈME (pour compatibilité)
+  courses?: TrainerCourse[];
+  coursesCount?: number;
   duration: number; // en heures
-  estimatedDuration?: number; // Alias pour duration (pour compatibilité)
-  enrolledStudents?: number; // Nombre d'apprenants inscrits
+  estimatedDuration?: number;
+  enrolledStudents?: number;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -103,11 +113,13 @@ export interface TrainerCourse {
   order: number;
   status: ContentStatus;
   duration: number; // en minutes
+  difficulty?: DifficultyLevel; // Niveau de difficulté (optionnel)
   lessons: TrainerLesson[];
   resources: TrainerResource[];
   exercises: TrainerExercise[];
   quizzes: TrainerQuiz[];
   enrolledStudents: number;
+  enrolledCount?: number; // Alias pour enrolledStudents (pour compatibilité)
   completionRate: number;
   createdBy: string;
   createdAt: Date;
@@ -118,6 +130,8 @@ export interface TrainerCourse {
   rejectionReason?: string;
   isAIGenerated?: boolean;
   aiGenerationPrompt?: string;
+  category?: string; // Catégorie du cours (optionnel)
+  thumbnailUrl?: string; // URL de la miniature (optionnel)
 }
 
 export interface TrainerLesson {
@@ -169,12 +183,14 @@ export interface TrainerExercise {
 
 export interface TrainerQuiz {
   id: string;
-  courseId: string;
+  courseId?: string; // ⚠️ Ancien système (pour compatibilité)
+  moduleId?: string; // ⭐ NOUVEAU - Pour nouveau système
   title: string;
   description: string;
   difficulty: DifficultyLevel;
   duration: number; // en minutes
   passingScore: number; // pourcentage
+  maxAttempts?: number; // Nombre maximum de tentatives
   questions: QuizQuestion[];
   status: ContentStatus;
   attempts: QuizAttempt[];
@@ -329,6 +345,10 @@ export interface StudentDashboard {
   performance: StudentPerformance;
   difficulties: StudentDifficulty[];
   achievements: StudentAchievement[];
+  chatLevel?: string; // Niveau basé sur les conversations (Débutant, Intermédiaire, Avancé, Expert)
+  chatLevelScore?: number; // Score de niveau (0-300+)
+  totalConversations?: number; // Nombre total de conversations
+  totalChatMessages?: number; // Nombre total de messages
 }
 
 export interface StudentPerformance {
@@ -549,15 +569,20 @@ export interface CompetencyValidation {
 }
 
 export interface LearningPathAdjustment {
-  id: string;
-  studentId: string;
-  studentName: string;
-  formationId: string;
-  adjustments: PathAdjustment[];
-  reason: string;
-  adjustedBy: string;
-  adjustedAt: Date;
-  effective: boolean;
+  id?: string;
+  studentId?: string;
+  studentName?: string;
+  formationId?: string;
+  adjustments?: PathAdjustment[];
+  reason?: string;
+  adjustedBy?: string;
+  adjustedAt?: Date;
+  effective?: boolean;
+  // Propriétés pour les recommandations basées sur le ML
+  confidenceScore?: number; // Score de confiance du modèle ML (0-1 ou 0-100)
+  courseTitle?: string; // Titre du cours recommandé
+  conversationExcerpt?: string; // Extrait de conversation analysé
+  predictedDifficulty?: string; // Difficulté prédite par le ML
 }
 
 export interface PathAdjustment {
@@ -676,6 +701,11 @@ export interface PersonalizedLearningPath {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  // Propriétés pour les recommandations basées sur le ML
+  confidenceScore?: number; // Score de confiance du modèle ML (0-1 ou 0-100)
+  predictedDifficulty?: string; // Difficulté prédite par le ML
+  courseTitle?: string; // Titre du cours recommandé (depuis adjustments[0])
+  conversationExcerpt?: string; // Extrait de conversation (depuis adjustments[0])
 }
 
 export interface PersonalizedModule {
@@ -776,6 +806,24 @@ export interface ContentHistory {
   performedBy: string;
   performedAt: Date;
   notes?: string;
+}
+
+export interface CourseRecommendation {
+  id: string;
+  studentId: string;
+  studentName?: string;
+  studentEmail?: string;
+  courseId: string;
+  course?: TrainerCourse;
+  reason: string;
+  conversationExcerpt?: string;
+  confidenceScore: number;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  reviewNotes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ContentChange {

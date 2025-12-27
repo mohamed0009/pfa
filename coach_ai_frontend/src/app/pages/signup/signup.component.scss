@@ -159,15 +159,93 @@
   align-items: center;
   gap: 12px;
   font-size: 0.95rem;
+  animation: slideIn 0.3s ease-out;
 
-  &.alert-error {
-    background: rgba(#dc2626, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(#dc2626, 0.2);
+  &.alert-success {
+    background: linear-gradient(135deg, rgba(#10b981, 0.15) 0%, rgba(#10b981, 0.1) 100%);
+    color: #065f46;
+    border: 2px solid #10b981;
+    box-shadow: 0 4px 12px rgba(#10b981, 0.25);
+    font-weight: 500;
+    padding: 16px 20px;
+    animation: slideIn 0.4s ease-out, pulse 2s ease-in-out infinite;
 
     .material-icons {
-      font-size: 20px;
+      font-size: 24px;
+      color: #10b981;
+      flex-shrink: 0;
     }
+
+    .success-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+
+      strong {
+        font-size: 1rem;
+        color: #065f46;
+      }
+
+      small {
+        font-size: 0.85rem;
+        color: #047857;
+        font-style: italic;
+      }
+    }
+  }
+
+  &.alert-error {
+    background: linear-gradient(135deg, rgba(#dc2626, 0.15) 0%, rgba(#dc2626, 0.1) 100%);
+    color: #991b1b;
+    border: 2px solid #dc2626;
+    box-shadow: 0 4px 12px rgba(#dc2626, 0.25);
+    font-weight: 500;
+    padding: 16px 20px;
+
+    .material-icons {
+      font-size: 24px;
+      color: #dc2626;
+      flex-shrink: 0;
+    }
+
+    .error-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+
+      strong {
+        font-size: 1rem;
+        color: #991b1b;
+      }
+
+      small {
+        font-size: 0.85rem;
+        color: #b91c1c;
+        font-style: italic;
+      }
+    }
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(#10b981, 0.25);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(#10b981, 0.4);
   }
 }
 
@@ -258,6 +336,19 @@
     align-items: center;
     gap: 4px;
   }
+  
+  .info-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 0.875rem;
+    color: #3b82f6;
+    
+    .material-icons {
+      font-size: 18px;
+    }
+  }
 }
 
 // Password Strength Indicator
@@ -299,7 +390,11 @@
   color: $dark-text;
 
   input[type="checkbox"] {
-    display: none;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    cursor: pointer;
 
     &:checked + .checkbox-custom {
       background: $primary-green;
@@ -309,6 +404,10 @@
         opacity: 1;
         transform: scale(1);
       }
+    }
+
+    &:focus + .checkbox-custom {
+      box-shadow: 0 0 0 3px rgba($primary-green, 0.2);
     }
   }
 

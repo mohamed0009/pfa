@@ -1,0 +1,159 @@
+<div class="my-formations-page">
+  <header class="page-header">
+    <h1>Mon apprentissage</h1>
+  </header>
+
+  <!-- Onglets style Coursera -->
+  <div class="tabs-container">
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'en_cours'"
+      (click)="setActiveTab('en_cours')">
+      En cours
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'sauvegarde'"
+      (click)="setActiveTab('sauvegarde')">
+      Sauvegardé
+    </button>
+    <button 
+      class="tab" 
+      [class.active]="activeTab === 'termine'"
+      (click)="setActiveTab('termine')">
+      Terminé
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement de vos formations...</p>
+  </div>
+
+  <!-- Onglet: En cours -->
+  <div *ngIf="!isLoading && activeTab === 'en_cours'" class="tab-content">
+    <div *ngIf="getFormationsByTab().length > 0" class="formations-list">
+      <div *ngFor="let enrollment of getFormationsByTab()" class="formation-card-coursera">
+        <div class="formation-thumbnail">
+          <div class="formation-icon">
+            <span class="material-icons">school</span>
+          </div>
+        </div>
+        <div class="formation-details">
+          <h3>{{ enrollment.formationTitle || enrollment.formation?.title || 'Formation ' + enrollment.formationId }}</h3>
+          <p class="formation-provider">Coach IA</p>
+          <div class="progress-section">
+            <div class="progress-info">
+              <span class="progress-label">Progrès : {{ getProgressPercentage(enrollment) }}%</span>
+              <div class="progress-bar-coursera">
+                <div class="progress-fill-coursera" [style.width.%]="getProgressPercentage(enrollment)"></div>
+              </div>
+            </div>
+            <button class="btn-resume" (click)="continueFormation(enrollment.formationId)">
+              Reprendre
+            </button>
+          </div>
+          <div class="formation-stats" *ngIf="enrollment.progress">
+            <span>{{ enrollment.progress.completedModules }} / {{ enrollment.progress.totalModules }} modules</span>
+            <span>{{ enrollment.progress.completedQuizzes }} / {{ enrollment.progress.totalQuizzes }} quiz complétés</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!isLoading && getFormationsByTab().length === 0" class="empty-state">
+      <span class="material-icons">school</span>
+      <h3>Aucune formation en cours</h3>
+      <p>Explorez notre catalogue pour commencer une nouvelle formation</p>
+      <button class="btn btn-primary" [routerLink]="['/user/courses']">
+        <span class="material-icons">explore</span>
+        Explorer les formations
+      </button>
+    </div>
+  </div>
+
+  <!-- Onglet: Sauvegardé (Formations non commencées ou disponibles) -->
+  <div *ngIf="!isLoading && activeTab === 'sauvegarde'" class="tab-content">
+    <div *ngIf="getFormationsByTab().length > 0 || availableFormations.length > 0" class="formations-list">
+      <!-- Formations sauvegardées mais non commencées -->
+      <div *ngFor="let enrollment of getFormationsByTab()" class="formation-card-coursera">
+        <div class="formation-thumbnail">
+          <div class="formation-icon">
+            <span class="material-icons">bookmark</span>
+          </div>
+        </div>
+        <div class="formation-details">
+          <h3>{{ enrollment.formationTitle || enrollment.formation?.title || 'Formation ' + enrollment.formationId }}</h3>
+          <p class="formation-provider">Coach IA</p>
+          <button class="btn-resume" (click)="continueFormation(enrollment.formationId)">
+            Commencer
+          </button>
+        </div>
+      </div>
+      <!-- Formations disponibles pour inscription -->
+      <div *ngFor="let formation of availableFormations" class="formation-card-coursera">
+        <div class="formation-thumbnail">
+          <img [src]="formation.thumbnail || 'https://via.placeholder.com/300x200'" [alt]="formation.title">
+        </div>
+        <div class="formation-details">
+          <h3>{{ formation.title }}</h3>
+          <p class="formation-provider">{{ getTrainerName(formation) }}</p>
+          <p class="formation-description">{{ formation.description }}</p>
+          <button class="btn-resume" (click)="enrollInAvailableFormation(formation.id)">
+            S'inscrire
+          </button>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!isLoading && getFormationsByTab().length === 0 && availableFormations.length === 0" class="empty-state">
+      <span class="material-icons">bookmark_border</span>
+      <h3>Aucune formation sauvegardée</h3>
+      <p>Explorez notre catalogue pour sauvegarder des formations</p>
+      <button class="btn btn-primary" [routerLink]="['/user/courses']">
+        <span class="material-icons">explore</span>
+        Explorer les formations
+      </button>
+    </div>
+  </div>
+
+  <!-- Onglet: Terminé -->
+  <div *ngIf="!isLoading && activeTab === 'termine'" class="tab-content">
+    <div *ngIf="getFormationsByTab().length > 0" class="formations-list">
+      <div *ngFor="let enrollment of getFormationsByTab()" class="formation-card-coursera completed">
+        <div class="formation-thumbnail">
+          <div class="formation-icon completed">
+            <span class="material-icons">check_circle</span>
+          </div>
+        </div>
+        <div class="formation-details">
+          <h3>{{ enrollment.formationTitle || enrollment.formation?.title || 'Formation ' + enrollment.formationId }}</h3>
+          <p class="formation-provider">Coach IA</p>
+          <div class="progress-section">
+            <div class="progress-info">
+              <span class="progress-label">Terminé à 100%</span>
+              <div class="progress-bar-coursera">
+                <div class="progress-fill-coursera" style="width: 100%"></div>
+              </div>
+            </div>
+            <button class="btn-resume" [routerLink]="['/user/profile']" [queryParams]="{tab: 'accomplissements'}">
+              Voir le certificat
+            </button>
+          </div>
+          <div class="completion-date" *ngIf="enrollment.progress?.lastActivityDate">
+            <span class="material-icons">event</span>
+            <span>Terminé le {{ enrollment.progress?.lastActivityDate | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!isLoading && getFormationsByTab().length === 0" class="empty-state">
+      <span class="material-icons">emoji_events</span>
+      <h3>Aucune formation terminée</h3>
+      <p>Continuez vos formations en cours pour obtenir votre premier certificat !</p>
+      <button class="btn btn-primary" (click)="setActiveTab('en_cours')">
+        <span class="material-icons">play_arrow</span>
+        Voir mes formations en cours
+      </button>
+    </div>
+  </div>
+</div>

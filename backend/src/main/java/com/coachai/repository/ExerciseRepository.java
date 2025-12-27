@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface ExerciseRepository extends JpaRepository<Exercise, String> {
     List<Exercise> findByCourse(Course course);
+    List<Exercise> findByCourseId(String courseId);
     List<Exercise> findByIsAIGeneratedTrue();
 }
 

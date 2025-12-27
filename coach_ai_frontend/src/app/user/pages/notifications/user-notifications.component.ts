@@ -27,7 +27,13 @@ import { UserNotification } from '../../models/user.interfaces';
           (click)="markAsRead(notif)">
           <span class="notification-icon material-icons">{{ getNotifIcon(notif.type) }}</span>
           <div class="notification-content">
-            <h3>{{ notif.title }}</h3>
+            <div class="notification-header">
+              <h3>{{ notif.title }}</h3>
+              <span class="notification-badge admin-badge" *ngIf="notif.createdBy === 'admin'">
+                <span class="material-icons">admin_panel_settings</span>
+                Admin
+              </span>
+            </div>
             <p>{{ notif.message }}</p>
             <span class="notification-time">{{ notif.createdAt | date:'short' }}</span>
           </div>
@@ -55,7 +61,11 @@ import { UserNotification } from '../../models/user.interfaces';
     .notification-item.notif-medium { border-left: 3px solid #f59e0b; }
     .notification-icon { font-size: 32px; color: #10b981; flex-shrink: 0; }
     .notification-content { flex: 1; min-width: 0; }
-    .notification-content h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .notification-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .notification-content h3 { font-size: 1rem; font-weight: 700; margin: 0; flex: 1; }
+    .notification-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .admin-badge { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; }
+    .admin-badge .material-icons { font-size: 14px; }
     .notification-content p { font-size: 0.9rem; color: #6b7280; margin-bottom: 8px; line-height: 1.6; }
     .notification-time { font-size: 0.75rem; color: #9ca3af; }
     .btn-delete { background: none; border: none; cursor: pointer; padding: 6px; opacity: 0; transition: all 0.3s ease; border-radius: 50%; }

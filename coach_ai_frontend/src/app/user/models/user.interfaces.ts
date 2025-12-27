@@ -35,6 +35,12 @@ export interface ChatMessage {
   timestamp: Date;
   type: 'text' | 'suggestion' | 'feedback';
   attachments?: ChatAttachment[];
+  // AI metadata (optional, added when using direct AI)
+  aiMetadata?: {
+    predictedDifficulty?: string;
+    confidence?: number;
+    source?: string;
+  };
 }
 
 export interface ChatAttachment {
@@ -218,6 +224,7 @@ export interface UserNotification {
   readAt?: Date;
   actionUrl?: string;
   priority: 'low' | 'medium' | 'high';
+  createdBy?: 'admin' | 'system' | 'trainer' | string; // Source de la notification
 }
 
 // Recommendations

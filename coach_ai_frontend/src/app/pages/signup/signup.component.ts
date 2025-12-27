@@ -16,6 +16,7 @@ export class SignupComponent implements OnInit {
   loading = false;
   submitted = false;
   errorMessage = '';
+  successMessage = '';
   showPassword = false;
   showConfirmPassword = false;
   passwordStrength: 'weak' | 'medium' | 'strong' = 'weak';
@@ -26,21 +27,72 @@ export class SignupComponent implements OnInit {
     private router: Router
   ) {}
 
+  selectedRole: 'USER' | 'TRAINER' | 'ADMIN' = 'USER';
+
   ngOnInit(): void {
     // Initialize form with validation
     this.signupForm = this.formBuilder.group({
       fullName: ['', [Validators.required, Validators.minLength(3)]],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.email, this.emailFormatValidator.bind(this)]],
       password: ['', [
         Validators.required,
         Validators.minLength(8),
         this.passwordStrengthValidator
       ]],
       confirmPassword: ['', [Validators.required]],
+      role: ['USER', [Validators.required]],
       acceptTerms: [false, [Validators.requiredTrue]]
     }, {
       validators: this.passwordMatchValidator
     });
+    
+    // Watch role changes to update email validation
+    this.signupForm.get('role')?.valueChanges.subscribe(role => {
+      this.selectedRole = role;
+      this.signupForm.get('email')?.updateValueAndValidity();
+    });
+  }
+  
+  // Custom validator for email format based on role
+  emailFormatValidator(control: AbstractControl): ValidationErrors | null {
+    const email = control.value;
+    if (!email) {
+      return null; // Let required validator handle empty emails
+    }
+    
+    if (!this.selectedRole) {
+      return null; // Wait for role selection
+    }
+    
+    const emailLower = email.toLowerCase().trim();
+    
+    // First check basic email format
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(emailLower)) {
+      return null; // Let Validators.email handle this
+    }
+    
+    let expectedDomain = '';
+    
+    switch (this.selectedRole) {
+      case 'USER':
+        expectedDomain = '@etud.com';
+        break;
+      case 'TRAINER':
+        expectedDomain = '@form.com';
+        break;
+      case 'ADMIN':
+        expectedDomain = '@adm.com';
+        break;
+      default:
+        return null;
+    }
+    
+    if (!emailLower.endsWith(expectedDomain)) {
+      return { emailFormat: { expectedDomain, role: this.selectedRole } };
+    }
+    
+    return null;
   }
 
   // Custom validator for password strength
@@ -132,6 +184,7 @@ export class SignupComponent implements OnInit {
   onSubmit(): void {
     this.submitted = true;
     this.errorMessage = '';
+    this.successMessage = '';
 
     // Stop if form is invalid
     if (this.signupForm.invalid) {
@@ -139,18 +192,79 @@ export class SignupComponent implements OnInit {
     }
 
     this.loading = true;
+    
+    // Split fullName into firstName and lastName
+    const fullName = this.signupForm.value.fullName.trim();
+    const nameParts = fullName.split(' ', 2);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.length > 1 ? nameParts[1] : '';
 
-    this.authService.signup(this.signupForm.value).subscribe({
-      next: (user) => {
-        console.log('Signup successful', user);
-        this.router.navigate(['/']);
+    const signupData = {
+      email: this.signupForm.value.email.trim().toLowerCase(),
+      password: this.signupForm.value.password,
+      firstName: firstName,
+      lastName: lastName,
+      role: this.signupForm.value.role
+    };
+
+    this.authService.signup(signupData).subscribe({
+      next: (response) => {
+        console.log('✅ Signup successful - User created in database:', response);
+        
+        // Afficher le message de succès avec plus de détails
+        const userName = firstName || response.firstName || 'Utilisateur';
+        const userEmail = signupData.email;
+        this.successMessage = `✅ Compte créé avec succès dans la base de données ! Bienvenue ${userName} (${userEmail}) !`;
+        this.loading = false;
+        this.errorMessage = ''; // Effacer les erreurs précédentes
+        
+        // Store token
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('user', JSON.stringify(response));
+          console.log('✅ Token stored in localStorage');
+        }
+        
+        // Attendre 4 secondes pour bien voir la notification avant de rediriger
+        setTimeout(() => {
+          const role = response.role?.toUpperCase() || this.signupForm.value.role;
+          console.log(`🔄 Redirecting to ${role} dashboard...`);
+          if (role === 'ADMIN') {
+            this.router.navigate(['/admin/dashboard']);
+          } else if (role === 'TRAINER') {
+            this.router.navigate(['/trainer/dashboard']);
+          } else {
+            this.router.navigate(['/user/dashboard']);
+          }
+        }, 4000); // Augmenté à 4 secondes
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Signup failed. Please try again.';
+        console.error('❌ Signup error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        
+        // Message d'erreur détaillé
+        let errorMsg = 'Erreur lors de l\'inscription. Veuillez réessayer.';
+        
+        if (error?.error?.message) {
+          errorMsg = error.error.message;
+        } else if (error?.error?.error) {
+          errorMsg = error.error.error;
+        } else if (error?.message) {
+          errorMsg = error.message;
+        } else if (error?.status === 0 || error?.statusText === 'Unknown Error') {
+          errorMsg = 'Impossible de se connecter au serveur. Vérifiez que le backend est démarré sur http://localhost:8081';
+        } else if (error?.status === 400) {
+          errorMsg = 'Données invalides. Vérifiez votre email et votre mot de passe.';
+        } else if (error?.status === 500) {
+          errorMsg = 'Erreur serveur. Veuillez réessayer plus tard.';
+        }
+        
+        this.errorMessage = errorMsg;
         this.loading = false;
+        this.successMessage = '';
       },
       complete: () => {
-        this.loading = false;
+        // Ne pas mettre loading à false ici car on le fait dans next ou error
       }
     });
   }

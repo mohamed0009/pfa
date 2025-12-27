@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ContentManagementService } from '../../../services/content-management.service';
-import { Formation, Module, Course, ContentValidation, ContentStatus } from '../../../models/admin.interfaces';
+import { TrainersService } from '../../../services/trainers.service';
+import { Formation, Module, Course, ContentValidation, ContentStatus, Trainer } from '../../../models/admin.interfaces';
 
 @Component({
   selector: 'app-content-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './content-management.component.html',
   styleUrl: './content-management.component.scss'
 })
@@ -42,13 +44,57 @@ export class ContentManagementComponent implements OnInit {
   showValidationModal = false;
   selectedValidation: ContentValidation | null = null;
   validationFeedback = '';
+  
+  // Form data
+  newFormation: Partial<Formation> = {
+    title: '',
+    description: '',
+    level: 'Débutant',
+    category: '',
+    duration: 0,
+    thumbnail: '',
+    createdBy: ''
+  };
+  trainers: Trainer[] = [];
 
-  constructor(private contentService: ContentManagementService) {}
+  constructor(
+    private contentService: ContentManagementService,
+    private trainersService: TrainersService
+  ) {}
 
   ngOnInit(): void {
     this.loadFormations();
     this.loadStats();
     this.loadPendingValidations();
+    this.loadTrainers();
+    this.loadPendingFormations();
+  }
+
+  loadPendingFormations(): void {
+    this.contentService.getPendingFormations().subscribe({
+      next: (formations) => {
+        // Ajouter les formations en attente aux validations
+        formations.forEach(formation => {
+          if (!this.pendingValidations.find(v => v.contentId === formation.id)) {
+            this.pendingValidations.push({
+              id: `validation-${formation.id}`,
+              contentType: 'formation',
+              contentId: formation.id,
+              status: 'pending'
+            });
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error loading pending formations:', error);
+      }
+    });
+  }
+  
+  loadTrainers(): void {
+    this.trainersService.getTrainers('active').subscribe(trainers => {
+      this.trainers = trainers;
+    });
   }
 
   loadFormations(): void {
@@ -114,16 +160,21 @@ export class ContentManagementComponent implements OnInit {
   approveContent(): void {
     if (!this.selectedValidation) return;
 
-    this.contentService.validateContent(
-      this.selectedValidation.id,
-      true,
-      this.validationFeedback
-    ).subscribe(() => {
-      this.loadPendingValidations();
-      this.loadFormations();
-      this.loadStats();
-      this.closeValidationModal();
-    });
+    if (this.selectedValidation.contentType === 'formation') {
+      this.contentService.approveFormation(this.selectedValidation.contentId).subscribe(() => {
+        this.loadPendingValidations();
+        this.loadFormations();
+        this.loadStats();
+        this.closeValidationModal();
+      });
+    } else if (this.selectedValidation.contentType === 'cours') {
+      this.contentService.approveCourse(this.selectedValidation.contentId).subscribe(() => {
+        this.loadPendingValidations();
+        this.loadFormations();
+        this.loadStats();
+        this.closeValidationModal();
+      });
+    }
   }
 
   rejectContent(): void {
@@ -132,16 +183,21 @@ export class ContentManagementComponent implements OnInit {
       return;
     }
 
-    this.contentService.validateContent(
-      this.selectedValidation.id,
-      false,
-      this.validationFeedback
-    ).subscribe(() => {
-      this.loadPendingValidations();
-      this.loadFormations();
-      this.loadStats();
-      this.closeValidationModal();
-    });
+    if (this.selectedValidation.contentType === 'formation') {
+      this.contentService.rejectFormation(this.selectedValidation.contentId, this.validationFeedback).subscribe(() => {
+        this.loadPendingValidations();
+        this.loadFormations();
+        this.loadStats();
+        this.closeValidationModal();
+      });
+    } else if (this.selectedValidation.contentType === 'cours') {
+      this.contentService.rejectCourse(this.selectedValidation.contentId, this.validationFeedback).subscribe(() => {
+        this.loadPendingValidations();
+        this.loadFormations();
+        this.loadStats();
+        this.closeValidationModal();
+      });
+    }
   }
 
   closeValidationModal(): void {
@@ -152,11 +208,69 @@ export class ContentManagementComponent implements OnInit {
 
   // CRUD modals
   openCreateFormationModal(): void {
+    this.newFormation = {
+      title: '',
+      description: '',
+      level: 'Débutant',
+      category: '',
+      duration: 0,
+      thumbnail: '',
+      createdBy: ''
+    };
     this.showFormationModal = true;
   }
 
   closeFormationModal(): void {
     this.showFormationModal = false;
+    this.newFormation = {
+      title: '',
+      description: '',
+      level: 'Débutant',
+      category: '',
+      duration: 0,
+      thumbnail: '',
+      createdBy: ''
+    };
+  }
+  
+  saveFormation(): void {
+    if (!this.newFormation.title || !this.newFormation.description) {
+      alert('Veuillez remplir au moins le titre et la description');
+      return;
+    }
+    
+    this.contentService.createFormation(this.newFormation).subscribe({
+      next: (formation) => {
+        // Si un formateur est assigné, l'assigner
+        if (this.newFormation.createdBy) {
+          this.contentService.assignTrainerToFormation(formation.id, this.newFormation.createdBy).subscribe({
+            next: () => {
+              this.loadFormations();
+              this.loadStats();
+              this.closeFormationModal();
+              alert('✅ Formation créée et assignée au formateur avec succès !');
+            },
+            error: (error) => {
+              console.error('Error assigning trainer:', error);
+              this.loadFormations();
+              this.loadStats();
+              this.closeFormationModal();
+              alert('✅ Formation créée, mais erreur lors de l\'assignation du formateur');
+            }
+          });
+        } else {
+          this.loadFormations();
+          this.loadStats();
+          this.closeFormationModal();
+          alert('✅ Formation créée avec succès !');
+        }
+      },
+      error: (error) => {
+        console.error('Error creating formation:', error);
+        const errorMessage = error?.error?.error || error?.error?.message || 'Erreur lors de la création de la formation';
+        alert('❌ Erreur: ' + errorMessage);
+      }
+    });
   }
 
   openCreateModuleModal(): void {

@@ -50,6 +50,20 @@ export class UserLayoutComponent implements OnInit {
       this.currentUser = user;
     });
 
+    // Recharger le profil si l'utilisateur est connecté mais le profil n'est pas chargé
+    this.authService.isAuthenticated.subscribe(isAuth => {
+      if (isAuth && !this.currentUser) {
+        this.userProfileService.getUserProfile().subscribe({
+          next: (user) => {
+            this.currentUser = user;
+          },
+          error: (err) => {
+            console.error('Error loading user profile:', err);
+          }
+        });
+      }
+    });
+
     // Charger le nombre de notifications non lues
     this.notificationsService.unreadCount$.subscribe(count => {
       this.unreadNotifications = count;
@@ -86,6 +100,17 @@ export class UserLayoutComponent implements OnInit {
   goToSettings(): void {
     this.router.navigate(['/user/settings']);
     this.showProfileMenu = false;
+  }
+
+  // Méthode pour obtenir le nom complet de l'utilisateur
+  getFullName(): string {
+    if (!this.currentUser) {
+      return 'Utilisateur';
+    }
+    const firstName = this.currentUser.firstName || '';
+    const lastName = this.currentUser.lastName || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || this.currentUser.email || 'Utilisateur';
   }
 }
 

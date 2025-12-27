@@ -1,0 +1,196 @@
+<div class="page-container">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>
+        <span class="material-icons">quiz</span>
+        Mes Quiz
+      </h1>
+      <p class="subtitle">Créez et gérez vos évaluations</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <span class="material-icons">add</span>
+      Nouveau Quiz
+    </button>
+  </header>
+
+  <!-- Filters -->
+  <div class="filters-section" *ngIf="!isLoading && quizzes.length > 0">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input 
+        type="text" 
+        placeholder="Rechercher un quiz..."
+        [(ngModel)]="searchTerm"
+        (input)="filterQuizzes()">
+    </div>
+    <div class="filter-controls">
+      <select [(ngModel)]="selectedCourse" (change)="filterQuizzes()">
+        <option value="all">Tous les cours</option>
+        <option *ngFor="let course of courses" [value]="course.id">{{ course.title }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des quiz...</p>
+  </div>
+
+  <!-- Quizzes Grid -->
+  <div *ngIf="!isLoading && filteredQuizzes.length > 0" class="quizzes-grid">
+    <div *ngFor="let quiz of filteredQuizzes" class="quiz-card">
+      <div class="quiz-header">
+        <h3>{{ quiz.title }}</h3>
+        <span class="status-badge" [style.background]="getStatusColor(quiz.status)">
+          {{ getStatusLabel(quiz.status) }}
+        </span>
+      </div>
+      <p>{{ quiz.description || 'Aucune description' }}</p>
+      <div class="quiz-stats">
+        <span>
+          <span class="material-icons">help</span>
+          {{ quiz.questions?.length || 0 }} questions
+        </span>
+        <span>
+          <span class="material-icons">schedule</span>
+          {{ quiz.duration || 30 }} min
+        </span>
+        <span>
+          <span class="material-icons">people</span>
+          {{ quiz.attempts?.length || 0 }} tentatives
+        </span>
+      </div>
+      <div class="quiz-meta">
+        <span class="meta-item">
+          <span class="label">Score de passage:</span>
+          <span class="value">{{ quiz.passingScore || 60 }}%</span>
+        </span>
+        <span class="meta-item" *ngIf="quiz.difficulty">
+          <span class="label">Difficulté:</span>
+          <span class="value">{{ quiz.difficulty }}</span>
+        </span>
+      </div>
+      <div class="quiz-actions">
+        <button class="btn btn-primary" [routerLink]="['/trainer/content/quizzes', quiz.id]">
+          <span class="material-icons">edit</span>
+          Gérer le Quiz
+        </button>
+        <button class="btn btn-danger" (click)="deleteQuiz(quiz.id)">
+          <span class="material-icons">delete</span>
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredQuizzes.length === 0" class="empty-state">
+    <span class="material-icons">quiz</span>
+    <h3 *ngIf="quizzes.length === 0">Aucun quiz</h3>
+    <h3 *ngIf="quizzes.length > 0">Aucun quiz trouvé</h3>
+    <p *ngIf="quizzes.length === 0">Créez votre premier quiz</p>
+    <p *ngIf="quizzes.length > 0">Modifiez vos filtres pour voir plus de résultats</p>
+    <button *ngIf="quizzes.length === 0" class="btn btn-primary" (click)="openCreateModal()">
+      <span class="material-icons">add</span>
+      Créer un Quiz
+    </button>
+  </div>
+</div>
+
+<!-- Modal de Création de Quiz -->
+<div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Créer un Nouveau Quiz</h2>
+      <button class="btn-close" (click)="closeCreateModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="createQuiz()" class="modal-body">
+      <div class="form-group">
+        <label>Titre *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newQuiz.title" 
+          name="title"
+          placeholder="Ex: Quiz JavaScript Basics"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea 
+          [(ngModel)]="newQuiz.description" 
+          name="description"
+          rows="3"
+          placeholder="Décrivez le quiz..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Cours *</label>
+        <select [(ngModel)]="newQuiz.courseId" name="courseId" required>
+          <option value="">Sélectionner un cours</option>
+          <option *ngFor="let course of courses" [value]="course.id">{{ course.title }}</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Difficulté</label>
+          <select [(ngModel)]="newQuiz.difficulty" name="difficulty">
+            <option value="Facile">Facile</option>
+            <option value="Moyen">Moyen</option>
+            <option value="Difficile">Difficile</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Durée (minutes)</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newQuiz.duration" 
+            name="duration"
+            min="5"
+            step="5">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Score de passage (%)</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newQuiz.passingScore" 
+            name="passingScore"
+            min="0"
+            max="100"
+            step="5">
+        </div>
+
+        <div class="form-group">
+          <label>Nombre max de tentatives</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newQuiz.maxAttempts" 
+            name="maxAttempts"
+            min="1"
+            max="10">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isCreating || !newQuiz.title.trim() || !newQuiz.courseId">
+          <span *ngIf="isCreating" class="spinner-small"></span>
+          <span *ngIf="!isCreating">Créer le Quiz</span>
+          <span *ngIf="isCreating">Création...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

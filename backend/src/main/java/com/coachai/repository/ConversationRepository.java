@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface ConversationRepository extends JpaRepository<Conversation, String> {
     List<Conversation> findByUserOrderByLastMessageDateDesc(User user);
+    List<Conversation> findByUser(User user);
     Optional<Conversation> findByUserAndIsActiveTrue(User user);
     List<Conversation> findByUserAndIsActive(User user, boolean isActive);
 }

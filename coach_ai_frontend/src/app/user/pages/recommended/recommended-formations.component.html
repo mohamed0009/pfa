@@ -1,0 +1,120 @@
+<div class="recommended-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <span class="material-icons">recommend</span>
+        Formations recommandées pour vous
+      </h1>
+      <p>Formations sélectionnées par votre formateur selon votre niveau et votre progression</p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement des recommandations...</p>
+  </div>
+
+  <!-- Recommendations List -->
+  <div class="recommendations-container" *ngIf="!isLoading">
+    <div class="recommendations-list" *ngIf="recommendations.length > 0">
+      <div 
+        class="recommendation-card" 
+        *ngFor="let reco of recommendations"
+        [class.high-priority]="reco.priority === 'high'">
+        
+        <!-- Priority Badge -->
+        <div class="priority-badge" [style.background-color]="getPriorityColor(reco.priority)">
+          <span class="material-icons">star</span>
+          {{ getPriorityLabel(reco.priority) }}
+        </div>
+
+        <div class="card-layout">
+          <!-- Left: Formation Image -->
+          <div class="formation-thumbnail">
+            <img [src]="reco.formationThumbnail" [alt]="reco.formationTitle">
+            <div class="level-badge">{{ getLevelLabel(reco.formationLevel) }}</div>
+          </div>
+
+          <!-- Center: Content -->
+          <div class="formation-info">
+            <h2>{{ reco.formationTitle }}</h2>
+            <p class="formation-description">{{ reco.formationDescription }}</p>
+
+            <!-- Recommended By -->
+            <div class="recommended-by">
+              <img 
+                [src]="reco.trainerAvatar || 'assets/images/default-avatar.png'" 
+                [alt]="reco.recommendedBy"
+                class="trainer-avatar-small">
+              <div>
+                <p class="trainer-label">Recommandé par</p>
+                <p class="trainer-name">{{ reco.recommendedBy }}</p>
+              </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="reason-section">
+              <p class="reason-text">
+                <span class="material-icons">info</span>
+                {{ reco.reason }}
+              </p>
+            </div>
+
+            <!-- Based On -->
+            <div class="based-on-section">
+              <p class="section-title">Basée sur votre parcours:</p>
+              <ul class="based-on-list">
+                <li *ngFor="let item of reco.basedOn">
+                  <span class="material-icons">check_circle</span>
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
+
+            <!-- Meta Info -->
+            <div class="meta-info">
+              <span class="meta-item">
+                <span class="material-icons">schedule</span>
+                {{ reco.formationDuration }}h de contenu
+              </span>
+              <span class="meta-item">
+                <span class="material-icons">event</span>
+                Recommandé le {{ reco.recommendedAt | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Right: Actions -->
+          <div class="card-actions">
+            <button 
+              class="btn btn-primary btn-block"
+              (click)="viewFormation(reco.formationId, reco.id)">
+              <span class="material-icons">visibility</span>
+              Voir la formation
+            </button>
+            <button 
+              class="btn btn-secondary btn-block"
+              (click)="dismissRecommendation(reco.id)">
+              <span class="material-icons">close</span>
+              Plus tard
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="recommendations.length === 0">
+      <span class="material-icons">school</span>
+      <h3>Aucune recommandation pour le moment</h3>
+      <p>Continuez votre apprentissage, votre formateur vous recommandera de nouvelles formations adaptées à votre progression.</p>
+      <button class="btn btn-primary" [routerLink]="['/user/courses']">
+        <span class="material-icons">explore</span>
+        Explorer le catalogue
+      </button>
+    </div>
+  </div>
+</div>
+

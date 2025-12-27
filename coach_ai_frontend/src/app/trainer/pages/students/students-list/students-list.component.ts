@@ -30,10 +30,30 @@ export class StudentsListComponent implements OnInit {
   }
 
   private loadStudents(): void {
-    this.trainerService.getStudents().subscribe(students => {
-      this.students = students;
-      this.filteredStudents = students;
-      this.isLoading = false;
+    this.trainerService.getStudents().subscribe({
+      next: (students) => {
+        this.students = students;
+        this.filteredStudents = students;
+        this.isLoading = false;
+        // Charger les formations pour le filtre
+        this.loadFormations();
+      },
+      error: (error) => {
+        console.error('Error loading students:', error);
+        this.students = [];
+        this.filteredStudents = [];
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private loadFormations(): void {
+    this.trainerService.getFormations().subscribe({
+      next: (formations) => {
+        // Extraire les formations uniques depuis les étudiants
+        const formationIds = new Set(this.students.map(s => s.formationId).filter(id => id));
+        // TODO: Populer le select avec les formations
+      }
     });
   }
 
@@ -63,6 +83,16 @@ export class StudentsListComponent implements OnInit {
     if (score >= 70) return 'Bon';
     if (score >= 50) return 'Moyen';
     return 'Faible';
+  }
+
+  getLevelClass(level: string): string {
+    const levelMap: Record<string, string> = {
+      'Débutant': 'beginner',
+      'Intermédiaire': 'intermediate',
+      'Avancé': 'advanced',
+      'Expert': 'expert'
+    };
+    return levelMap[level] || 'beginner';
   }
 }
 

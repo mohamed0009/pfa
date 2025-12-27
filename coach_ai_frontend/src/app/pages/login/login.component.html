@@ -40,7 +40,12 @@
         <!-- Error Message -->
         <div class="alert alert-error" *ngIf="errorMessage && submitted">
           <span class="material-icons">error</span>
-          <span>{{ errorMessage }}</span>
+          <div class="error-content">
+            <strong>{{ errorMessage }}</strong>
+            <small *ngIf="errorMessage.includes('connexion au serveur') || errorMessage.includes('backend')">
+              Vérifiez que le backend est démarré sur http://localhost:8081
+            </small>
+          </div>
         </div>
 
         <!-- Login Form -->

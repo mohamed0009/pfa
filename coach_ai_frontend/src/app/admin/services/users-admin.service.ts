@@ -1,11 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay, throwError } from 'rxjs';
-import { User, UserProgress, LearnerActivity } from '../models/admin.interfaces';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, delay, throwError, map, catchError } from 'rxjs';
+import { User, UserProgress, LearnerActivity, UserRole } from '../models/admin.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsersAdminService {
+  private apiUrl = 'http://localhost:8081/api/admin/users';
+
+  constructor(private http: HttpClient) {}
+
   private users: User[] = [
     {
       id: '1',
@@ -79,50 +84,183 @@ export class UsersAdminService {
     }
   ];
 
-  constructor() {}
-
-  getUsers(): Observable<User[]> {
-    return of(this.users).pipe(delay(300));
+  getUsers(role?: string): Observable<User[]> {
+    const url = role ? `${this.apiUrl}?role=${role}` : this.apiUrl;
+    return this.http.get<any[]>(url).pipe(
+      map((users: any[]) => users.map(user => {
+        // Calculer les cours depuis les enrollments si disponibles
+        const enrollments = user.enrollments || [];
+        const coursesEnrolled = enrollments.length;
+        const coursesCompleted = enrollments.filter((e: any) => 
+          e.status === 'COMPLETED' || (e.progress && e.progress.overallProgress === 100)
+        ).length;
+        
+        return {
+          id: user.id,
+          fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          email: user.email,
+          avatarUrl: user.avatarUrl || '',
+          role: (user.role === 'USER' ? 'Apprenant' : user.role === 'TRAINER' ? 'Formateur' : 'Administrateur') as UserRole,
+          status: (user.status === 'ACTIVE' ? 'active' : user.status === 'INACTIVE' ? 'inactive' : user.status === 'PENDING' ? 'pending' : 'suspended') as 'active' | 'inactive' | 'pending' | 'suspended',
+          training: user.formation || '',
+          level: (user.niveau ? (user.niveau === 'DEBUTANT' ? 'Débutant' : user.niveau === 'INTERMEDIAIRE' ? 'Intermédiaire' : 'Avancé') : 'Débutant') as 'Débutant' | 'Intermédiaire' | 'Avancé',
+          coursesEnrolled: coursesEnrolled,
+          coursesCompleted: coursesCompleted,
+          lastActive: user.lastActive ? new Date(user.lastActive) : new Date(),
+          createdAt: user.joinedAt ? new Date(user.joinedAt) : new Date()
+        };
+      })),
+      catchError((error) => {
+        console.error('Error fetching users:', error);
+        return of([]);
+      })
+    );
   }
 
   getUserById(id: string): Observable<User | undefined> {
-    return of(this.users.find(u => u.id === id)).pipe(delay(200));
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+      map((user: any) => {
+        const enrollments = user.enrollments || [];
+        const coursesEnrolled = enrollments.length;
+        const coursesCompleted = enrollments.filter((e: any) => 
+          e.status === 'COMPLETED' || (e.progress && e.progress.overallProgress === 100)
+        ).length;
+        
+        return {
+          id: user.id,
+          fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          email: user.email,
+          avatarUrl: user.avatarUrl || '',
+          role: (user.role === 'USER' ? 'Apprenant' : user.role === 'TRAINER' ? 'Formateur' : 'Administrateur') as UserRole,
+          status: (user.status === 'ACTIVE' ? 'active' : user.status === 'INACTIVE' ? 'inactive' : user.status === 'PENDING' ? 'pending' : 'suspended') as 'active' | 'inactive' | 'pending' | 'suspended',
+          training: user.formation || '',
+          level: (user.niveau ? (user.niveau === 'DEBUTANT' ? 'Débutant' : user.niveau === 'INTERMEDIAIRE' ? 'Intermédiaire' : 'Avancé') : 'Débutant') as 'Débutant' | 'Intermédiaire' | 'Avancé',
+          coursesEnrolled: coursesEnrolled,
+          coursesCompleted: coursesCompleted,
+          lastActive: user.lastActive ? new Date(user.lastActive) : new Date(),
+          createdAt: user.joinedAt ? new Date(user.joinedAt) : new Date()
+        };
+      }),
+      catchError((error) => {
+        console.error('Error fetching user:', error);
+        return of(undefined);
+      })
+    );
   }
 
   createUser(user: Partial<User>): Observable<User> {
-    const newUser: User = {
-      id: 'u' + (this.users.length + 1),
-      fullName: user.fullName || '',
+    const userData: any = {
       email: user.email || '',
-      avatarUrl: user.avatarUrl || 'https://i.pravatar.cc/150',
+      fullName: user.fullName || '',
       role: user.role || 'Apprenant',
       status: user.status || 'active',
       training: user.training || '',
       level: user.level || 'Débutant',
-      coursesEnrolled: 0,
-      coursesCompleted: 0,
-      createdAt: new Date()
+      avatarUrl: user.avatarUrl || 'https://i.pravatar.cc/150'
     };
-    this.users.push(newUser);
-    return of(newUser).pipe(delay(400));
+    
+    return this.http.post<any>(this.apiUrl, userData).pipe(
+      map((savedUser: any) => ({
+        id: savedUser.id,
+        fullName: `${savedUser.firstName || ''} ${savedUser.lastName || ''}`.trim() || savedUser.email,
+        email: savedUser.email,
+        avatarUrl: savedUser.avatarUrl || '',
+        role: (savedUser.role === 'USER' ? 'Apprenant' : savedUser.role === 'TRAINER' ? 'Formateur' : 'Administrateur') as UserRole,
+        status: (savedUser.status === 'ACTIVE' ? 'active' : savedUser.status === 'INACTIVE' ? 'inactive' : savedUser.status === 'PENDING' ? 'pending' : 'suspended') as 'active' | 'inactive' | 'pending' | 'suspended',
+        training: savedUser.formation || '',
+        level: (savedUser.niveau ? (savedUser.niveau === 'DEBUTANT' ? 'Débutant' : savedUser.niveau === 'INTERMEDIAIRE' ? 'Intermédiaire' : 'Avancé') : 'Débutant') as 'Débutant' | 'Intermédiaire' | 'Avancé',
+        coursesEnrolled: 0,
+        coursesCompleted: 0,
+        lastActive: savedUser.lastActive ? new Date(savedUser.lastActive) : new Date(),
+        createdAt: savedUser.joinedAt ? new Date(savedUser.joinedAt) : new Date()
+      })),
+      catchError((error) => {
+        console.error('Error creating user:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   updateUser(id: string, updates: Partial<User>): Observable<User> {
-    const index = this.users.findIndex(u => u.id === id);
-    if (index === -1) {
-      return throwError(() => new Error('User not found'));
-    }
-    this.users[index] = { ...this.users[index], ...updates };
-    return of(this.users[index]).pipe(delay(300));
+    const backendUpdates: any = {};
+    
+    if (updates.email !== undefined) backendUpdates.email = updates.email;
+    if (updates.fullName !== undefined) backendUpdates.fullName = updates.fullName;
+    if (updates.role !== undefined) backendUpdates.role = updates.role;
+    if (updates.status !== undefined) backendUpdates.status = updates.status;
+    if (updates.training !== undefined) backendUpdates.training = updates.training;
+    if (updates.level !== undefined) backendUpdates.level = updates.level;
+    if (updates.avatarUrl !== undefined) backendUpdates.avatarUrl = updates.avatarUrl;
+    
+    return this.http.put<any>(`${this.apiUrl}/${id}`, backendUpdates).pipe(
+      map((user: any) => {
+        const enrollments = user.enrollments || [];
+        const coursesEnrolled = enrollments.length;
+        const coursesCompleted = enrollments.filter((e: any) => 
+          e.status === 'COMPLETED' || (e.progress && e.progress.overallProgress === 100)
+        ).length;
+        
+        return {
+          id: user.id,
+          fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          email: user.email,
+          avatarUrl: user.avatarUrl || '',
+          role: (user.role === 'USER' ? 'Apprenant' : user.role === 'TRAINER' ? 'Formateur' : 'Administrateur') as UserRole,
+          status: (user.status === 'ACTIVE' ? 'active' : user.status === 'INACTIVE' ? 'inactive' : user.status === 'PENDING' ? 'pending' : 'suspended') as 'active' | 'inactive' | 'pending' | 'suspended',
+          training: user.formation || '',
+          level: (user.niveau ? (user.niveau === 'DEBUTANT' ? 'Débutant' : user.niveau === 'INTERMEDIAIRE' ? 'Intermédiaire' : 'Avancé') : 'Débutant') as 'Débutant' | 'Intermédiaire' | 'Avancé',
+          coursesEnrolled: coursesEnrolled,
+          coursesCompleted: coursesCompleted,
+          lastActive: user.lastActive ? new Date(user.lastActive) : new Date(),
+          createdAt: user.joinedAt ? new Date(user.joinedAt) : new Date()
+        };
+      }),
+      catchError((error) => {
+        console.error('Error updating user:', error);
+        return throwError(() => new Error('User not found'));
+      })
+    );
+  }
+
+  updateUserStatus(id: string, status: string): Observable<User> {
+    return this.http.put<any>(`${this.apiUrl}/${id}/status`, `"${status}"`).pipe(
+      map((user: any) => {
+        const enrollments = user.enrollments || [];
+        const coursesEnrolled = enrollments.length;
+        const coursesCompleted = enrollments.filter((e: any) => 
+          e.status === 'COMPLETED' || (e.progress && e.progress.overallProgress === 100)
+        ).length;
+        
+        return {
+          id: user.id,
+          fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          email: user.email,
+          avatarUrl: user.avatarUrl || '',
+          role: (user.role === 'USER' ? 'Apprenant' : user.role === 'TRAINER' ? 'Formateur' : 'Administrateur') as UserRole,
+          status: (user.status === 'ACTIVE' ? 'active' : user.status === 'INACTIVE' ? 'inactive' : user.status === 'PENDING' ? 'pending' : 'suspended') as 'active' | 'inactive' | 'pending' | 'suspended',
+          training: user.formation || '',
+          level: (user.niveau ? (user.niveau === 'DEBUTANT' ? 'Débutant' : user.niveau === 'INTERMEDIAIRE' ? 'Intermédiaire' : 'Avancé') : 'Débutant') as 'Débutant' | 'Intermédiaire' | 'Avancé',
+          coursesEnrolled: coursesEnrolled,
+          coursesCompleted: coursesCompleted,
+          lastActive: user.lastActive ? new Date(user.lastActive) : new Date(),
+          createdAt: user.joinedAt ? new Date(user.joinedAt) : new Date()
+        };
+      }),
+      catchError((error) => {
+        console.error('Error updating user status:', error);
+        return throwError(() => new Error('Failed to update user status'));
+      })
+    );
   }
 
   deleteUser(id: string): Observable<boolean> {
-    const index = this.users.findIndex(u => u.id === id);
-    if (index === -1) {
-      return of(false);
-    }
-    this.users.splice(index, 1);
-    return of(true).pipe(delay(300));
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      map(() => true),
+      catchError((error) => {
+        console.error('Error deleting user:', error);
+        return of(false);
+      })
+    );
   }
 
   getUserProgress(userId: string): Observable<UserProgress[]> {
@@ -180,14 +318,25 @@ export class UsersAdminService {
   }
 
   getUserStats(): Observable<any> {
-    const stats = {
-      total: this.users.length,
-      active: this.users.filter(u => u.status === 'active').length,
-      apprenants: this.users.filter(u => u.role === 'Apprenant').length,
-      formateurs: this.users.filter(u => u.role === 'Formateur').length,
-      administrateurs: this.users.filter(u => u.role === 'Administrateur').length
-    };
-    return of(stats).pipe(delay(250));
+    return this.http.get<any>(`${this.apiUrl}/stats`).pipe(
+      map((stats: any) => ({
+        total: stats.total || 0,
+        active: stats.active || 0,
+        apprenants: stats.apprenants || 0,
+        formateurs: stats.formateurs || 0,
+        administrateurs: stats.administrateurs || 0
+      })),
+      catchError((error) => {
+        console.error('Error fetching user stats:', error);
+        return of({
+          total: 0,
+          active: 0,
+          apprenants: 0,
+          formateurs: 0,
+          administrateurs: 0
+        });
+      })
+    );
   }
 
   getUserStatsById(userId: string): Observable<any> {

@@ -25,6 +25,7 @@ export class AdminLayoutComponent implements OnInit {
 
   navItems: NavItem[] = [
     { label: 'Tableau de Bord', icon: 'dashboard', route: '/admin/dashboard' },
+    { label: 'Mon Profil', icon: 'person', route: '/admin/profile' },
     { label: 'Utilisateurs', icon: 'people', route: '/admin/users' },
     { label: 'Contenus Pédagogiques', icon: 'auto_stories', route: '/admin/content', badge: 3 },
     { label: 'Supervision IA', icon: 'psychology', route: '/admin/ai-supervision' },

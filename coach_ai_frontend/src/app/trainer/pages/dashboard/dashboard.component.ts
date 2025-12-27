@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TrainerProfile, TrainerStats, AtRiskStudent, FormationStatistics } from '../../models/trainer.interfaces';
+import { TrainerProfile, TrainerStats, AtRiskStudent, FormationStatistics, TrainerCourse } from '../../models/trainer.interfaces';
 import { TrainerService } from '../../services/trainer.service';
 
 @Component({
@@ -16,6 +16,13 @@ export class DashboardComponent implements OnInit {
   stats: TrainerStats | null = null;
   atRiskStudents: AtRiskStudent[] = [];
   recentFormations: FormationStatistics[] = [];
+  recentCourses: TrainerCourse[] = [];
+  aiStats = {
+    totalGenerated: 0,
+    quizzesGenerated: 0,
+    exercisesGenerated: 0,
+    summariesGenerated: 0
+  };
   isLoading = true;
 
   constructor(private trainerService: TrainerService) {}
@@ -40,6 +47,16 @@ export class DashboardComponent implements OnInit {
 
     this.trainerService.getFormationsStatistics().subscribe(formations => {
       this.recentFormations = formations.slice(0, 5);
+    });
+
+    // Charger les cours dynamiquement depuis le backend
+    this.trainerService.getTrainerCourses().subscribe(courses => {
+      this.recentCourses = courses.slice(0, 5);
+    });
+
+    // Charger les statistiques AI
+    this.trainerService.getAIStatistics().subscribe(stats => {
+      this.aiStats = stats;
     });
   }
 

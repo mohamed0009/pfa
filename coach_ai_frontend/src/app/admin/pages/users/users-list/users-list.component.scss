@@ -559,6 +559,35 @@
           cursor: not-allowed;
         }
       }
+      
+      .password-field-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      
+      .btn-link {
+        background: none;
+        border: none;
+        color: $primary-green;
+        cursor: pointer;
+        font-size: 0.875rem;
+        text-decoration: underline;
+        padding: 0;
+        font-weight: 500;
+        
+        &:hover {
+          color: darken($primary-green, 10%);
+        }
+      }
+      
+      .form-text {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
 
       select.form-control {
         cursor: pointer;

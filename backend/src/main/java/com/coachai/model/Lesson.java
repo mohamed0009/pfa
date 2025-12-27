@@ -48,6 +48,18 @@ public class Lesson {
     
     @Column(columnDefinition = "TEXT")
     private String transcript; // Transcription vidéo
+
+    /**
+     * Liens optionnels vers un quiz ou un exercice (lab) spécifiques.
+     * Permet de représenter la séquence Texte → Vidéo → Lab → Quiz au niveau du module.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_id")
+    private Quiz quiz;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exercise_id")
+    private Exercise exercise;
     
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LessonResource> resources = new ArrayList<>();

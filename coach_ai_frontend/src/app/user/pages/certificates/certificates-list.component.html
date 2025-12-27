@@ -1,0 +1,62 @@
+<div class="certificates-page">
+  <header class="page-header">
+    <h1>
+      <span class="material-icons">workspace_premium</span>
+      Mes Certificats
+    </h1>
+    <p>Consultez et partagez vos certificats de complétion</p>
+  </header>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement de vos certificats...</p>
+  </div>
+
+  <div *ngIf="!isLoading && certificates.length === 0" class="empty-state">
+    <span class="material-icons">workspace_premium</span>
+    <h3>Aucun certificat</h3>
+    <p>Complétez une formation pour obtenir votre premier certificat!</p>
+  </div>
+
+  <div *ngIf="!isLoading && certificates.length > 0" class="certificates-grid">
+    <div *ngFor="let cert of certificates" class="certificate-card" [routerLink]="['/user/certificate', cert.id]">
+      <div class="certificate-header">
+        <div class="certificate-icon">
+          <span class="material-icons">workspace_premium</span>
+        </div>
+        <div class="certificate-badge">
+          <span class="material-icons">verified</span>
+        </div>
+      </div>
+
+      <div class="certificate-body">
+        <h3>{{ cert.title }}</h3>
+        <div class="certificate-meta">
+          <div class="meta-item">
+            <span class="material-icons">star</span>
+            <span>Score: {{ cert.finalScore | number:'1.1-1' }}%</span>
+          </div>
+          <div class="meta-item">
+            <span class="material-icons">schedule</span>
+            <span>{{ cert.totalHours }}h</span>
+          </div>
+          <div class="meta-item">
+            <span class="material-icons">calendar_today</span>
+            <span>{{ cert.issuedAt | date:'shortDate' }}</span>
+          </div>
+        </div>
+        <div class="certificate-number">
+          <code>{{ cert.certificateNumber }}</code>
+        </div>
+      </div>
+
+      <div class="certificate-footer">
+        <button class="btn btn-primary" (click)="$event.stopPropagation()" [routerLink]="['/user/certificate', cert.id]">
+          <span class="material-icons">visibility</span>
+          Voir le certificat
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

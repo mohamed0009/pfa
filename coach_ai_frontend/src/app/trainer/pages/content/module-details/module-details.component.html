@@ -1,0 +1,298 @@
+<div class="page-container" *ngIf="module">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <button class="btn-back" (click)="router.navigate(['/trainer/content/formations', module.formationId])" type="button">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div>
+        <h1>{{ module.title }}</h1>
+        <p class="subtitle">{{ module.description || 'Aucune description' }}</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="openCreateQuizModal()" *ngIf="!moduleQuiz">
+        <span class="material-icons">quiz</span>
+        Ajouter Quiz Final
+      </button>
+      <button class="btn btn-primary" (click)="openCreateCourseModal()">
+        <span class="material-icons">add</span>
+        Nouveau Cours
+      </button>
+    </div>
+  </header>
+
+  <!-- Module Info -->
+  <div class="module-info">
+    <div class="info-item">
+      <span class="material-icons">schedule</span>
+      <div>
+        <span class="label">Durée</span>
+        <span class="value">{{ module.duration || 0 }}h</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">menu_book</span>
+      <div>
+        <span class="label">Cours</span>
+        <span class="value">{{ courses.length }}</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">check_circle</span>
+      <div>
+        <span class="label">Statut</span>
+        <span class="value status-badge" [style.background]="getStatusColor(module.status)">
+          {{ getStatusBadge(module.status) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Courses Section -->
+  <section class="courses-section">
+    <div class="section-header">
+      <h2>Cours du Module</h2>
+      <span class="courses-count">{{ courses.length }} cours</span>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des cours...</p>
+    </div>
+
+    <!-- Courses List -->
+    <div *ngIf="!isLoading && courses.length > 0" class="courses-list">
+      <div *ngFor="let course of courses; let i = index" class="course-card">
+        <div class="course-header">
+          <div class="course-order">{{ i + 1 }}</div>
+          <div class="course-content">
+            <h3>{{ course.title }}</h3>
+            <p>{{ course.description || 'Aucune description' }}</p>
+            <div class="course-meta">
+              <span class="meta-item">
+                <span class="material-icons">play_circle</span>
+                {{ course.lessons?.length || 0 }} leçons
+              </span>
+              <span class="meta-item">
+                <span class="material-icons">schedule</span>
+                {{ (course.duration / 60) || 0 }}h
+              </span>
+              <span class="meta-item status-badge" [style.background]="getStatusColor(course.status)">
+                {{ getStatusBadge(course.status) }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="course-actions">
+          <button class="btn btn-secondary" [routerLink]="['/trainer/content/courses', course.id]">
+            <span class="material-icons">edit</span>
+            Gérer le Cours
+          </button>
+          <button class="btn btn-danger" (click)="deleteCourse(course.id)">
+            <span class="material-icons">delete</span>
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && courses.length === 0" class="empty-state">
+      <span class="material-icons">menu_book</span>
+      <h3>Aucun cours</h3>
+      <p>Créez votre premier cours pour ce module</p>
+      <button class="btn btn-primary" (click)="openCreateCourseModal()">
+        <span class="material-icons">add</span>
+        Créer un Cours
+      </button>
+    </div>
+  </section>
+
+  <!-- Module Quiz Section -->
+  <section class="quiz-section" *ngIf="moduleQuiz || courses.length > 0">
+    <div class="section-header">
+      <h2>Quiz Final du Module</h2>
+    </div>
+
+    <div *ngIf="moduleQuiz" class="quiz-card">
+      <div class="quiz-header">
+        <div class="quiz-info">
+          <h3>{{ moduleQuiz.title }}</h3>
+          <p>{{ moduleQuiz.description || 'Aucune description' }}</p>
+          <div class="quiz-meta">
+            <span class="meta-item">
+              <span class="material-icons">help</span>
+              {{ moduleQuiz.questions?.length || 0 }} questions
+            </span>
+            <span class="meta-item">
+              <span class="material-icons">schedule</span>
+              {{ moduleQuiz.duration || 30 }} min
+            </span>
+            <span class="meta-item">
+              <span class="material-icons">check_circle</span>
+              Score de passage: {{ moduleQuiz.passingScore || 60 }}%
+            </span>
+          </div>
+        </div>
+        <button class="btn btn-secondary" [routerLink]="['/trainer/content/quizzes', moduleQuiz.id]">
+          <span class="material-icons">edit</span>
+          Modifier le Quiz
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="!moduleQuiz" class="quiz-empty-state">
+      <span class="material-icons">quiz</span>
+      <p>Aucun quiz final pour ce module</p>
+      <button class="btn btn-primary" (click)="openCreateQuizModal()">
+        <span class="material-icons">add</span>
+        Créer le Quiz Final
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- Modal de Création de Cours -->
+<div *ngIf="showCreateCourseModal" class="modal-overlay" (click)="closeCreateCourseModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Créer un Nouveau Cours</h2>
+      <button class="btn-close" (click)="closeCreateCourseModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="createCourse()" class="modal-body">
+      <div class="form-group">
+        <label>Titre *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newCourse.title" 
+          name="title"
+          placeholder="Ex: Introduction à JavaScript"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea 
+          [(ngModel)]="newCourse.description" 
+          name="description"
+          rows="4"
+          placeholder="Décrivez le cours..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ordre</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newCourse.order" 
+            name="order"
+            min="1">
+        </div>
+
+        <div class="form-group">
+          <label>Durée estimée (en heures)</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newCourse.estimatedHours" 
+            name="estimatedHours"
+            min="0"
+            step="0.5">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateCourseModal()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isCreatingCourse || !newCourse.title.trim()">
+          <span *ngIf="isCreatingCourse" class="spinner-small"></span>
+          <span *ngIf="!isCreatingCourse">Créer le Cours</span>
+          <span *ngIf="isCreatingCourse">Création...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Création de Quiz de Module -->
+<div *ngIf="showCreateQuizModal" class="modal-overlay" (click)="closeCreateQuizModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Créer le Quiz Final du Module</h2>
+      <button class="btn-close" (click)="closeCreateQuizModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="createModuleQuiz()" class="modal-body">
+      <div class="form-group">
+        <label>Titre *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newQuiz.title" 
+          name="quizTitle"
+          placeholder="Ex: Quiz Final - Module JavaScript"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea 
+          [(ngModel)]="newQuiz.description" 
+          name="quizDescription"
+          rows="3"
+          placeholder="Décrivez le quiz..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Durée (minutes)</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newQuiz.duration" 
+            name="quizDuration"
+            min="5"
+            step="5">
+        </div>
+
+        <div class="form-group">
+          <label>Score de passage (%)</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newQuiz.passingScore" 
+            name="passingScore"
+            min="0"
+            max="100"
+            step="5">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Nombre max de tentatives</label>
+        <input 
+          type="number" 
+          [(ngModel)]="newQuiz.maxAttempts" 
+          name="maxAttempts"
+          min="1"
+          max="10">
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateQuizModal()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isCreatingQuiz || !newQuiz.title.trim()">
+          <span *ngIf="isCreatingQuiz" class="spinner-small"></span>
+          <span *ngIf="!isCreatingQuiz">Créer le Quiz</span>
+          <span *ngIf="isCreatingQuiz">Création...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

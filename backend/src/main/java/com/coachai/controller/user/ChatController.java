@@ -1,8 +1,10 @@
 package com.coachai.controller.user;
 
+import com.coachai.model.ChatAttachment;
 import com.coachai.model.ChatMessage;
 import com.coachai.model.Conversation;
 import com.coachai.model.User;
+import com.coachai.repository.ChatAttachmentRepository;
 import com.coachai.repository.ChatMessageRepository;
 import com.coachai.repository.ConversationRepository;
 import com.coachai.repository.UserRepository;
@@ -30,6 +32,15 @@ public class ChatController {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private com.coachai.service.ChatAnalysisService chatAnalysisService;
+    
+    @Autowired
+    private com.coachai.service.FormationRecommendationService formationRecommendationService;
+    
+    @Autowired
+    private ChatAttachmentRepository chatAttachmentRepository;
     
     @GetMapping("/conversations")
     public ResponseEntity<?> getConversations(Authentication authentication) {
@@ -79,7 +90,32 @@ public class ChatController {
                 messages = List.of();
             }
             
-            return ResponseEntity.ok(messages);
+            // Map messages with attachments
+            List<Map<String, Object>> messagesWithAttachments = messages.stream().map(msg -> {
+                Map<String, Object> msgMap = new java.util.HashMap<>();
+                msgMap.put("id", msg.getId());
+                msgMap.put("conversationId", msg.getConversation().getId());
+                msgMap.put("sender", msg.getSender().toString());
+                msgMap.put("content", msg.getContent());
+                msgMap.put("timestamp", msg.getTimestamp());
+                msgMap.put("type", msg.getType().toString());
+                
+                // Load attachments for this message
+                List<ChatAttachment> attachments = chatAttachmentRepository.findByMessage(msg);
+                List<Map<String, Object>> attList = attachments.stream().map(att -> {
+                    Map<String, Object> attMap = new java.util.HashMap<>();
+                    attMap.put("id", att.getId());
+                    attMap.put("type", att.getType().toString());
+                    attMap.put("title", att.getTitle());
+                    attMap.put("url", att.getUrl());
+                    return attMap;
+                }).collect(java.util.stream.Collectors.toList());
+                msgMap.put("attachments", attList);
+                
+                return msgMap;
+            }).collect(java.util.stream.Collectors.toList());
+            
+            return ResponseEntity.ok(messagesWithAttachments);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "Error fetching messages", "message", e.getMessage() != null ? e.getMessage() : "Unknown error"));
@@ -164,6 +200,41 @@ public class ChatController {
             
             ChatMessage saved = chatMessageRepository.save(message);
             
+            // Handle attachments (audio, documents, etc.)
+            if (messageData.containsKey("attachments") && messageData.get("attachments") instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> attachments = (List<Map<String, Object>>) messageData.get("attachments");
+                for (Map<String, Object> attData : attachments) {
+                    ChatAttachment attachment = new ChatAttachment();
+                    attachment.setMessage(saved);
+                    attachment.setTitle((String) attData.getOrDefault("title", "Attachment"));
+                    
+                    // Handle audio: store base64 data in url field (can be improved with file storage later)
+                    String url = (String) attData.getOrDefault("url", "");
+                    if (url.startsWith("data:audio")) {
+                        // Store base64 audio data - in production, save to file system and store file path
+                        attachment.setUrl(url);
+                    } else {
+                        attachment.setUrl(url);
+                    }
+                    
+                    String attType = (String) attData.getOrDefault("type", "LINK");
+                    try {
+                        ChatAttachment.AttachmentType type = ChatAttachment.AttachmentType.valueOf(attType.toUpperCase());
+                        attachment.setType(type);
+                    } catch (IllegalArgumentException e) {
+                        // Default to AUDIO if type is "audio", otherwise LINK
+                        if ("audio".equalsIgnoreCase(attType)) {
+                            attachment.setType(ChatAttachment.AttachmentType.AUDIO);
+                        } else {
+                            attachment.setType(ChatAttachment.AttachmentType.LINK);
+                        }
+                    }
+                    
+                    chatAttachmentRepository.save(attachment);
+                }
+            }
+            
             // Update conversation with user message
             Conversation conv = conversation.get();
             conv.setLastMessage(message.getContent());
@@ -191,6 +262,39 @@ public class ChatController {
                 // Don't fail the whole request if AI fails, just log it
             }
             
+            // 3. Analyser les conversations et générer des recommandations IA après 10 messages USER
+            // Compter uniquement les messages USER dans la conversation
+            List<ChatMessage> allMessages = chatMessageRepository.findByConversationOrderByTimestampAsc(conv);
+            long userMessagesCount = allMessages != null ? 
+                allMessages.stream().filter(m -> m.getSender() == ChatMessage.MessageSender.USER).count() : 0;
+            
+            System.out.println("=== ANALYSE IA DES CONVERSATIONS ===");
+            System.out.println("Conversation ID: " + conv.getId());
+            System.out.println("Total messages: " + conv.getMessagesCount());
+            System.out.println("User messages count: " + userMessagesCount);
+            
+            // Déclencher l'analyse ML après 5 messages USER (seuil réduit pour plus de réactivité)
+            if (userMessagesCount >= 5 && (userMessagesCount == 5 || userMessagesCount % 5 == 0)) {
+                System.out.println("Déclenchement de l'analyse ML pour l'utilisateur: " + user.getEmail());
+                // Analyser les conversations et générer des recommandations de manière asynchrone
+                new Thread(() -> {
+                    try {
+                        System.out.println("Démarrage de l'analyse ML des conversations...");
+                        // Utiliser le nouveau service de recommandation basé sur ML
+                        var recommendation = formationRecommendationService.generateFormationRecommendation(user);
+                        if (recommendation != null) {
+                            System.out.println("✅ Recommandation ML générée: " + recommendation.getTitle() + 
+                                " - Niveau: " + recommendation.getLevel() + 
+                                " - Spécialité: " + recommendation.getSpecialty());
+                        } else {
+                            System.out.println("ℹ️ Aucune nouvelle recommandation générée (peut-être déjà existante)");
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Erreur lors de l'analyse ML: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }).start();
+            }
             
             return ResponseEntity.ok(saved);
         } catch (Exception e) {

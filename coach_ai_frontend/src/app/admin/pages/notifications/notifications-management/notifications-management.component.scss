@@ -96,6 +96,217 @@
     margin-bottom: 20px;
   }
 
+  .user-search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    
+    label {
+      font-weight: 600;
+      color: $dark-text;
+    }
+  }
+  
+  .user-search-container {
+    margin-top: 12px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .search-input-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    
+    input {
+      flex: 1;
+    }
+    
+    .search-role-select {
+      width: 200px;
+    }
+  }
+  
+  .search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    margin-bottom: 12px;
+  }
+  
+  .search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.2s;
+    
+    &:hover {
+      background: #f9fafb;
+    }
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .user-avatar-small {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .user-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      
+      strong {
+        font-weight: 600;
+        color: $dark-text;
+      }
+      
+      .user-email {
+        font-size: 0.875rem;
+        color: $text-secondary;
+      }
+      
+      .user-role-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        
+        &[data-role="TRAINER"] {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+        
+        &[data-role="USER"] {
+          background: #dcfce7;
+          color: #166534;
+        }
+        
+        &[data-role="ADMIN"] {
+          background: #fef3c7;
+          color: #92400e;
+        }
+      }
+    }
+    
+    .add-icon {
+      color: $primary-green;
+      font-size: 24px;
+    }
+  }
+  
+  .search-no-results,
+  .search-loading {
+    text-align: center;
+    padding: 24px;
+    color: $text-secondary;
+    
+    .material-icons {
+      font-size: 32px;
+      color: $text-secondary;
+      margin-bottom: 8px;
+      
+      &.spin {
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .selected-users {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f0fdf4;
+    border-radius: 8px;
+    border: 1px solid #bbf7d0;
+    
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: $dark-text;
+    }
+    
+    .selected-users-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .selected-user-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 20px;
+      border: 1px solid #bbf7d0;
+      
+      .user-avatar-small {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      
+      .user-name {
+        font-weight: 500;
+        color: $dark-text;
+      }
+      
+      .btn-remove-user {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        color: #ef4444;
+        
+        &:hover {
+          background: #fee2e2;
+          border-radius: 50%;
+        }
+        
+        .material-icons {
+          font-size: 18px;
+        }
+      }
+    }
+    
+    .info-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #166534;
+      margin: 0;
+      
+      .material-icons {
+        font-size: 18px;
+      }
+    }
+  }
+
   .form-group {
     label {
       display: block;

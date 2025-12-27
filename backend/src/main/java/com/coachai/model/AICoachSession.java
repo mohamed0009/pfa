@@ -21,6 +21,7 @@ import java.util.List;
 public class AICoachSession {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid")
     private String id;
     
     @ManyToOne(fetch = FetchType.LAZY)

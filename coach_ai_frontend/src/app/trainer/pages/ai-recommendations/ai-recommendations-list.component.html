@@ -1,0 +1,167 @@
+<div class="ai-recommendations-page">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>
+      <span class="material-icons">auto_awesome</span>
+      Recommandations IA
+    </h1>
+    <p>L'IA analyse les conversations et performances pour vous suggérer du contenu pertinent</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <button 
+      *ngFor="let filter of filters"
+      class="filter-btn"
+      [class.active]="selectedFilter === filter.value"
+      (click)="applyFilter(filter.value)">
+      {{ filter.label }}
+      <span class="count" *ngIf="filter.count > 0">{{ filter.count }}</span>
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement des recommandations...</p>
+  </div>
+
+  <!-- Recommendations List -->
+  <div class="recommendations-list" *ngIf="!isLoading">
+    <div 
+      class="recommendation-card"
+      *ngFor="let reco of filteredRecommendations"
+      [class.pending]="reco.status === 'PENDING'"
+      [class.approved]="reco.status === 'APPROVED'"
+      [class.published]="reco.status === 'PUBLISHED'"
+      [class.rejected]="reco.status === 'REJECTED'"
+      (click)="viewRecommendation(reco.id)">
+      
+      <!-- Header -->
+      <div class="card-header">
+        <div class="header-left">
+          <span class="material-icons type-icon">{{ getTypeIcon(reco.type) }}</span>
+          <div>
+            <span class="type-label">{{ getTypeLabel(reco.type) }}</span>
+            <h3>{{ reco.title }}</h3>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <span class="priority-badge" [style.background-color]="getPriorityColor(reco.priority)">
+            Priorité: {{ reco.priority }}
+          </span>
+          <span class="status-badge" [attr.data-status]="reco.status">
+            {{ reco.status }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="card-content">
+        <p class="description">{{ reco.description }}</p>
+
+        <!-- AI Justification -->
+        <div class="justification-section">
+          <h4>
+            <span class="material-icons">psychology</span>
+            Justification IA
+          </h4>
+          <p>{{ reco.justification }}</p>
+        </div>
+
+        <!-- Data Analysis -->
+        <div class="data-analysis">
+          <div class="data-grid">
+            <div class="data-item">
+              <span class="material-icons">people</span>
+              <div>
+                <strong>{{ reco.basedOnData.studentCount }}</strong>
+                <span>Apprenants concernés</span>
+              </div>
+            </div>
+            <div class="data-item">
+              <span class="material-icons">trending_up</span>
+              <div>
+                <strong>{{ reco.basedOnData.level }}</strong>
+                <span>Niveau ciblé</span>
+              </div>
+            </div>
+            <div class="data-item">
+              <span class="material-icons">category</span>
+              <div>
+                <strong>{{ reco.basedOnData.specialty }}</strong>
+                <span>Spécialité</span>
+              </div>
+            </div>
+            <div class="data-item">
+              <span class="material-icons" [style.color]="getDifficultyColor(reco.basedOnData.difficultyDetected)">
+                {{ reco.basedOnData.difficultyDetected === 'HIGH' ? 'warning' : 'info' }}
+              </span>
+              <div>
+                <strong>{{ reco.basedOnData.difficultyDetected }}</strong>
+                <span>Niveau de difficulté détecté</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="topics-detected">
+            <p class="topics-label">Sujets mentionnés dans les conversations:</p>
+            <div class="topics-chips">
+              <span class="topic-chip" *ngFor="let topic of reco.basedOnData.conversationTopics">
+                {{ topic }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="card-actions" *ngIf="reco.status === 'PENDING'">
+        <button 
+          class="btn btn-success"
+          (click)="approveRecommendation(reco.id, $event)">
+          <span class="material-icons">check_circle</span>
+          Approuver
+        </button>
+        <button 
+          class="btn btn-edit"
+          (click)="viewRecommendation(reco.id)">
+          <span class="material-icons">edit</span>
+          Modifier
+        </button>
+        <button 
+          class="btn btn-danger"
+          (click)="rejectRecommendation(reco.id, $event)">
+          <span class="material-icons">cancel</span>
+          Refuser
+        </button>
+      </div>
+
+      <!-- Approved Actions -->
+      <div class="card-actions" *ngIf="reco.status === 'APPROVED'">
+        <button 
+          class="btn btn-primary"
+          (click)="publishRecommendation(reco.id, $event)">
+          <span class="material-icons">publish</span>
+          Publier (Rendre visible aux apprenants)
+        </button>
+        <p class="info-text">Approuvée mais pas encore publiée - Les apprenants ne la verront qu'après publication</p>
+      </div>
+
+      <!-- Published Message -->
+      <div class="published-message" *ngIf="reco.status === 'PUBLISHED'">
+        <span class="material-icons">check_circle</span>
+        <p>Recommandation publiée - Visible pour {{ reco.targetStudents.length }} apprenant(s)</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredRecommendations.length === 0 && !isLoading">
+      <span class="material-icons">auto_awesome</span>
+      <h3>Aucune recommandation pour le moment</h3>
+      <p>L'IA analysera les conversations et performances pour générer des suggestions pertinentes</p>
+    </div>
+  </div>
+</div>
+

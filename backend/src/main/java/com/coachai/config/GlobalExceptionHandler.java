@@ -1,6 +1,8 @@
 package com.coachai.config;
 
 import org.hibernate.LazyInitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Map<String, Object>> handleAuthenticationException(AuthenticationException e) {
@@ -90,7 +94,7 @@ public class GlobalExceptionHandler {
         response.put("error", "Data Integrity Violation");
         response.put("message", "Violation de contrainte de données. Vérifiez que les données sont valides.");
         
-        System.err.println("DataIntegrityViolationException: " + e.getMessage());
+        logger.warn("DataIntegrityViolationException: {}", e.getMessage(), e);
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -101,7 +105,7 @@ public class GlobalExceptionHandler {
         response.put("error", "Lazy Initialization Exception");
         response.put("message", "Erreur de chargement des données. Veuillez réessayer.");
         
-        System.err.println("LazyInitializationException: " + e.getMessage());
+        logger.error("LazyInitializationException: {}", e.getMessage(), e);
         
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
@@ -122,9 +126,7 @@ public class GlobalExceptionHandler {
         response.put("message", e.getMessage() != null ? e.getMessage() : "Une erreur s'est produite");
         
         // Log l'exception complète pour le debugging
-        System.err.println("RuntimeException: " + e.getClass().getSimpleName());
-        System.err.println("Message: " + e.getMessage());
-        e.printStackTrace();
+        logger.error("RuntimeException: {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
         
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
@@ -137,9 +139,7 @@ public class GlobalExceptionHandler {
         response.put("type", e.getClass().getSimpleName());
         
         // Log complet pour debugging
-        System.err.println("Exception: " + e.getClass().getName());
-        System.err.println("Message: " + e.getMessage());
-        e.printStackTrace();
+        logger.error("Unexpected exception: {} - {}", e.getClass().getName(), e.getMessage(), e);
         
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }

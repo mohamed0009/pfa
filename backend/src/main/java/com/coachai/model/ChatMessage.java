@@ -46,6 +46,9 @@ public class ChatMessage {
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<ChatAttachment> attachments = new ArrayList<>();
     
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean read = false;
+    
     public enum MessageSender {
         USER, AI
     }

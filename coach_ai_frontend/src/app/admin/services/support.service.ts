@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, delay, BehaviorSubject } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { 
   SupportTicket, 
   TicketMessage, 
@@ -12,8 +14,14 @@ import {
   providedIn: 'root'
 })
 export class SupportService {
-
+  private apiUrl = 'http://localhost:8081/api/admin/support';
+  
   private ticketsSubject = new BehaviorSubject<SupportTicket[]>([]);
+  
+  constructor(private http: HttpClient) {
+    // Initialiser le BehaviorSubject avec les tickets mockés
+    // Note: Les tickets seront remplacés par les données du backend
+  }
 
   private tickets: SupportTicket[] = [
     {
@@ -160,10 +168,6 @@ export class SupportService {
     }
   ];
 
-  constructor() {
-    this.ticketsSubject.next(this.tickets);
-  }
-
   // ==================== TICKETS ====================
 
   getTickets(filters?: {
@@ -172,28 +176,68 @@ export class SupportService {
     category?: TicketCategory;
     assignedTo?: string;
   }): Observable<SupportTicket[]> {
-    let filtered = [...this.tickets];
-
+    let params = new HttpParams();
     if (filters) {
-      if (filters.status) {
-        filtered = filtered.filter(t => t.status === filters.status);
-      }
-      if (filters.priority) {
-        filtered = filtered.filter(t => t.priority === filters.priority);
-      }
-      if (filters.category) {
-        filtered = filtered.filter(t => t.category === filters.category);
-      }
-      if (filters.assignedTo) {
-        filtered = filtered.filter(t => t.assignedTo === filters.assignedTo);
-      }
+      if (filters.status) params = params.set('status', filters.status);
+      if (filters.priority) params = params.set('priority', filters.priority);
+      if (filters.category) params = params.set('category', filters.category);
     }
-
-    return of(filtered).pipe(delay(300));
+    
+    return this.http.get<any[]>(`${this.apiUrl}/tickets`, { params }).pipe(
+      map((tickets: any[]) => tickets.map(t => this.mapBackendTicketToFrontend(t))),
+      catchError((error) => {
+        console.error('Error fetching tickets:', error);
+        // Fallback to mock
+        let filtered = [...this.tickets];
+        if (filters) {
+          if (filters.status) filtered = filtered.filter(t => t.status === filters.status);
+          if (filters.priority) filtered = filtered.filter(t => t.priority === filters.priority);
+          if (filters.category) filtered = filtered.filter(t => t.category === filters.category);
+          if (filters.assignedTo) filtered = filtered.filter(t => t.assignedTo === filters.assignedTo);
+        }
+        return of(filtered).pipe(delay(300));
+      })
+    );
   }
 
   getTicketById(id: string): Observable<SupportTicket | undefined> {
-    return of(this.tickets.find(t => t.id === id)).pipe(delay(200));
+    return this.http.get<any>(`${this.apiUrl}/tickets/${id}`).pipe(
+      map((ticket: any) => this.mapBackendTicketToFrontend(ticket)),
+      catchError((error) => {
+        console.error('Error fetching ticket:', error);
+        const ticket = this.tickets.find(t => t.id === id);
+        return of(ticket).pipe(delay(200));
+      })
+    );
+  }
+  
+  private mapBackendTicketToFrontend(ticket: any): SupportTicket {
+    return {
+      id: ticket.id || '',
+      ticketNumber: ticket.ticketNumber || '',
+      title: ticket.title || '',
+      description: ticket.description || '',
+      category: (ticket.category || 'other') as TicketCategory,
+      priority: (ticket.priority || 'medium') as TicketPriority,
+      status: (ticket.status || 'open') as TicketStatus,
+      userId: ticket.userId || '',
+      userName: ticket.userName || '',
+      userEmail: ticket.userEmail || '',
+      assignedTo: ticket.assignedTo || '',
+      assignedToName: ticket.assignedToName || '',
+      messages: (ticket.messages || []).map((m: any) => ({
+        id: m.id || '',
+        ticketId: ticket.id || '',
+        senderId: m.senderId || '',
+        senderName: m.senderName || '',
+        senderRole: m.senderRole || '',
+        message: m.message || '',
+        timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+        isInternal: m.isInternal || false
+      })),
+      createdAt: ticket.createdAt ? new Date(ticket.createdAt) : new Date(),
+      updatedAt: ticket.updatedAt ? new Date(ticket.updatedAt) : new Date()
+    };
   }
 
   createTicket(ticket: Partial<SupportTicket>): Observable<SupportTicket> {
@@ -219,26 +263,34 @@ export class SupportService {
   }
 
   updateTicketStatus(id: string, status: TicketStatus): Observable<SupportTicket> {
-    const index = this.tickets.findIndex(t => t.id === id);
-    if (index !== -1) {
-      this.tickets[index] = {
-        ...this.tickets[index],
-        status,
-        updatedAt: new Date(),
-        resolvedAt: status === 'resolved' || status === 'closed' ? new Date() : undefined
-      };
-
-      if (status === 'resolved' || status === 'closed') {
-        const createdAt = this.tickets[index].createdAt;
-        const resolvedAt = new Date();
-        const hours = (resolvedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
-        this.tickets[index].resolutionTime = Math.round(hours * 10) / 10;
-      }
-
-      this.ticketsSubject.next(this.tickets);
-      return of(this.tickets[index]).pipe(delay(300));
-    }
-    throw new Error('Ticket not found');
+    return this.http.put<any>(`${this.apiUrl}/tickets/${id}/status`, { status }).pipe(
+      map(() => {
+        // Reload ticket
+        return this.getTicketById(id);
+      }),
+      map((ticketObs: Observable<SupportTicket | undefined>) => {
+        let ticket: SupportTicket | undefined;
+        ticketObs.subscribe(t => ticket = t);
+        if (!ticket) throw new Error('Ticket not found');
+        return ticket;
+      }),
+      catchError((error) => {
+        console.error('Error updating ticket status:', error);
+        // Fallback to mock
+        const index = this.tickets.findIndex(t => t.id === id);
+        if (index !== -1) {
+          this.tickets[index] = {
+            ...this.tickets[index],
+            status,
+            updatedAt: new Date(),
+            resolvedAt: status === 'resolved' || status === 'closed' ? new Date() : undefined
+          };
+          this.ticketsSubject.next(this.tickets);
+          return of(this.tickets[index]).pipe(delay(300));
+        }
+        throw new Error('Ticket not found');
+      })
+    );
   }
 
   updateTicketPriority(id: string, priority: TicketPriority): Observable<SupportTicket> {
@@ -256,19 +308,35 @@ export class SupportService {
   }
 
   assignTicket(id: string, assignedTo: string, assignedToName: string): Observable<SupportTicket> {
-    const index = this.tickets.findIndex(t => t.id === id);
-    if (index !== -1) {
-      this.tickets[index] = {
-        ...this.tickets[index],
-        assignedTo,
-        assignedToName,
-        status: 'in_progress',
-        updatedAt: new Date()
-      };
-      this.ticketsSubject.next(this.tickets);
-      return of(this.tickets[index]).pipe(delay(300));
-    }
-    throw new Error('Ticket not found');
+    return this.http.put<any>(`${this.apiUrl}/tickets/${id}/assign`, { assignedTo }).pipe(
+      map(() => {
+        // Reload ticket
+        return this.getTicketById(id);
+      }),
+      map((ticketObs: Observable<SupportTicket | undefined>) => {
+        let ticket: SupportTicket | undefined;
+        ticketObs.subscribe(t => ticket = t);
+        if (!ticket) throw new Error('Ticket not found');
+        return ticket;
+      }),
+      catchError((error) => {
+        console.error('Error assigning ticket:', error);
+        // Fallback to mock
+        const index = this.tickets.findIndex(t => t.id === id);
+        if (index !== -1) {
+          this.tickets[index] = {
+            ...this.tickets[index],
+            assignedTo,
+            assignedToName,
+            status: 'in_progress',
+            updatedAt: new Date()
+          };
+          this.ticketsSubject.next(this.tickets);
+          return of(this.tickets[index]).pipe(delay(300));
+        }
+        throw new Error('Ticket not found');
+      })
+    );
   }
 
   // ==================== MESSAGES ====================

@@ -1,16 +1,21 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay, BehaviorSubject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, delay, BehaviorSubject, map, catchError } from 'rxjs';
 import { 
   AIConfiguration, 
   AIInteraction, 
   AIGeneratedContent,
-  AIKnowledgeDocument
+  AIKnowledgeDocument,
+  UserRole
 } from '../models/admin.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AiSupervisionService {
+  private apiUrl = 'http://localhost:8081/api/admin/ai';
+
+  constructor(private http: HttpClient) {}
 
   private configSubject = new BehaviorSubject<AIConfiguration>({
     id: 'config1',
@@ -165,24 +170,58 @@ export class AiSupervisionService {
     }
   ];
 
-  constructor() {}
-
   // ==================== CONFIGURATION ====================
 
   getConfiguration(): Observable<AIConfiguration> {
-    return this.configSubject.asObservable();
+    return this.http.get<any>(`${this.apiUrl}/config`).pipe(
+      map((config: any) => ({
+        id: 'config1',
+        language: config.language || 'Français',
+        tone: config.tone || 'friendly',
+        detailLevel: config.detailLevel || 'moderate',
+        enableQuizGeneration: config.enableQuizGeneration !== undefined ? config.enableQuizGeneration : true,
+        enableExerciseGeneration: config.enableExerciseGeneration !== undefined ? config.enableExerciseGeneration : true,
+        enableSummaryGeneration: config.enableSummaryGeneration !== undefined ? config.enableSummaryGeneration : true,
+        enablePersonalization: config.enablePersonalization !== undefined ? config.enablePersonalization : true,
+        maxResponseLength: config.maxResponseLength || 500,
+        updatedBy: 'admin',
+        updatedAt: new Date()
+      })),
+      catchError((error) => {
+        console.error('Error fetching AI configuration:', error);
+        return this.configSubject.asObservable();
+      })
+    );
   }
 
   updateConfiguration(updates: Partial<AIConfiguration>): Observable<AIConfiguration> {
-    const current = this.configSubject.value;
-    const updated: AIConfiguration = {
-      ...current,
-      ...updates,
-      updatedBy: 'current-admin',
-      updatedAt: new Date()
-    };
-    this.configSubject.next(updated);
-    return of(updated).pipe(delay(400));
+    return this.http.post<any>(`${this.apiUrl}/config`, updates).pipe(
+      map((config: any) => ({
+        id: 'config1',
+        language: config.language || 'Français',
+        tone: config.tone || 'friendly',
+        detailLevel: config.detailLevel || 'moderate',
+        enableQuizGeneration: config.enableQuizGeneration !== undefined ? config.enableQuizGeneration : true,
+        enableExerciseGeneration: config.enableExerciseGeneration !== undefined ? config.enableExerciseGeneration : true,
+        enableSummaryGeneration: config.enableSummaryGeneration !== undefined ? config.enableSummaryGeneration : true,
+        enablePersonalization: config.enablePersonalization !== undefined ? config.enablePersonalization : true,
+        maxResponseLength: config.maxResponseLength || 500,
+        updatedBy: 'current-admin',
+        updatedAt: new Date()
+      })),
+      catchError((error) => {
+        console.error('Error updating AI configuration:', error);
+        const current = this.configSubject.value;
+        const updated: AIConfiguration = {
+          ...current,
+          ...updates,
+          updatedBy: 'current-admin',
+          updatedAt: new Date()
+        };
+        this.configSubject.next(updated);
+        return of(updated);
+      })
+    );
   }
 
   // ==================== INTERACTIONS ====================
@@ -193,24 +232,31 @@ export class AiSupervisionService {
     endDate?: Date;
     flaggedOnly?: boolean;
   }): Observable<AIInteraction[]> {
-    let filtered = [...this.interactions];
-
-    if (filters) {
-      if (filters.userId) {
-        filtered = filtered.filter(i => i.userId === filters.userId);
-      }
-      if (filters.startDate) {
-        filtered = filtered.filter(i => i.timestamp >= filters.startDate!);
-      }
-      if (filters.endDate) {
-        filtered = filtered.filter(i => i.timestamp <= filters.endDate!);
-      }
-      if (filters.flaggedOnly) {
-        filtered = filtered.filter(i => i.flagged);
-      }
+    const params: string[] = [];
+    if (filters?.flaggedOnly) {
+      params.push('flaggedOnly=true');
     }
-
-    return of(filtered).pipe(delay(300));
+    const url = `${this.apiUrl}/interactions${params.length > 0 ? '?' + params.join('&') : ''}`;
+    
+    return this.http.get<any[]>(url).pipe(
+      map((interactions: any[]) => interactions.map((int: any) => ({
+        id: int.id,
+        userId: int.userId,
+        userName: int.userName || 'Utilisateur',
+        userRole: (int.userRole === 'USER' ? 'Apprenant' : int.userRole === 'TRAINER' ? 'Formateur' : 'Administrateur') as UserRole,
+        timestamp: int.timestamp ? new Date(int.timestamp) : new Date(),
+        question: int.question || '',
+        response: int.response || '',
+        category: int.category || 'General',
+        sentiment: int.sentiment || 'neutral',
+        flagged: int.flagged || false,
+        responseTime: int.responseTime || 0
+      }))),
+      catchError((error) => {
+        console.error('Error fetching interactions:', error);
+        return of([]);
+      })
+    );
   }
 
   getInteractionById(id: string): Observable<AIInteraction | undefined> {
@@ -320,29 +366,31 @@ export class AiSupervisionService {
   // ==================== STATISTICS ====================
 
   getAIStatistics(): Observable<any> {
-    return of({
-      totalInteractions: this.interactions.length,
-      averageResponseTime: Math.round(
-        this.interactions.reduce((sum, i) => sum + i.responseTime, 0) / this.interactions.length
-      ),
-      flaggedInteractions: this.interactions.filter(i => i.flagged).length,
-      sentimentBreakdown: {
-        positive: this.interactions.filter(i => i.sentiment === 'positive').length,
-        neutral: this.interactions.filter(i => i.sentiment === 'neutral').length,
-        negative: this.interactions.filter(i => i.sentiment === 'negative').length
-      },
-      generatedContentCount: {
-        quiz: this.generatedContent.filter(c => c.type === 'quiz').length,
-        exercise: this.generatedContent.filter(c => c.type === 'exercise').length,
-        summary: this.generatedContent.filter(c => c.type === 'summary').length
-      },
-      averageContentRating: this.generatedContent
-        .filter(c => c.rating)
-        .reduce((sum, c) => sum + (c.rating || 0), 0) / 
-        this.generatedContent.filter(c => c.rating).length,
-      knowledgeBaseSize: this.knowledgeDocuments.length,
-      indexedDocuments: this.knowledgeDocuments.filter(d => d.indexed).length
-    }).pipe(delay(300));
+    return this.http.get<any>(`${this.apiUrl}/stats`).pipe(
+      map((stats: any) => ({
+        totalInteractions: stats.totalInteractions || 0,
+        averageResponseTime: stats.averageResponseTime || 0,
+        flaggedInteractions: stats.flaggedInteractions || 0,
+        sentimentBreakdown: stats.sentimentBreakdown || { positive: 0, neutral: 0, negative: 0 },
+        generatedContentCount: stats.generatedContentCount || { quiz: 0, exercise: 0, summary: 0 },
+        averageContentRating: stats.averageContentRating || 0,
+        knowledgeBaseSize: stats.knowledgeBaseSize || 0,
+        indexedDocuments: stats.indexedDocuments || 0
+      })),
+      catchError((error) => {
+        console.error('Error fetching AI statistics:', error);
+        return of({
+          totalInteractions: 0,
+          averageResponseTime: 0,
+          flaggedInteractions: 0,
+          sentimentBreakdown: { positive: 0, neutral: 0, negative: 0 },
+          generatedContentCount: { quiz: 0, exercise: 0, summary: 0 },
+          averageContentRating: 0,
+          knowledgeBaseSize: 0,
+          indexedDocuments: 0
+        });
+      })
+    );
   }
 }
 

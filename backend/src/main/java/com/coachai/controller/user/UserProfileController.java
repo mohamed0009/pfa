@@ -5,6 +5,7 @@ import com.coachai.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -15,6 +16,9 @@ import java.util.Map;
 public class UserProfileController {
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired(required = false)
+    private PasswordEncoder passwordEncoder;
     
     @GetMapping
     public ResponseEntity<?> getProfile(Authentication authentication) {
@@ -93,6 +97,74 @@ public class UserProfileController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "Error updating profile", "message", e.getMessage() != null ? e.getMessage() : "Unknown error"));
+        }
+    }
+    
+    /**
+     * Change le mot de passe de l'utilisateur connecté
+     * API: PUT /api/user/profile/password
+     */
+    @PutMapping("/password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody Map<String, Object> passwordData,
+            Authentication authentication) {
+        try {
+            if (authentication == null || authentication.getName() == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+            
+            if (passwordData == null || passwordData.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Password data is required"));
+            }
+            
+            String email = authentication.getName();
+            User user = userRepository.findByEmail(email).orElse(null);
+            
+            if (user == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+            }
+            
+            String currentPassword = (String) passwordData.get("currentPassword");
+            String newPassword = (String) passwordData.get("newPassword");
+            
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Current password is required"));
+            }
+            
+            if (newPassword == null || newPassword.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "New password is required"));
+            }
+            
+            if (newPassword.length() < 6) {
+                return ResponseEntity.badRequest().body(Map.of("error", "New password must be at least 6 characters"));
+            }
+            
+            // Vérifier le mot de passe actuel
+            if (passwordEncoder != null) {
+                if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Current password is incorrect"));
+                }
+            } else {
+                // Fallback si pas d'encoder (devrait ne jamais arriver en production)
+                if (!currentPassword.equals(user.getPassword())) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "Current password is incorrect"));
+                }
+            }
+            
+            // Mettre à jour le mot de passe
+            if (passwordEncoder != null) {
+                user.setPassword(passwordEncoder.encode(newPassword));
+            } else {
+                user.setPassword(newPassword);
+            }
+            
+            User saved = userRepository.save(user);
+            saved.setPassword(null);
+            
+            return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Error changing password", "message", e.getMessage() != null ? e.getMessage() : "Unknown error"));
         }
     }
 }

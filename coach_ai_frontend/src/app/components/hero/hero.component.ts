@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { DataService } from '../../services/data.service';
 import { Statistic } from '../../models/interfaces';
 
 @Component({
   selector: 'app-hero',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './hero.component.html',
   styleUrl: './hero.component.scss'
 })

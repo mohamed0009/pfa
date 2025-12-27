@@ -10,7 +10,9 @@ import java.util.List;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, String> {
     List<ChatMessage> findByConversationOrderByTimestampAsc(Conversation conversation);
+    List<ChatMessage> findByConversationOrderByTimestampDesc(Conversation conversation);
     long countByConversation(Conversation conversation);
+    List<ChatMessage> findByConversationAndSenderOrderByTimestampAsc(Conversation conversation, ChatMessage.MessageSender sender);
 }
 
 

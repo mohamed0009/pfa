@@ -14,5 +14,9 @@ public interface FormationRepository extends JpaRepository<Formation, String> {
     List<Formation> findByCategory(String category);
     List<Formation> findByLevel(Formation.Level level);
     List<Formation> findByCreatedBy(User user);
+    
+    // Méthodes pour filtrer par catégorie/niveau ET status
+    List<Formation> findByCategoryAndStatus(String category, ContentStatus status);
+    List<Formation> findByLevelAndStatus(Formation.Level level, ContentStatus status);
 }
 

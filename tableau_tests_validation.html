@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tests de Validation des Formulaires - Coach AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background-color: #e74c3c;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #c0392b;
+        }
+        
+        td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #fdeaea;
+        }
+        
+        .id-col {
+            width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        .scenario-col {
+            width: 200px;
+        }
+        
+        .preconditions-col {
+            width: 180px;
+        }
+        
+        .steps-col {
+            width: 300px;
+        }
+        
+        .result-col {
+            width: 200px;
+        }
+        
+        .verification-col {
+            width: 250px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .code {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Tests de Validation des Formulaires - Projet Coach AI</h1>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th class="id-col">ID</th>
+                    <th class="scenario-col">Scénario de Test</th>
+                    <th class="preconditions-col">Préconditions</th>
+                    <th class="steps-col">Étapes</th>
+                    <th class="result-col">Résultat Attendu</th>
+                    <th class="verification-col">Vérification dans Selenium IDE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="id-col">20</td>
+                    <td>Validation du formulaire de connexion avec champs vides</td>
+                    <td>Page de connexion chargée</td>
+                    <td>1. Laisser tous les champs vides<br>2. Tenter de cliquer sur le bouton 'Se Connecter'</td>
+                    <td>Le bouton est désactivé ou un message de validation s'affiche</td>
+                    <td><span class="code">assertElementNotEnabled</span> pour vérifier que le bouton est désactivé ou <span class="code">assertText</span> pour vérifier les messages de validation</td>
+                </tr>
+                <tr>
+                    <td class="id-col">21</td>
+                    <td>Validation du formulaire d'inscription avec champs vides</td>
+                    <td>Page d'inscription chargée</td>
+                    <td>1. Laisser tous les champs vides<br>2. Tenter de cliquer sur le bouton 'Créer Mon Compte'</td>
+                    <td>Le bouton est désactivé ou des messages de validation s'affichent pour chaque champ requis</td>
+                    <td><span class="code">assertElementNotEnabled</span> pour vérifier que le bouton est désactivé ou <span class="code">assertText</span> pour vérifier les messages de validation de chaque champ</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <p>Document créé le 25 Décembre 2025 - Projet Coach AI</p>
+        </div>
+    </div>
+</body>
+</html>
+
+

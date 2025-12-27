@@ -25,6 +25,14 @@
       <div><h3>{{ trainerStats.pending }}</h3><p>En Attente</p></div>
     </div>
     <div class="stat-card">
+      <span class="material-icons" style="color: #3b82f6;">wifi</span>
+      <div><h3>{{ trainerStats.online }}</h3><p>En Ligne</p></div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons" style="color: #ef4444;">notification_important</span>
+      <div><h3>{{ trainerStats.pendingFormations }}</h3><p>Formations en Attente</p></div>
+    </div>
+    <div class="stat-card">
       <span class="material-icons">star</span>
       <div><h3>{{ trainerStats.averageRating?.toFixed(1) || 0 }}</h3><p>Note Moyenne</p></div>
     </div>
@@ -46,8 +54,15 @@
   <!-- Trainers Grid -->
   <div class="trainers-grid">
     <div class="trainer-card" *ngFor="let trainer of trainers">
-      <img [src]="trainer.avatarUrl" [alt]="trainer.fullName" class="trainer-avatar">
-      <span class="status-dot" [style.background]="getStatusColor(trainer.status)"></span>
+      <div class="trainer-header">
+        <img [src]="trainer.avatarUrl" [alt]="trainer.fullName" class="trainer-avatar">
+        <div class="status-indicators">
+          <span class="status-dot" [style.background]="getStatusColor(trainer.status)" [title]="getStatusLabel(trainer.status)"></span>
+          <span class="online-dot" *ngIf="trainer.isOnline" [title]="'En ligne'">
+            <span class="material-icons" style="color: #10b981; font-size: 16px;">circle</span>
+          </span>
+        </div>
+      </div>
       
       <div class="trainer-info">
         <h3>{{ trainer.fullName }}</h3>
@@ -65,12 +80,36 @@
         </div>
         <div class="stat-item">
           <span class="material-icons">school</span>
-          <span>{{ trainer.coursesCreated }} cours</span>
+          <span>{{ trainer.coursesCreated || 0 }} cours</span>
+        </div>
+        <div class="stat-item">
+          <span class="material-icons">book</span>
+          <span>{{ trainer.totalFormations || 0 }} formations</span>
+        </div>
+        <div class="stat-item" *ngIf="trainer.pendingFormations && trainer.pendingFormations > 0" style="color: #ef4444;">
+          <span class="material-icons">pending</span>
+          <span>{{ trainer.pendingFormations }} en attente</span>
         </div>
         <div class="stat-item" *ngIf="trainer.rating > 0">
           <span class="material-icons">star</span>
           <span>{{ trainer.rating }}/5</span>
         </div>
+      </div>
+      
+      <!-- Formations en attente -->
+      <div class="pending-formations" *ngIf="trainer.pendingFormationsList && trainer.pendingFormationsList.length > 0">
+        <div class="pending-header">
+          <span class="material-icons" style="color: #ef4444;">notification_important</span>
+          <strong>Formations en attente d'approbation:</strong>
+        </div>
+        <ul class="pending-list">
+          <li *ngFor="let formation of trainer.pendingFormationsList">
+            <a [routerLink]="['/admin/content']" [queryParams]="{formationId: formation.id}" style="color: #ef4444; text-decoration: underline;">
+              {{ formation.title }}
+            </a>
+            <span class="pending-date">{{ (formation.createdAt | date: 'short') || formation.createdAt }}</span>
+          </li>
+        </ul>
       </div>
 
       <div class="trainer-actions">

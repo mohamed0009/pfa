@@ -1,0 +1,256 @@
+<div class="student-details-page" *ngIf="student && !isLoading">
+  <!-- Student Header -->
+  <div class="student-header">
+    <div class="student-identity">
+      <img 
+        [src]="student.avatarUrl || 'assets/images/default-avatar.png'" 
+        [alt]="getStudentFullName()"
+        class="student-avatar">
+      <div class="student-info">
+        <h1>{{ getStudentFullName() }}</h1>
+        <p class="student-email">{{ student.email }}</p>
+        <div class="student-meta">
+          <span>
+            <span class="material-icons">category</span>
+            {{ student.specialty }}
+          </span>
+          <span>
+            <span class="material-icons">event</span>
+            Inscrit le {{ student.joinedAt | date:'dd/MM/yyyy' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="btn btn-message">
+        <span class="material-icons">message</span>
+        Envoyer un message
+      </button>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    
+    <!-- Left Column: Progression & Stats -->
+    <div class="left-column">
+      
+      <!-- Progression par Formation -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>
+            <span class="material-icons">school</span>
+            Formations suivies
+          </h2>
+        </div>
+        <div class="formations-list">
+          <div class="formation-item" *ngFor="let formation of student.formations">
+            <div class="formation-header">
+              <h3>{{ formation.formationTitle }}</h3>
+              <div class="progress-circle" [style.--progress]="formation.progress">
+                <span>{{ formation.progress }}%</span>
+              </div>
+            </div>
+            
+            <!-- Modules Progress -->
+            <div class="modules-progress">
+              <div class="module-bar" *ngFor="let module of formation.modules">
+                <div class="module-header">
+                  <span>{{ module.moduleTitle }}</span>
+                  <span class="lessons-count">{{ module.completedLessons }}/{{ module.totalLessons }}</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="module.progress"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2>
+            <span class="material-icons">analytics</span>
+            Statistiques
+          </h2>
+        </div>
+        <div class="stats-grid" *ngIf="stats">
+          <div class="stat-item">
+            <span class="material-icons">schedule</span>
+            <div>
+              <strong>{{ stats.totalTimeSpent }}h</strong>
+              <p>Temps passé</p>
+            </div>
+          </div>
+          <div class="stat-item">
+            <span class="material-icons">quiz</span>
+            <div>
+              <strong>{{ stats.quizzesCompleted }}/{{ stats.quizzesTotal }}</strong>
+              <p>Quiz réussis</p>
+            </div>
+          </div>
+          <div class="stat-item">
+            <span class="material-icons">grade</span>
+            <div>
+              <strong>{{ stats.averageScore }}%</strong>
+              <p>Score moyen</p>
+            </div>
+          </div>
+          <div class="stat-item">
+            <span class="material-icons">assignment</span>
+            <div>
+              <strong>{{ stats.labsSubmitted }}/{{ stats.labsTotal }}</strong>
+              <p>Labs rendus</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: IA Analysis -->
+    <div class="right-column">
+      
+      <!-- AI Level Detection -->
+      <div class="section-card ai-section">
+        <div class="section-header ai-header">
+          <h2>
+            <span class="material-icons">psychology</span>
+            Analyse IA
+          </h2>
+        </div>
+        
+        <div class="ai-content" *ngIf="aiAnalysis">
+          <!-- Global Level -->
+          <div class="level-indicator">
+            <h3>Niveau global</h3>
+            <div class="level-display">
+              <div class="level-circle" [style.--score]="aiAnalysis.levelScore">
+                <span class="level-label">{{ aiAnalysis.levelGlobal }}</span>
+                <span class="level-score">{{ aiAnalysis.levelScore }}/100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strengths -->
+          <div class="analysis-section">
+            <h3>
+              <span class="material-icons">thumb_up</span>
+              Forces
+            </h3>
+            <ul class="strengths-list">
+              <li *ngFor="let strength of aiAnalysis.strengths">
+                <span class="material-icons">check_circle</span>
+                {{ strength }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Weaknesses -->
+          <div class="analysis-section">
+            <h3>
+              <span class="material-icons">warning</span>
+              Axes d'amélioration
+            </h3>
+            <ul class="weaknesses-list">
+              <li *ngFor="let weakness of aiAnalysis.weaknesses">
+                <span class="material-icons">error_outline</span>
+                {{ weakness }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Difficulties via Chat -->
+          <div class="analysis-section">
+            <h3>
+              <span class="material-icons">chat</span>
+              Difficultés détectées (via conversations)
+            </h3>
+            <div class="difficulties-list">
+              <div 
+                class="difficulty-card"
+                *ngFor="let diff of aiAnalysis.difficultiesDetected"
+                [class.high-severity]="diff.severity === 'HIGH'">
+                <div class="diff-header">
+                  <h4>{{ diff.topic }}</h4>
+                  <span class="severity-badge" [style.background-color]="getSeverityColor(diff.severity)">
+                    {{ diff.severity }}
+                  </span>
+                </div>
+                <div class="diff-meta">
+                  <span>
+                    <span class="material-icons">repeat</span>
+                    Mentionné {{ diff.frequency }} fois
+                  </span>
+                  <span>
+                    <span class="material-icons">event</span>
+                    {{ diff.lastMentioned | date:'dd/MM/yyyy' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversation Insights -->
+          <div class="analysis-section">
+            <h3>
+              <span class="material-icons">question_answer</span>
+              Questions récurrentes
+            </h3>
+            <div class="insights-list">
+              <div class="insight-item" *ngFor="let insight of aiAnalysis.conversationInsights">
+                <div class="insight-question">
+                  <strong>"{{ insight.question }}"</strong>
+                  <span class="count-badge">{{ insight.count }}x</span>
+                </div>
+                <p class="insight-context">{{ insight.context }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Recommendations -->
+          <div class="recommendations-section">
+            <h3>
+              <span class="material-icons">auto_awesome</span>
+              Recommandations pédagogiques (IA)
+            </h3>
+            <ul class="recommendations-list">
+              <li *ngFor="let reco of aiAnalysis.recommendations">
+                <span class="material-icons">arrow_right</span>
+                {{ reco }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Certificates -->
+      <div class="section-card" *ngIf="student.certificates.length > 0">
+        <div class="section-header">
+          <h2>
+            <span class="material-icons">workspace_premium</span>
+            Certifications obtenues
+          </h2>
+        </div>
+        <div class="certificates-list">
+          <div class="certificate-item" *ngFor="let cert of student.certificates">
+            <span class="material-icons">verified</span>
+            <div>
+              <strong>{{ cert.formationTitle }}</strong>
+              <p>{{ cert.issuedAt | date:'dd/MM/yyyy' }} - Score: {{ cert.score }}%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-state" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Chargement du profil apprenant...</p>
+</div>
+

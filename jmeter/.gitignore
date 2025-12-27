@@ -1,0 +1,13 @@
+# JMeter Results
+jmeter-results/
+*.jtl
+*.log
+
+# HTML Reports
+html-report/
+report/
+
+# JMeter temporary files
+*.jmx.bak
+*.jmx.save
+

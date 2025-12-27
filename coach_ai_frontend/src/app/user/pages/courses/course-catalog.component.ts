@@ -649,9 +649,18 @@ export class CourseCatalogComponent implements OnInit {
   }
 
   loadCourses(): void {
-    this.coursesService.getCourses().subscribe(courses => {
-      this.allCourses = courses;
-      this.filteredCourses = courses;
+    console.log('Loading courses...');
+    this.coursesService.getCourses().subscribe({
+      next: (courses) => {
+        console.log('Courses loaded:', courses);
+        this.allCourses = courses;
+        this.filteredCourses = courses;
+      },
+      error: (error) => {
+        console.error('Error loading courses:', error);
+        this.allCourses = [];
+        this.filteredCourses = [];
+      }
     });
   }
 

@@ -61,10 +61,38 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value).subscribe({
       next: (user) => {
         console.log('Login successful', user);
-        this.router.navigate([this.returnUrl]);
+        // Rediriger selon le rôle
+        const role = user.role?.toUpperCase();
+        if (role === 'ADMIN') {
+          this.router.navigate(['/admin/dashboard']);
+        } else if (role === 'TRAINER') {
+          this.router.navigate(['/trainer/dashboard']);
+        } else {
+          this.router.navigate(['/user/dashboard']);
+        }
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Login failed. Please try again.';
+        console.error('❌ Login error:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        
+        // Message d'erreur détaillé
+        let errorMsg = 'Erreur lors de la connexion. Veuillez réessayer.';
+        
+        if (error?.error?.message) {
+          errorMsg = error.error.message;
+        } else if (error?.error?.error) {
+          errorMsg = error.error.error;
+        } else if (error?.message) {
+          errorMsg = error.message;
+        } else if (error?.status === 0 || error?.statusText === 'Unknown Error') {
+          errorMsg = 'Impossible de se connecter au serveur. Vérifiez que le backend est démarré sur http://localhost:8081';
+        } else if (error?.status === 401) {
+          errorMsg = 'Email ou mot de passe incorrect.';
+        } else if (error?.status === 500) {
+          errorMsg = 'Erreur serveur. Veuillez réessayer plus tard.';
+        }
+        
+        this.errorMessage = errorMsg;
         this.loading = false;
       },
       complete: () => {

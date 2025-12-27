@@ -1,12 +1,79 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { map, catchError, delay } from 'rxjs/operators';
 import { Quiz, QuizAttempt, Question, UserAnswer, Exercise, ExerciseSubmission } from '../models/user.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class QuizService {
+  private apiUrl = 'http://localhost:8081/api/user';
+
+  constructor(private http: HttpClient) {}
+
+  // Mapper les données backend vers l'interface frontend
+  private mapBackendQuizToFrontend(backendQuiz: any): Quiz {
+    return {
+      id: backendQuiz.id,
+      moduleId: backendQuiz.course?.id || '',
+      title: backendQuiz.title || '',
+      description: backendQuiz.description || '',
+      difficulty: this.mapDifficulty(backendQuiz.difficulty),
+      duration: backendQuiz.duration || 0,
+      questionsCount: backendQuiz.questions?.length || 0,
+      passingScore: backendQuiz.passingScore || 70,
+      attempts: (backendQuiz.attempts || []).map((a: any) => this.mapBackendAttemptToFrontend(a)),
+      questions: (backendQuiz.questions || []).map((q: any) => this.mapBackendQuestionToFrontend(q)),
+      isAIGenerated: backendQuiz.isAIGenerated || false
+    };
+  }
+
+  private mapBackendQuestionToFrontend(backendQuestion: any): Question {
+    const options = backendQuestion.options?.map((opt: any) => opt.text || opt) || [];
+    
+    return {
+      id: backendQuestion.id,
+      type: this.mapQuestionType(backendQuestion.type),
+      question: backendQuestion.question || '',
+      options: options.length > 0 ? options : undefined,
+      correctAnswer: backendQuestion.correctAnswer || '',
+      explanation: backendQuestion.explanation,
+      points: backendQuestion.points || 10
+    };
+  }
+
+  private mapBackendAttemptToFrontend(backendAttempt: any): QuizAttempt {
+    return {
+      id: backendAttempt.id,
+      quizId: backendAttempt.quiz?.id || backendAttempt.quizId || '',
+      userId: backendAttempt.user?.id || backendAttempt.userId || '',
+      startedAt: new Date(backendAttempt.startedAt),
+      completedAt: backendAttempt.submittedAt ? new Date(backendAttempt.submittedAt) : undefined,
+      score: backendAttempt.score || 0,
+      percentage: backendAttempt.score || 0,
+      passed: backendAttempt.passed || false,
+      answers: [],
+      feedback: ''
+    };
+  }
+
+  private mapDifficulty(backendDifficulty: string): 'Facile' | 'Moyen' | 'Difficile' {
+    const upper = backendDifficulty?.toUpperCase() || '';
+    if (upper === 'FACILE') return 'Facile';
+    if (upper === 'MOYEN') return 'Moyen';
+    if (upper === 'DIFFICILE') return 'Difficile';
+    return 'Moyen';
+  }
+
+  private mapQuestionType(backendType: string): 'mcq' | 'true_false' | 'open' {
+    const upper = backendType?.toUpperCase() || '';
+    if (upper === 'MULTIPLE_CHOICE') return 'mcq';
+    if (upper === 'TRUE_FALSE') return 'true_false';
+    return 'open';
+  }
+
+  // Fallback mock data (utilisé si le backend n'est pas disponible)
   private mockQuizzes: Quiz[] = [
     {
       id: 'quiz1',
@@ -153,115 +220,218 @@ export class QuizService {
     }
   ];
 
-  constructor() {}
-
   // Récupérer tous les quiz
   getQuizzes(): Observable<Quiz[]> {
-    return of(this.mockQuizzes).pipe(delay(300));
+    return this.http.get<any[]>(`${this.apiUrl}/quizzes`).pipe(
+      map((backendQuizzes: any[]) => {
+        if (!backendQuizzes || backendQuizzes.length === 0) {
+          // Fallback vers mock data si aucune donnée
+          return this.mockQuizzes;
+        }
+        return backendQuizzes.map(q => this.mapBackendQuizToFrontend(q));
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error fetching quizzes from backend:', error);
+        // Fallback vers mock data en cas d'erreur
+        return of(this.mockQuizzes);
+      })
+    );
   }
 
   // Récupérer un quiz spécifique
   getQuiz(quizId: string): Observable<Quiz | undefined> {
-    const quiz = this.mockQuizzes.find(q => q.id === quizId);
-    return of(quiz).pipe(delay(350));
+    return this.http.get<any>(`${this.apiUrl}/quizzes/${quizId}`).pipe(
+      map((backendQuiz: any) => {
+        if (!backendQuiz) {
+          return undefined;
+        }
+        return this.mapBackendQuizToFrontend(backendQuiz);
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error fetching quiz from backend:', error);
+        // Fallback vers mock data
+        const quiz = this.mockQuizzes.find(q => q.id === quizId);
+        return of(quiz);
+      })
+    );
   }
 
   // Récupérer les quiz d'un module
   getQuizzesByModule(moduleId: string): Observable<Quiz[]> {
-    const quizzes = this.mockQuizzes.filter(q => q.moduleId === moduleId);
-    return of(quizzes).pipe(delay(300));
+    return this.getQuizzes().pipe(
+      map(quizzes => quizzes.filter(q => q.moduleId === moduleId))
+    );
   }
 
   // Démarrer un quiz
   startQuiz(quizId: string): Observable<QuizAttempt> {
-    const attempt: QuizAttempt = {
-      id: 'attempt_' + Date.now(),
-      quizId,
-      userId: 'user1',
-      startedAt: new Date(),
-      score: 0,
-      percentage: 0,
-      passed: false,
-      answers: [],
-      feedback: ''
-    };
-
-    const quiz = this.mockQuizzes.find(q => q.id === quizId);
-    if (quiz) {
-      quiz.attempts.push(attempt);
-    }
-
-    return of(attempt).pipe(delay(300));
+    return this.http.post<any>(`${this.apiUrl}/quizzes/${quizId}/attempts`, {}).pipe(
+      map((backendAttempt: any) => {
+        return this.mapBackendAttemptToFrontend(backendAttempt);
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error starting quiz attempt:', error);
+        // Fallback vers mock
+        const attempt: QuizAttempt = {
+          id: 'attempt_' + Date.now(),
+          quizId,
+          userId: 'user1',
+          startedAt: new Date(),
+          score: 0,
+          percentage: 0,
+          passed: false,
+          answers: [],
+          feedback: ''
+        };
+        return of(attempt);
+      })
+    );
   }
 
   // Soumettre un quiz
   submitQuiz(attemptId: string, answers: UserAnswer[]): Observable<QuizAttempt> {
-    // Trouver la tentative
-    let attempt: QuizAttempt | undefined;
-    let quiz: Quiz | undefined;
+    // Convertir les réponses au format backend
+    const answerData = answers.map(a => ({
+      questionId: a.questionId,
+      userAnswer: String(a.answer)
+    }));
 
-    for (const q of this.mockQuizzes) {
-      attempt = q.attempts.find(a => a.id === attemptId);
-      if (attempt) {
-        quiz = q;
-        break;
-      }
-    }
-
-    if (attempt && quiz) {
-      attempt.answers = answers;
-      attempt.completedAt = new Date();
-      
-      // Calculer le score
-      const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
-      const earnedPoints = answers.reduce((sum, a) => sum + a.pointsEarned, 0);
-      
-      attempt.score = earnedPoints;
-      attempt.percentage = Math.round((earnedPoints / totalPoints) * 100);
-      attempt.passed = attempt.percentage >= quiz.passingScore;
-      
-      // Générer un feedback
-      if (attempt.passed) {
-        attempt.feedback = attempt.percentage >= 90 
-          ? 'Excellent ! Vous maîtrisez parfaitement ce sujet.' 
-          : 'Très bien ! Vous avez une bonne compréhension du sujet.';
-      } else {
-        attempt.feedback = 'Continuez vos efforts. Révisez les points faibles et retentez le quiz.';
-      }
-    }
-
-    return of(attempt!).pipe(delay(500));
+    return this.http.post<any>(`${this.apiUrl}/quizzes/attempts/${attemptId}/submit`, answerData).pipe(
+      map((backendAttempt: any) => {
+        const attempt = this.mapBackendAttemptToFrontend(backendAttempt);
+        attempt.answers = answers;
+        
+        // Générer un feedback basé sur le score
+        if (attempt.passed) {
+          attempt.feedback = attempt.percentage >= 90 
+            ? 'Excellent ! Vous maîtrisez parfaitement ce sujet.' 
+            : 'Très bien ! Vous avez une bonne compréhension du sujet.';
+        } else {
+          attempt.feedback = 'Continuez vos efforts. Révisez les points faibles et retentez le quiz.';
+        }
+        
+        return attempt;
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error submitting quiz:', error);
+        return throwError(() => new Error('Erreur lors de la soumission du quiz'));
+      })
+    );
   }
 
   // Récupérer tous les exercices
   getExercises(): Observable<Exercise[]> {
-    return of(this.mockExercises).pipe(delay(300));
+    return this.http.get<any[]>(`${this.apiUrl}/exercises`).pipe(
+      map((backendExercises: any[]) => {
+        if (!backendExercises || backendExercises.length === 0) {
+          return this.mockExercises;
+        }
+        return backendExercises.map(e => this.mapBackendExerciseToFrontend(e));
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error fetching exercises from backend:', error);
+        return of(this.mockExercises);
+      })
+    );
   }
 
   // Récupérer un exercice
   getExercise(exerciseId: string): Observable<Exercise | undefined> {
-    const exercise = this.mockExercises.find(e => e.id === exerciseId);
-    return of(exercise).pipe(delay(300));
+    return this.http.get<any>(`${this.apiUrl}/exercises/${exerciseId}`).pipe(
+      map((backendExercise: any) => {
+        if (!backendExercise) {
+          return undefined;
+        }
+        return this.mapBackendExerciseToFrontend(backendExercise);
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error fetching exercise from backend:', error);
+        const exercise = this.mockExercises.find(e => e.id === exerciseId);
+        return of(exercise);
+      })
+    );
   }
 
   // Soumettre un exercice
   submitExercise(exerciseId: string, content: string, attachments: string[]): Observable<ExerciseSubmission> {
-    const submission: ExerciseSubmission = {
-      id: 'sub_' + Date.now(),
-      exerciseId,
-      userId: 'user1',
-      submittedAt: new Date(),
+    const submissionData = {
       content,
-      attachments
+      attachments: attachments || []
     };
 
-    const exercise = this.mockExercises.find(e => e.id === exerciseId);
-    if (exercise) {
-      exercise.status = 'submitted';
-      exercise.submission = submission;
+    return this.http.post<any>(`${this.apiUrl}/exercises/${exerciseId}/submissions`, submissionData).pipe(
+      map((backendSubmission: any) => {
+        return {
+          id: backendSubmission.id,
+          exerciseId: backendSubmission.exercise?.id || exerciseId,
+          userId: backendSubmission.user?.id || '',
+          submittedAt: new Date(backendSubmission.submittedAt),
+          content: backendSubmission.content || content,
+          attachments: backendSubmission.attachments || attachments,
+          feedback: backendSubmission.feedback,
+          score: backendSubmission.score,
+          reviewedAt: backendSubmission.reviewedAt ? new Date(backendSubmission.reviewedAt) : undefined
+        };
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error submitting exercise:', error);
+        return throwError(() => new Error('Erreur lors de la soumission de l\'exercice'));
+      })
+    );
+  }
+
+  // Mapper les données backend vers l'interface frontend pour les exercices
+  private mapBackendExerciseToFrontend(backendExercise: any): Exercise {
+    // Déterminer le statut basé sur les soumissions
+    let status: 'not_started' | 'in_progress' | 'submitted' | 'reviewed' = 'not_started';
+    let submission: ExerciseSubmission | undefined = undefined;
+
+    // Récupérer les soumissions si disponibles
+    if (backendExercise.submissions && backendExercise.submissions.length > 0) {
+      const latestSubmission = backendExercise.submissions[backendExercise.submissions.length - 1];
+      const submissionStatus = latestSubmission.status?.toUpperCase();
+      
+      if (submissionStatus === 'REVIEWED' || submissionStatus === 'GRADED') {
+        status = 'reviewed';
+      } else if (submissionStatus === 'SUBMITTED') {
+        status = 'submitted';
+      } else {
+        status = 'in_progress';
+      }
+
+      submission = {
+        id: latestSubmission.id,
+        exerciseId: backendExercise.id,
+        userId: latestSubmission.user?.id || '',
+        submittedAt: new Date(latestSubmission.submittedAt),
+        content: latestSubmission.content || '',
+        attachments: latestSubmission.attachments || [],
+        feedback: latestSubmission.feedback,
+        score: latestSubmission.score,
+        reviewedAt: latestSubmission.reviewedAt ? new Date(latestSubmission.reviewedAt) : undefined
+      };
     }
 
-    return of(submission).pipe(delay(400));
+    return {
+      id: backendExercise.id,
+      moduleId: backendExercise.course?.id || '',
+      title: backendExercise.title || '',
+      description: backendExercise.description || '',
+      type: this.mapExerciseType(backendExercise.type),
+      difficulty: this.mapDifficulty(backendExercise.difficulty),
+      estimatedTime: backendExercise.estimatedTime || 0,
+      instructions: backendExercise.instructions || '',
+      status,
+      submission
+    };
+  }
+
+  private mapExerciseType(backendType: string): 'pratique' | 'simulation' | 'projet' {
+    const upper = backendType?.toUpperCase() || '';
+    if (upper === 'PRATIQUE' || upper === 'CODE') return 'pratique';
+    if (upper === 'SIMULATION') return 'simulation';
+    if (upper === 'PROJET') return 'projet';
+    return 'pratique';
   }
 
   // Évaluer une réponse (pour les questions ouvertes - mock AI)

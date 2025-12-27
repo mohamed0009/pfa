@@ -2,8 +2,10 @@ package com.coachai.controller.trainer;
 
 import com.coachai.model.Course;
 import com.coachai.model.User;
+import com.coachai.model.Module;
 import com.coachai.repository.CourseRepository;
 import com.coachai.repository.UserRepository;
+import com.coachai.repository.ModuleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,14 +24,29 @@ public class TrainerCourseController {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private ModuleRepository moduleRepository;
+    
     @GetMapping
-    public ResponseEntity<?> getCourses(Authentication authentication) {
+    public ResponseEntity<?> getCourses(
+            @RequestParam(required = false) String moduleId,
+            Authentication authentication) {
         try {
             if (authentication == null || authentication.getName() == null) {
                 return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
             }
             
-            List<Course> courses = courseRepository.findAll();
+            List<Course> courses;
+            if (moduleId != null) {
+                Module module = moduleRepository.findById(moduleId).orElse(null);
+                if (module != null) {
+                    courses = courseRepository.findByModule(module);
+                } else {
+                    courses = List.of();
+                }
+            } else {
+                courses = courseRepository.findAll();
+            }
             if (courses == null) {
                 courses = List.of();
             }
@@ -62,7 +79,8 @@ public class TrainerCourseController {
             
             Course course = new Course();
             course.setCreatedBy(trainer);
-            course.setStatus(com.coachai.model.ContentStatus.DRAFT);
+            // Par défaut, les cours sont PUBLISHED pour être visibles par les apprenants
+            course.setStatus(com.coachai.model.ContentStatus.PUBLISHED);
             
             if (courseData.containsKey("title")) {
                 course.setTitle((String) courseData.get("title"));
@@ -79,6 +97,28 @@ public class TrainerCourseController {
             }
             if (courseData.containsKey("category")) {
                 course.setCategory((String) courseData.get("category"));
+            }
+            if (courseData.containsKey("moduleId")) {
+                String moduleId = (String) courseData.get("moduleId");
+                Module module = moduleRepository.findById(moduleId).orElse(null);
+                if (module != null) {
+                    course.setModule(module);
+                }
+            }
+            if (courseData.containsKey("order")) {
+                course.setOrder(((Number) courseData.get("order")).intValue());
+            }
+            if (courseData.containsKey("estimatedHours")) {
+                Object hoursObj = courseData.get("estimatedHours");
+                if (hoursObj instanceof Number) {
+                    course.setEstimatedHours(((Number) hoursObj).doubleValue());
+                } else if (hoursObj instanceof String) {
+                    try {
+                        course.setEstimatedHours(Double.parseDouble((String) hoursObj));
+                    } catch (NumberFormatException e) {
+                        // Invalid hours, skip
+                    }
+                }
             }
             
             Course saved = courseRepository.save(course);
@@ -117,6 +157,39 @@ public class TrainerCourseController {
             }
             if (updateData.containsKey("description")) {
                 course.setDescription((String) updateData.get("description"));
+            }
+            if (updateData.containsKey("level")) {
+                try {
+                    course.setLevel(Course.Level.valueOf(((String) updateData.get("level")).toUpperCase()));
+                } catch (Exception e) {
+                    // Invalid level, skip
+                }
+            }
+            if (updateData.containsKey("category")) {
+                course.setCategory((String) updateData.get("category"));
+            }
+            if (updateData.containsKey("order")) {
+                course.setOrder(((Number) updateData.get("order")).intValue());
+            }
+            if (updateData.containsKey("estimatedHours")) {
+                Object hoursObj = updateData.get("estimatedHours");
+                if (hoursObj instanceof Number) {
+                    course.setEstimatedHours(((Number) hoursObj).doubleValue());
+                } else if (hoursObj instanceof String) {
+                    try {
+                        course.setEstimatedHours(Double.parseDouble((String) hoursObj));
+                    } catch (NumberFormatException e) {
+                        // Invalid hours, skip
+                    }
+                }
+            }
+            if (updateData.containsKey("status")) {
+                try {
+                    String statusStr = ((String) updateData.get("status")).toUpperCase();
+                    course.setStatus(com.coachai.model.ContentStatus.valueOf(statusStr));
+                } catch (Exception e) {
+                    // Invalid status, skip
+                }
             }
             
             Course saved = courseRepository.save(course);

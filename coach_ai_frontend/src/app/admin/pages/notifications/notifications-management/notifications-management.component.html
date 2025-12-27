@@ -73,12 +73,81 @@
 
         <div class="form-group">
           <label>Audience Cible</label>
-          <select [(ngModel)]="newNotification.targetAudience" class="form-control">
+          <select [(ngModel)]="newNotification.targetAudience" class="form-control" [disabled]="selectedUsers.length > 0">
             <option value="all">Tous</option>
             <option value="apprenants">Apprenants</option>
             <option value="formateurs">Formateurs</option>
             <option value="administrateurs">Administrateurs</option>
+            <option value="specific">Utilisateurs spécifiques</option>
           </select>
+        </div>
+      </div>
+      
+      <!-- Recherche d'utilisateurs spécifiques -->
+      <div class="form-group">
+        <div class="user-search-header">
+          <label>Rechercher des utilisateurs/formateurs spécifiques</label>
+          <button type="button" class="btn btn-sm btn-secondary" (click)="toggleUserSearch()">
+            <span class="material-icons">{{ showUserSearch ? 'expand_less' : 'expand_more' }}</span>
+            {{ showUserSearch ? 'Masquer' : 'Afficher' }}
+          </button>
+        </div>
+        
+        <div class="user-search-container" *ngIf="showUserSearch">
+          <div class="search-input-group">
+            <input 
+              type="text" 
+              [(ngModel)]="searchQuery" 
+              (input)="searchUsers()"
+              class="form-control" 
+              placeholder="Rechercher par nom ou email (min. 2 caractères)">
+            <select [(ngModel)]="searchRole" (change)="searchUsers()" class="form-control search-role-select">
+              <option value="all">Tous les rôles</option>
+              <option value="TRAINER">Formateurs uniquement</option>
+              <option value="USER">Apprenants uniquement</option>
+              <option value="ADMIN">Administrateurs uniquement</option>
+            </select>
+          </div>
+          
+          <!-- Résultats de recherche -->
+          <div class="search-results" *ngIf="searchResults.length > 0">
+            <div class="search-result-item" *ngFor="let user of searchResults" (click)="selectUser(user)">
+              <img [src]="user.avatarUrl || 'https://i.pravatar.cc/150'" [alt]="user.fullName" class="user-avatar-small">
+              <div class="user-info">
+                <strong>{{ user.fullName }}</strong>
+                <span class="user-email">{{ user.email }}</span>
+                <span class="user-role-badge" [attr.data-role]="user.role">{{ user.role }}</span>
+              </div>
+              <span class="material-icons add-icon">add_circle</span>
+            </div>
+          </div>
+          
+          <div class="search-no-results" *ngIf="searchQuery.length >= 2 && searchResults.length === 0 && !isSearching">
+            <p>Aucun utilisateur trouvé</p>
+          </div>
+          
+          <div class="search-loading" *ngIf="isSearching">
+            <span class="material-icons spin">refresh</span>
+            <p>Recherche en cours...</p>
+          </div>
+        </div>
+        
+        <!-- Utilisateurs sélectionnés -->
+        <div class="selected-users" *ngIf="selectedUsers.length > 0">
+          <label>Utilisateurs sélectionnés ({{ selectedUsers.length }})</label>
+          <div class="selected-users-list">
+            <div class="selected-user-item" *ngFor="let user of selectedUsers">
+              <img [src]="user.avatarUrl || 'https://i.pravatar.cc/150'" [alt]="user.fullName" class="user-avatar-small">
+              <span class="user-name">{{ user.fullName }}</span>
+              <button type="button" class="btn-remove-user" (click)="removeSelectedUser(user.id)">
+                <span class="material-icons">close</span>
+              </button>
+            </div>
+          </div>
+          <p class="info-text" *ngIf="selectedUsers.length > 0">
+            <span class="material-icons">info</span>
+            La notification sera envoyée uniquement aux utilisateurs sélectionnés ci-dessus.
+          </p>
         </div>
       </div>
 

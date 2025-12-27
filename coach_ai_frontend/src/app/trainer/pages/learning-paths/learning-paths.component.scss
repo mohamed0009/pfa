@@ -257,10 +257,18 @@
         margin-bottom: 1rem;
 
         h4 {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
           font-size: 0.875rem;
           font-weight: 600;
           color: #1e293b;
           margin-bottom: 0.5rem;
+
+          .material-icons {
+            font-size: 18px;
+            color: #6366f1;
+          }
         }
 
         .adaptation-chips {
@@ -273,6 +281,9 @@
             border-radius: 12px;
             font-size: 0.75rem;
             font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
 
             &.difficulty {
               background: rgba(245, 158, 11, 0.1);
@@ -288,7 +299,68 @@
               background: rgba(16, 185, 129, 0.1);
               color: #10b981;
             }
+
+            &.ml-recommendation {
+              background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+              color: #6366f1;
+              border: 1px solid rgba(99, 102, 241, 0.2);
+
+              .material-icons {
+                font-size: 14px;
+              }
+
+              .confidence-badge {
+                background: rgba(99, 102, 241, 0.2);
+                padding: 0.125rem 0.5rem;
+                border-radius: 8px;
+                font-size: 0.7rem;
+                margin-left: 0.25rem;
+              }
+            }
           }
+        }
+
+        .ml-details {
+          margin-top: 1rem;
+          padding: 1rem;
+          background: #f8fafc;
+          border-radius: 8px;
+          border-left: 3px solid #6366f1;
+
+          .recommended-course {
+            font-size: 0.875rem;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+
+            strong {
+              color: #6366f1;
+            }
+          }
+
+          .conversation-excerpt {
+            font-size: 0.8125rem;
+            color: #64748b;
+            font-style: italic;
+            line-height: 1.5;
+            margin: 0;
+          }
+        }
+      }
+
+      .ml-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+        border-radius: 8px;
+        margin-top: 1rem;
+        font-size: 0.8125rem;
+        color: #6366f1;
+        font-weight: 600;
+
+        .material-icons {
+          font-size: 18px;
         }
       }
 
@@ -318,10 +390,19 @@
           padding-left: 1.5rem;
 
           li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
             font-size: 0.875rem;
             color: #475569;
             line-height: 1.5;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
+
+            .material-icons {
+              font-size: 16px;
+              color: #6366f1;
+              margin-top: 0.125rem;
+            }
           }
         }
       }
@@ -424,10 +505,18 @@
     max-height: 500px;
     overflow-y: auto;
 
-    p {
+    > p {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       font-size: 0.875rem;
       color: #64748b;
       margin-bottom: 1rem;
+
+      .material-icons {
+        font-size: 18px;
+        color: #6366f1;
+      }
     }
 
     .ai-recommendations {
@@ -444,8 +533,14 @@
         .recommendation-header {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          justify-content: space-between;
           margin-bottom: 0.5rem;
+
+          > div {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
 
           .material-icons {
             font-size: 18px;
@@ -456,12 +551,62 @@
             font-size: 0.875rem;
             color: #1e293b;
           }
+
+          .ml-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6366f1;
+
+            .material-icons {
+              font-size: 14px;
+              color: #6366f1;
+            }
+          }
         }
 
-        p {
+        .recommendation-text {
           font-size: 0.875rem;
           color: #475569;
           margin-bottom: 0.75rem;
+          line-height: 1.5;
+        }
+
+        .recommendation-details {
+          margin-bottom: 0.75rem;
+          padding: 0.75rem;
+          background: rgba(99, 102, 241, 0.05);
+          border-radius: 8px;
+
+          .course-name,
+          .conversation-excerpt {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.8125rem;
+            color: #475569;
+            margin-bottom: 0.5rem;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .material-icons {
+              font-size: 16px;
+              color: #6366f1;
+              margin-top: 0.125rem;
+            }
+          }
+
+          .conversation-excerpt {
+            font-style: italic;
+            color: #64748b;
+          }
         }
 
         .recommendation-actions {
@@ -499,10 +644,60 @@
     margin-bottom: 0.5rem;
   }
 
-  p {
+  > p {
     color: #64748b;
     font-size: 1rem;
     margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    text-align: left;
+    background: #f0f9ff;
+    border-left: 4px solid #3b82f6;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 2rem auto;
+    max-width: 600px;
+
+    .material-icons {
+      font-size: 24px;
+      color: #3b82f6;
+      margin: 0;
+      flex-shrink: 0;
+    }
+
+    > div {
+      flex: 1;
+
+      strong {
+        display: block;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 1.25rem;
+        list-style-type: disc;
+
+        li {
+          font-size: 0.875rem;
+          color: #475569;
+          line-height: 1.6;
+          margin-bottom: 0.5rem;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
   }
 
   .btn {

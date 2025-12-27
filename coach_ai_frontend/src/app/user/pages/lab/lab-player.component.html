@@ -1,0 +1,195 @@
+<div class="lab-player" *ngIf="exercise">
+  <!-- Header -->
+  <div class="lab-header">
+    <button class="back-btn" (click)="goBack()">
+      <span class="material-icons">arrow_back</span>
+      Retour
+    </button>
+
+    <div class="lab-info">
+      <div class="lab-title-section">
+        <h1>{{ exercise.title }}</h1>
+        <div class="lab-meta">
+          <span class="badge" [style.background-color]="getDifficultyColor(exercise.difficulty)">
+            {{ getDifficultyLabel(exercise.difficulty) }}
+          </span>
+          <span class="meta-item">
+            <span class="material-icons">schedule</span>
+            {{ exercise.estimatedTime }} min
+          </span>
+          <span class="meta-item">
+            <span class="material-icons">code</span>
+            {{ getTypeLabel(exercise.type) }}
+          </span>
+        </div>
+      </div>
+
+      <button class="btn btn-help" (click)="toggleChatHelp()">
+        <span class="material-icons">psychology</span>
+        Aide via Chat IA
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="lab-content">
+    <!-- Left Panel: Instructions -->
+    <div class="instructions-panel">
+      <div class="panel-header">
+        <span class="material-icons">assignment</span>
+        <h2>Énoncé de l'exercice</h2>
+      </div>
+
+      <div class="panel-content">
+        <div class="description-section">
+          <h3>Description</h3>
+          <p>{{ exercise.description }}</p>
+        </div>
+
+        <div class="instructions-section">
+          <h3>Instructions</h3>
+          <div class="instructions-text" [innerHTML]="exercise.instructions"></div>
+        </div>
+
+        <!-- Submission Status if submitted -->
+        <div class="submission-status" *ngIf="submission">
+          <div class="status-badge" [style.background-color]="getStatusColor(submission.status)">
+            <span class="material-icons">
+              {{ submission.status === 'GRADED' || submission.status === 'VALIDATED' ? 'check_circle' : 'pending' }}
+            </span>
+            {{ getStatusLabel(submission.status) }}
+          </div>
+
+          <div class="feedback-section" *ngIf="submission.feedback">
+            <h4>
+              <span class="material-icons">rate_review</span>
+              Feedback du formateur
+            </h4>
+            <p>{{ submission.feedback }}</p>
+          </div>
+
+          <div class="score-section" *ngIf="submission.score !== null && submission.score !== undefined">
+            <span class="material-icons">grade</span>
+            <strong>Note: {{ submission.score }} / {{ submission.maxScore }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Work Area -->
+    <div class="work-panel">
+      <div class="panel-header">
+        <span class="material-icons">edit_note</span>
+        <h2>Votre travail</h2>
+      </div>
+
+      <div class="panel-content">
+        <div class="editor-section" *ngIf="!isSubmitted">
+          <label>Réponse / Code</label>
+          <textarea 
+            [(ngModel)]="userContent"
+            [placeholder]="exercise.type === 'CODE' ? 'Écrivez votre code ici...' : 'Décrivez votre solution...'"
+            rows="15"
+            [class.code-editor]="exercise.type === 'CODE'">
+          </textarea>
+
+          <div class="attachments-section">
+            <label>
+              <span class="material-icons">attach_file</span>
+              Fichiers joints (optionnel)
+            </label>
+            <input 
+              type="file" 
+              multiple
+              (change)="onFileSelected($event)"
+              id="file-input"
+              style="display: none;">
+            <button class="btn btn-attach" onclick="document.getElementById('file-input')?.click()">
+              <span class="material-icons">cloud_upload</span>
+              Ajouter des fichiers
+            </button>
+
+            <div class="attached-files" *ngIf="attachments.length > 0">
+              <div class="file-item" *ngFor="let file of attachments; let i = index">
+                <span class="material-icons">insert_drive_file</span>
+                <span>{{ file.name }}</span>
+                <button class="remove-btn" (click)="removeAttachment(i)">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="submit-section">
+            <button 
+              class="btn btn-primary btn-block"
+              [disabled]="isSubmitting || !userContent.trim()"
+              (click)="submitExercise()">
+              <span class="material-icons">send</span>
+              {{ isSubmitting ? 'Soumission en cours...' : 'Soumettre l\'exercice' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Submitted View -->
+        <div class="submitted-view" *ngIf="isSubmitted && submission">
+          <div class="success-message">
+            <span class="material-icons">check_circle</span>
+            <h3>Exercice soumis avec succès!</h3>
+            <p>Votre formateur corrigera votre travail prochainement.</p>
+          </div>
+
+          <div class="submitted-content">
+            <h4>Votre réponse:</h4>
+            <pre [class.code-display]="exercise.type === 'CODE'">{{ submission.content }}</pre>
+          </div>
+
+          <div class="submitted-attachments" *ngIf="submission.attachments && submission.attachments.length > 0">
+            <h4>Fichiers joints:</h4>
+            <div class="file-list">
+              <a *ngFor="let url of submission.attachments" [href]="url" target="_blank" class="file-link">
+                <span class="material-icons">insert_drive_file</span>
+                {{ url.split('/').pop() }}
+              </a>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary" (click)="goBack()">
+            <span class="material-icons">home</span>
+            Retour au Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Help Panel (Floating) -->
+  <div class="chat-help-panel" *ngIf="showChatHelp" [@slideIn]>
+    <div class="chat-header">
+      <h3>
+        <span class="material-icons">psychology</span>
+        Aide du Coach IA
+      </h3>
+      <button class="close-btn" (click)="toggleChatHelp()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="chat-content">
+      <p class="chat-intro">
+        Besoin d'aide? Posez vos questions au coach IA pour mieux comprendre l'exercice.
+      </p>
+      <!-- Intégrer le composant chat ici -->
+      <button class="btn btn-primary" [routerLink]="['/user/chat']">
+        <span class="material-icons">chat</span>
+        Ouvrir le Chat IA
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-state" *ngIf="!exercise">
+  <div class="spinner"></div>
+  <p>Chargement de l'exercice...</p>
+</div>
+

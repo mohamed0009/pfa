@@ -238,6 +238,88 @@
     <div class="spinner"></div>
     <p>Chargement des évaluations...</p>
   </div>
+
+  <!-- Review Modal -->
+  <div class="modal-overlay" *ngIf="showReviewModal" (click)="closeReviewModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <span class="material-icons">{{ reviewModalType === 'exercise' ? 'assignment' : 'quiz' }}</span>
+          Corriger {{ reviewModalType === 'exercise' ? 'l\'Exercice' : 'le Quiz' }}
+        </h2>
+        <button class="btn-icon" (click)="closeReviewModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedReview">
+        <div class="review-student-info">
+          <h3>{{ getStudentName() }}</h3>
+          <p>{{ getReviewTitle() }}</p>
+        </div>
+
+        <div class="review-content-section" *ngIf="reviewModalType === 'exercise' && getSelectedExerciseReview()">
+          <h4>Réponse de l'étudiant</h4>
+          <div class="answer-content">
+            <p>{{ getSelectedExerciseReview()!.content }}</p>
+          </div>
+        </div>
+
+        <div class="review-content-section" *ngIf="reviewModalType === 'quiz' && getSelectedQuizReview()">
+          <h4>Résultats du Quiz</h4>
+          <div class="quiz-results">
+            <div class="result-item">
+              <span>Score:</span>
+              <strong>{{ getSelectedQuizReview()!.score }}/100</strong>
+            </div>
+            <div class="result-item">
+              <span>Bonnes réponses:</span>
+              <strong>{{ getSelectedQuizReview()!.correctAnswers }}/{{ getSelectedQuizReview()!.totalQuestions }}</strong>
+            </div>
+            <div class="result-item">
+              <span>Statut:</span>
+              <strong [class.passed]="getSelectedQuizReview()!.passed" [class.failed]="!getSelectedQuizReview()!.passed">
+                {{ getSelectedQuizReview()!.passed ? 'Réussi' : 'Échoué' }}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Feedback / Commentaire *</label>
+          <textarea 
+            [(ngModel)]="reviewFeedback"
+            class="form-control"
+            rows="5"
+            placeholder="Ajoutez vos commentaires et suggestions..."></textarea>
+        </div>
+
+        <div class="form-group" *ngIf="reviewModalType === 'exercise'">
+          <label>Note (sur 100) *</label>
+          <input 
+            type="number" 
+            [(ngModel)]="reviewScore"
+            class="form-control"
+            min="0" 
+            max="100"
+            required>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeReviewModal()" [disabled]="isSubmittingReview">
+          Annuler
+        </button>
+        <button class="btn btn-primary" (click)="submitReview()" [disabled]="isSubmittingReview || !reviewFeedback.trim()">
+          <span *ngIf="isSubmittingReview" class="spinner"></span>
+          <span *ngIf="!isSubmittingReview">
+            <span class="material-icons">save</span>
+            Enregistrer la correction
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 

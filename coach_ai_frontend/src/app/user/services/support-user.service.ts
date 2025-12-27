@@ -1,12 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { map, catchError, delay } from 'rxjs/operators';
 import { SupportTicket, TicketMessage } from '../models/user.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SupportUserService {
+  private apiUrl = 'http://localhost:8081/api/user/support';
+  
+  constructor(private http: HttpClient) {}
   private mockTickets: SupportTicket[] = [
     {
       id: 'ticket1',
@@ -109,17 +113,27 @@ export class SupportUserService {
     }
   ];
 
-  constructor() {}
-
   // Récupérer tous les tickets de l'utilisateur
   getTickets(): Observable<SupportTicket[]> {
-    return of(this.mockTickets).pipe(delay(350));
+    return this.http.get<any[]>(`${this.apiUrl}/tickets`).pipe(
+      map((tickets: any[]) => tickets.map(t => this.mapBackendTicketToFrontend(t))),
+      catchError((error) => {
+        console.error('Error fetching tickets:', error);
+        return of(this.mockTickets).pipe(delay(350));
+      })
+    );
   }
 
   // Récupérer un ticket spécifique
   getTicket(ticketId: string): Observable<SupportTicket | undefined> {
-    const ticket = this.mockTickets.find(t => t.id === ticketId);
-    return of(ticket).pipe(delay(300));
+    return this.http.get<any>(`${this.apiUrl}/tickets/${ticketId}`).pipe(
+      map((ticket: any) => this.mapBackendTicketToFrontend(ticket)),
+      catchError((error) => {
+        console.error('Error fetching ticket:', error);
+        const ticket = this.mockTickets.find(t => t.id === ticketId);
+        return of(ticket).pipe(delay(300));
+      })
+    );
   }
 
   // Créer un nouveau ticket
@@ -129,59 +143,84 @@ export class SupportUserService {
     priority: SupportTicket['priority'],
     initialMessage: string
   ): Observable<SupportTicket> {
-    const newTicket: SupportTicket = {
-      id: 'ticket_' + Date.now(),
-      userId: 'user1',
+    return this.http.post<any>(`${this.apiUrl}/tickets`, {
       subject,
-      category,
-      priority,
-      status: 'nouveau',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      messages: [
-        {
-          id: 'msg_' + Date.now(),
-          ticketId: 'ticket_' + Date.now(),
-          sender: 'user',
-          senderName: 'Marie Dupont',
-          content: initialMessage,
-          timestamp: new Date(),
-          attachments: []
-        }
-      ]
-    };
+      description: initialMessage,
+      category: category.toUpperCase(),
+      priority: priority.toUpperCase()
+    }).pipe(
+      map((ticket: any) => this.mapBackendTicketToFrontend(ticket)),
+      catchError((error) => {
+        console.error('Error creating ticket:', error);
+        // Fallback to mock
+        const newTicket: SupportTicket = {
+          id: 'ticket_' + Date.now(),
+          userId: 'user1',
+          subject,
+          category,
+          priority,
+          status: 'nouveau',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          messages: [
+            {
+              id: 'msg_' + Date.now(),
+              ticketId: 'ticket_' + Date.now(),
+              sender: 'user',
+              senderName: 'Marie Dupont',
+              content: initialMessage,
+              timestamp: new Date(),
+              attachments: []
+            }
+          ]
+        };
+        this.mockTickets.unshift(newTicket);
+        return of(newTicket).pipe(delay(400));
+      })
+    );
+  }
 
-    this.mockTickets.unshift(newTicket);
-    return of(newTicket).pipe(delay(400));
+  private mapBackendTicketToFrontend(ticket: any): SupportTicket {
+    return {
+      id: ticket.id || '',
+      userId: ticket.user?.id || '',
+      subject: ticket.subject || '',
+      category: (ticket.category?.toLowerCase() || 'autre') as SupportTicket['category'],
+      priority: (ticket.priority?.toLowerCase() || 'moyenne') as SupportTicket['priority'],
+      status: (ticket.status?.toLowerCase() || 'nouveau') as SupportTicket['status'],
+      createdAt: ticket.createdAt ? new Date(ticket.createdAt) : new Date(),
+      updatedAt: ticket.updatedAt ? new Date(ticket.updatedAt) : new Date(),
+      messages: (ticket.messages || []).map((m: any) => ({
+        id: m.id || '',
+        ticketId: ticket.id || '',
+        sender: m.sender?.toLowerCase() || 'user',
+        senderName: m.senderName || '',
+        content: m.content || '',
+        timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+        attachments: m.attachments || []
+      }))
+    };
   }
 
   // Ajouter un message à un ticket
   addMessage(ticketId: string, content: string): Observable<TicketMessage> {
-    const ticket = this.mockTickets.find(t => t.id === ticketId);
-    
-    if (ticket) {
-      const newMessage: TicketMessage = {
-        id: 'msg_' + Date.now(),
-        ticketId,
-        sender: 'user',
-        senderName: 'Marie Dupont',
-        content,
-        timestamp: new Date(),
-        attachments: []
-      };
-
-      ticket.messages.push(newMessage);
-      ticket.updatedAt = new Date();
-      
-      // Simuler une réponse du support après un délai
-      if (ticket.status === 'nouveau') {
-        ticket.status = 'en_cours';
-      }
-
-      return of(newMessage).pipe(delay(300));
-    }
-
-    throw new Error('Ticket not found');
+    return this.http.post<any>(`${this.apiUrl}/tickets/${ticketId}/messages`, {
+      message: content
+    }).pipe(
+      map((msg: any) => ({
+        id: msg.id || '',
+        ticketId: ticketId,
+        sender: msg.sender?.toLowerCase() || 'user',
+        senderName: msg.senderName || '',
+        content: msg.content || content,
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+        attachments: msg.attachments || []
+      })),
+      catchError((error) => {
+        console.error('Error adding message:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Fermer un ticket

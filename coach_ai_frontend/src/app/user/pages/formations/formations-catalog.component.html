@@ -1,0 +1,148 @@
+<div class="formations-catalog">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>Explorez notre catalogue de formations</h1>
+      <p>Développez vos compétences avec des formations complètes guidées par des experts et un coach IA</p>
+      
+      <!-- Search Bar -->
+      <div class="search-container">
+        <span class="material-icons">search</span>
+        <input 
+          type="text" 
+          placeholder="Rechercher une formation, une compétence, un formateur..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+        >
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <label>Catégorie</label>
+          <div class="filter-chips">
+            <button 
+              *ngFor="let cat of categories"
+              class="chip" 
+              [class.active]="selectedCategory === cat.value"
+              (click)="filterByCategory(cat.value)">
+              {{ cat.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label>Niveau</label>
+          <div class="filter-chips">
+            <button 
+              *ngFor="let lvl of levels"
+              class="chip" 
+              [class.active]="selectedLevel === lvl.value"
+              (click)="filterByLevel(lvl.value)">
+              {{ lvl.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formations Grid -->
+  <section class="formations-section">
+    <div class="section-header">
+      <h2>Formations disponibles</h2>
+      <p>{{ filteredFormations.length }} {{ filteredFormations.length > 1 ? 'formations disponibles' : 'formation disponible' }}</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Chargement des formations...</p>
+    </div>
+
+    <!-- Formations Grid -->
+    <div class="formations-grid" *ngIf="!isLoading">
+      <div 
+        class="formation-card" 
+        *ngFor="let formation of filteredFormations"
+        (click)="viewFormationDetails(formation.id)">
+        
+        <!-- Thumbnail -->
+        <div class="formation-thumbnail">
+          <img [src]="getFormationThumbnail(formation)" [alt]="formation.title" (error)="handleImageError($event)">
+          <div class="formation-overlay">
+            <span class="level-badge">{{ getLevelLabel(formation.level) }}</span>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="formation-content">
+          <div class="formation-header">
+            <h3>{{ formation.title }}</h3>
+            <span class="category-tag">{{ formation.category }}</span>
+          </div>
+
+          <p class="formation-description">{{ formation.description }}</p>
+
+          <!-- Trainer Info -->
+          <div class="trainer-info">
+            <img 
+              [src]="formation.trainer?.avatarUrl || 'assets/images/default-avatar.png'" 
+              [alt]="getTrainerFullName(formation)"
+              class="trainer-avatar">
+            <div class="trainer-details">
+              <p class="trainer-name">{{ getTrainerFullName(formation) }}</p>
+              <p class="trainer-role">Formateur</p>
+            </div>
+          </div>
+
+          <!-- Formation Stats -->
+          <div class="formation-stats">
+            <div class="stat-item">
+              <span class="material-icons">layers</span>
+              <span>{{ formation.modulesCount || formation.modules?.length || 0 }} modules</span>
+            </div>
+            <div class="stat-item">
+              <span class="material-icons">menu_book</span>
+              <span>0 cours</span>
+            </div>
+            <div class="stat-item">
+              <span class="material-icons">quiz</span>
+              <span>{{ getQuizzesCount(formation) }} quiz</span>
+            </div>
+            <div class="stat-item">
+              <span class="material-icons">schedule</span>
+              <span>{{ formation.duration }}h</span>
+            </div>
+          </div>
+
+          <!-- Enrollment Info -->
+          <div class="enrollment-info">
+            <div class="enrolled-count">
+              <span class="material-icons">people</span>
+              <span>{{ formation.enrolledCount }} inscrits</span>
+            </div>
+            <div class="completion-rate">
+              <span class="material-icons">check_circle</span>
+              <span>{{ formation.completionRate }}% de réussite</span>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <button class="btn btn-primary btn-block">
+            Voir la formation
+            <span class="material-icons">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && filteredFormations.length === 0">
+      <span class="material-icons">school</span>
+      <h3>Aucune formation trouvée</h3>
+      <p>Essayez de modifier vos filtres ou votre recherche</p>
+    </div>
+  </section>
+</div>
+

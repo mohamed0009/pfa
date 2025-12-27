@@ -169,6 +169,10 @@ export class CoursesListComponent implements OnInit {
   constructor(private coursesService: CoursesAdminService) {}
 
   ngOnInit(): void {
+    this.loadCourses();
+  }
+  
+  loadCourses(): void {
     this.coursesService.getCourses().subscribe(courses => {
       this.courses = courses;
     });

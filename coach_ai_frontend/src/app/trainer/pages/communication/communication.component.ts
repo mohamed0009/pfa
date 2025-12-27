@@ -19,12 +19,14 @@ export class CommunicationComponent implements OnInit {
   reminders: Reminder[] = [];
   
   selectedMessage: TrainerMessage | null = null;
+  selectedConversationMessages: any[] = [];
   searchTerm = '';
   replyContent = '';
   
   unreadMessages = 0;
   unansweredQuestions = 0;
   upcomingReminders = 0;
+  isLoadingMessages = false;
 
   constructor(private trainerService: TrainerService) {}
 
@@ -35,9 +37,16 @@ export class CommunicationComponent implements OnInit {
   }
 
   loadMessages(): void {
-    this.trainerService.getTrainerMessages().subscribe(messages => {
-      this.messages = messages;
-      this.unreadMessages = messages.filter(m => !m.read).length;
+    this.trainerService.getTrainerMessages().subscribe({
+      next: (messages) => {
+        this.messages = messages || [];
+        this.unreadMessages = this.messages.filter(m => !m.read).length;
+      },
+      error: (error) => {
+        console.error('Error loading messages:', error);
+        this.messages = [];
+        this.unreadMessages = 0;
+      }
     });
   }
 
@@ -57,33 +66,164 @@ export class CommunicationComponent implements OnInit {
 
   selectMessage(message: TrainerMessage): void {
     this.selectedMessage = message;
+    this.selectedConversationMessages = [];
+    this.isLoadingMessages = true;
+    
+    // Load conversation messages - use conversationId from the message
+    const conversationId = (message as any).conversationId;
+    if (conversationId) {
+      this.trainerService.getConversationMessages(conversationId).subscribe({
+        next: (messages) => {
+          this.selectedConversationMessages = messages || [];
+          this.isLoadingMessages = false;
+        },
+        error: (error) => {
+          console.error('Error loading conversation messages:', error);
+          this.isLoadingMessages = false;
+          // Fallback: use the selected message as the only message
+          this.selectedConversationMessages = [{
+            id: message.id,
+            content: message.content,
+            sender: message.senderRole === 'student' ? 'USER' : 'AI',
+            timestamp: message.sentAt
+          }];
+        }
+      });
+    } else {
+      // Fallback: use the selected message as the only message
+      this.selectedConversationMessages = [{
+        id: message.id,
+        content: message.content,
+        sender: message.senderRole === 'student' ? 'USER' : 'AI',
+        timestamp: message.sentAt
+      }];
+      this.isLoadingMessages = false;
+    }
+    
     if (!message.read) {
       message.read = true;
       this.unreadMessages--;
     }
   }
 
+  // Modal state
+  showNewMessageModal = false;
+  showAnswerModal = false;
+  selectedQuestion: StudentQuestion | null = null;
+  newMessageData = {
+    recipientId: '',
+    recipientName: '',
+    subject: '',
+    content: ''
+  };
+  answerContent = '';
+  isSending = false;
+
   sendReply(): void {
     if (!this.replyContent.trim() || !this.selectedMessage) return;
     
-    console.log('Sending reply:', this.replyContent);
-    // TODO: Implement send reply
-    this.replyContent = '';
+    this.isSending = true;
+    const conversationId = (this.selectedMessage as any).conversationId;
+    if (!conversationId) {
+      alert('Erreur: ID de conversation introuvable');
+      this.isSending = false;
+      return;
+    }
+    
+    const messageData = {
+      conversationId: conversationId,
+      content: this.replyContent
+    };
+
+    this.trainerService.sendMessage(messageData as any).subscribe({
+      next: () => {
+        this.replyContent = '';
+        this.isSending = false;
+        // Reload conversation messages
+        this.selectMessage(this.selectedMessage!);
+        this.loadMessages();
+      },
+      error: (error) => {
+        console.error('Error sending reply:', error);
+        this.isSending = false;
+        alert('Erreur lors de l\'envoi du message: ' + (error.error?.message || error.message || 'Erreur inconnue'));
+      }
+    });
   }
 
   newMessage(): void {
-    console.log('Creating new message');
-    // TODO: Implement new message dialog
+    this.showNewMessageModal = true;
+    this.newMessageData = {
+      recipientId: '',
+      recipientName: '',
+      subject: '',
+      content: ''
+    };
+  }
+
+  closeNewMessageModal(): void {
+    this.showNewMessageModal = false;
+  }
+
+  sendNewMessage(): void {
+    if (!this.newMessageData.content.trim()) return;
+
+    this.isSending = true;
+    this.trainerService.sendMessage(this.newMessageData as any).subscribe({
+      next: () => {
+        this.closeNewMessageModal();
+        this.isSending = false;
+        this.loadMessages();
+      },
+      error: (error) => {
+        console.error('Error sending message:', error);
+        this.isSending = false;
+        alert('Erreur lors de l\'envoi du message');
+      }
+    });
   }
 
   viewQuestion(id: string): void {
-    console.log('Viewing question:', id);
-    // TODO: Navigate to question detail
+    this.selectedQuestion = this.questions.find(q => q.id === id) || null;
+    if (this.selectedQuestion) {
+      this.showAnswerModal = true;
+      this.answerContent = '';
+    }
   }
 
   answerQuestion(id: string): void {
-    console.log('Answering question:', id);
-    // TODO: Implement answer dialog
+    this.viewQuestion(id);
+  }
+
+  closeAnswerModal(): void {
+    this.showAnswerModal = false;
+    this.selectedQuestion = null;
+    this.answerContent = '';
+  }
+
+  submitAnswer(): void {
+    if (!this.selectedQuestion || !this.answerContent.trim()) return;
+
+    this.isSending = true;
+    // Pour l'instant, envoyer comme un message
+    // TODO: Créer un endpoint spécifique pour répondre aux questions
+    const messageData = {
+      conversationId: this.selectedQuestion.id,
+      content: `Réponse à votre question: ${this.answerContent}`
+    };
+
+    this.trainerService.sendMessage(messageData as any).subscribe({
+      next: () => {
+        this.closeAnswerModal();
+        this.isSending = false;
+        this.loadQuestions();
+      },
+      error: (error) => {
+        console.error('Error submitting answer:', error);
+        this.isSending = false;
+        alert('Erreur lors de l\'envoi de la réponse');
+      }
+    });
   }
 
   createReminder(): void {
@@ -123,6 +263,20 @@ export class CommunicationComponent implements OnInit {
     if (!content) return '';
     const maxLength = 80;
     return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
+  }
+
+  // Messages filtrés par terme de recherche
+  get filteredMessages(): TrainerMessage[] {
+    if (!this.searchTerm) {
+      return this.messages;
+    }
+    const term = this.searchTerm.toLowerCase();
+    return this.messages.filter(m =>
+      (m.senderName && m.senderName.toLowerCase().includes(term)) ||
+      (m.recipientName && m.recipientName.toLowerCase().includes(term)) ||
+      (m.subject && m.subject.toLowerCase().includes(term)) ||
+      (m.content && m.content.toLowerCase().includes(term))
+    );
   }
 
   getQuestionStatusLabel(status: string): string {

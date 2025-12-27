@@ -12,6 +12,7 @@ public interface ModuleRepository extends JpaRepository<Module, String> {
     List<Module> findByFormation(Formation formation);
     List<Module> findByFormationOrderByOrderAsc(Formation formation);
     List<Module> findByFormationId(String formationId);
+    long countByFormation(Formation formation);
 }
 
 

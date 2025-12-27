@@ -143,8 +143,8 @@ export class CoursePlayerService {
   // ========== NAVIGATION ==========
 
   loadCourse(course: Course): void {
-    // Charger le syllabus si disponible
-    if (this.mockSyllabus[course.id]) {
+    // Si le backend ne renvoie pas encore de syllabus, utiliser un mock de secours
+    if ((!course.syllabus || course.syllabus.length === 0) && this.mockSyllabus[course.id]) {
       course.syllabus = this.mockSyllabus[course.id];
     }
     this.currentCourseSubject.next(course);

@@ -1,0 +1,494 @@
+{
+  "generated": "2025-12-25T23:37:54.194Z",
+  "total": 128,
+  "tested": 31,
+  "untested": 97,
+  "coverage": "24.2",
+  "untestedFiles": [
+    {
+      "path": "admin\\admin.routes.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\layout\\admin-layout.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\models\\admin.interfaces.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\ai\\ai-supervision\\ai-supervision.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\analytics\\analytics.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\content\\content-management\\content-management.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\content\\formations-enrollments\\formations-enrollments.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\courses\\course-details\\course-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\courses\\courses-list\\courses-list.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\dashboard\\dashboard.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\notifications\\notifications-management\\notifications-management.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\notifications\\notifications.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\profile\\admin-profile.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\support\\support-tickets\\support-tickets.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\trainers\\trainers-dashboard.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\trainers\\trainers-management\\trainers-management.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\users\\user-details\\user-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\pages\\users\\users-list\\users-list.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\services\\notifications-enhanced.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\services\\support.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "admin\\services\\trainers.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "app.config.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "app.routes.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "components\\blog\\blog.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "components\\team\\team.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "models\\interfaces.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "pages\\profile\\profile.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\layout\\trainer-layout.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\models\\trainer.interfaces.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\ai-analysis\\conversations-analysis.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\ai-assistant\\ai-assistant.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\ai-recommendations\\ai-recommendations-list.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\communication\\communication.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\communication\\messages\\messages.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\communication\\questions\\questions.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\communication\\reminders\\reminders.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\content-management\\content-management.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\course-details\\course-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\courses\\courses.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\exercises\\exercises.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\formation-details\\formation-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\formation-students\\formation-students.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\formations\\formations.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\module-details\\module-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\modules\\modules.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\quiz-details\\quiz-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\content\\quizzes\\quizzes.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\dashboard\\dashboard.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\evaluation\\evaluation.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\evaluation\\exercise-reviews\\exercise-reviews.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\evaluation\\quiz-reviews\\quiz-reviews.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\learning-paths\\learning-paths.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\profile\\profile.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\recommendations\\recommendation-details\\recommendation-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\recommendations\\recommendations.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\statistics\\statistics.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\students\\student-details\\student-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\pages\\students\\students-list\\students-list.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\services\\formation-template.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\services\\trainer.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "trainer\\trainer.routes.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\layout\\user-layout.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\models\\ai-coach.interfaces.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\models\\course.interfaces.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\models\\dashboard.interfaces.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\models\\formation.interfaces.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\models\\user.interfaces.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\assessments\\assessments.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\certificate\\certificate-view.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\certificates\\certificates-list.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\chat\\ai-chat.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\chat\\trainer-chat.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\course-player\\course-player.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\courses\\course-catalog.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\courses\\course-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\dashboard\\dashboard.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\formations\\formation-details.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\formations\\formations-catalog.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\formations\\my-formations.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\lab\\lab-player.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\learning-path\\learning-path.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\notifications\\user-notifications.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\profile\\user-profile.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\progress\\user-progress.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\quiz\\quiz-player.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\recommended\\recommended-formations.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\search\\search.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\pages\\support\\user-support.component.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\services\\ai-chat.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\services\\certificates.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\services\\course-player.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\services\\formations.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\services\\quiz.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\services\\search.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\services\\support-user.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\services\\trainer-chat.service.ts",
+      "category": "Other",
+      "priority": 3
+    },
+    {
+      "path": "user\\user.routes.ts",
+      "category": "Other",
+      "priority": 3
+    }
+  ]
+}

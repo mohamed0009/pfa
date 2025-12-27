@@ -1,0 +1,149 @@
+<div class="certificate-container" *ngIf="certificate && !isLoading">
+  <!-- Certificate Display -->
+  <div class="certificate-paper" id="certificate-content">
+    <div class="certificate-header">
+      <div class="certificate-logo">
+        <span class="material-icons">school</span>
+        <h1>CoachIA Pro</h1>
+      </div>
+      <div class="certificate-seal">
+        <span class="material-icons">verified</span>
+      </div>
+    </div>
+
+    <div class="certificate-body">
+      <h2 class="certificate-title">Certificat de Complétion</h2>
+      
+      <p class="certificate-intro">
+        Ceci certifie que
+      </p>
+      
+      <h3 class="certificate-name">
+        {{ currentUser?.fullName || 'Étudiant' }}
+      </h3>
+      
+      <p class="certificate-description">
+        a complété avec succès la formation
+      </p>
+      
+      <h4 class="certificate-formation">
+        {{ certificate.title }}
+      </h4>
+      
+      <div class="certificate-details">
+        <div class="detail-item">
+          <span class="material-icons">star</span>
+          <div>
+            <strong>Score Final:</strong>
+            <span>{{ certificate.finalScore | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+        <div class="detail-item">
+          <span class="material-icons">schedule</span>
+          <div>
+            <strong>Durée:</strong>
+            <span>{{ certificate.totalHours }} heures</span>
+          </div>
+        </div>
+        <div class="detail-item">
+          <span class="material-icons">calendar_today</span>
+          <div>
+            <strong>Date d'émission:</strong>
+            <span>{{ certificate.issuedAt | date:'longDate' }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="certificate-number">
+        <p>Numéro de certificat: <strong>{{ certificate.certificateNumber }}</strong></p>
+        <p class="verification-code">Code de vérification: <code>{{ certificate.verificationCode }}</code></p>
+      </div>
+    </div>
+
+    <div class="certificate-footer">
+      <div class="signature-section">
+        <div class="signature">
+          <div class="signature-line"></div>
+          <p>Directeur Pédagogique</p>
+        </div>
+        <div class="signature">
+          <div class="signature-line"></div>
+          <p>CoachIA Pro</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="certificate-actions">
+    <div class="action-group">
+      <h3>Partager</h3>
+      <div class="share-buttons">
+        <button class="btn btn-linkedin" (click)="shareOnLinkedIn()" title="Partager sur LinkedIn">
+          <span class="material-icons">work</span>
+          LinkedIn
+        </button>
+        <button class="btn btn-twitter" (click)="shareOnTwitter()" title="Partager sur Twitter">
+          <span class="material-icons">chat</span>
+          Twitter
+        </button>
+        <button class="btn btn-facebook" (click)="shareOnFacebook()" title="Partager sur Facebook">
+          <span class="material-icons">facebook</span>
+          Facebook
+        </button>
+      </div>
+    </div>
+
+    <div class="action-group">
+      <h3>Copier l'URL</h3>
+      <div class="url-copy">
+        <input 
+          type="text" 
+          [value]="getCertificateUrl()" 
+          readonly
+          class="url-input"
+          #urlInput>
+        <button 
+          class="btn btn-primary" 
+          (click)="copyUrl()"
+          [class.copied]="copiedToClipboard">
+          <span class="material-icons">{{ copiedToClipboard ? 'check' : 'content_copy' }}</span>
+          {{ copiedToClipboard ? 'Copié!' : 'Copier' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="action-group">
+      <h3>Exporter</h3>
+      <button class="btn btn-export" (click)="exportAsPDF()">
+        <span class="material-icons">picture_as_pdf</span>
+        Exporter en PDF
+      </button>
+    </div>
+
+    <div class="action-group">
+      <h3>Vérification</h3>
+      <p class="verification-info">
+        Vérifiez ce certificat en visitant:
+        <a [href]="getVerificationUrl()" target="_blank">{{ getVerificationUrl() }}</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-state" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Chargement du certificat...</p>
+</div>
+
+<!-- Error State -->
+<div class="error-state" *ngIf="!certificate && !isLoading">
+  <span class="material-icons">error_outline</span>
+  <h3>Certificat non trouvé</h3>
+  <p>Le certificat demandé n'existe pas ou n'est plus disponible.</p>
+  <button class="btn btn-primary" (click)="router.navigate(['/user/dashboard'])">
+    Retour au tableau de bord
+  </button>
+</div>
+

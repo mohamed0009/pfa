@@ -55,6 +55,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Level niveau;
     
+    // Spécialités du formateur (séparées par des virgules, ex: "Java,React,Python")
+    @Column(columnDefinition = "TEXT")
+    private String specialties;
+    
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "preferences_id")
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})

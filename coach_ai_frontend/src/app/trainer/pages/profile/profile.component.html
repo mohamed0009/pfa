@@ -5,56 +5,159 @@
   </header>
 
   <div *ngIf="profile" class="profile-content">
-    <div class="profile-card">
-      <div class="profile-avatar">
-        <img *ngIf="profile.avatarUrl" [src]="profile.avatarUrl" [alt]="profile.firstName">
-        <span *ngIf="!profile.avatarUrl" class="material-icons">person</span>
+    <!-- Mode Affichage -->
+    <div *ngIf="!isEditing" class="profile-view">
+      <div class="profile-card">
+        <div class="profile-avatar-container">
+          <div class="profile-avatar">
+            <img *ngIf="profile.avatarUrl" [src]="profile.avatarUrl" [alt]="profile.firstName">
+            <span *ngIf="!profile.avatarUrl" class="material-icons">person</span>
+          </div>
+          <button class="edit-avatar-btn" (click)="startEditing()" title="Modifier le profil">
+            <span class="material-icons">edit</span>
+          </button>
+        </div>
+
+        <div class="profile-info">
+          <h2>{{ profile.firstName }} {{ profile.lastName }}</h2>
+          <p>{{ profile.email }}</p>
+          <span class="status-badge">{{ getStatusLabel(profile.status) }}</span>
+        </div>
       </div>
 
-      <div class="profile-info">
-        <h2>{{ profile.firstName }} {{ profile.lastName }}</h2>
-        <p>{{ profile.email }}</p>
-        <span class="status-badge">{{ getStatusLabel(profile.status) }}</span>
+      <div class="info-section">
+        <h3>Informations Personnelles</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Téléphone</label>
+            <p>{{ profile.phone || 'Non renseigné' }}</p>
+          </div>
+          <div class="info-item">
+            <label>Bio</label>
+            <p>{{ profile.bio || 'Aucune bio' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3>Spécialisations</h3>
+        <div class="specializations">
+          <span *ngFor="let spec of profile.specializations" class="spec-badge">{{ spec }}</span>
+          <span *ngIf="profile.specializations.length === 0" class="no-specs">Aucune spécialisation</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" (click)="startEditing()">
+          <span class="material-icons">edit</span>
+          Modifier le profil
+        </button>
       </div>
     </div>
 
-    <div class="form-section">
-      <h3>Informations Personnelles</h3>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Prénom</label>
-          <input [(ngModel)]="profile.firstName" class="form-control">
+    <!-- Mode Édition -->
+    <div *ngIf="isEditing" class="profile-edit">
+      <form (ngSubmit)="saveProfile()" #profileForm="ngForm">
+        <div class="form-section">
+          <h3>Photo de profil</h3>
+          <div class="avatar-edit-container">
+            <div class="profile-avatar-edit">
+              <img *ngIf="editedProfile.avatarUrl" [src]="editedProfile.avatarUrl" [alt]="editedProfile.firstName">
+              <span *ngIf="!editedProfile.avatarUrl" class="material-icons">person</span>
+            </div>
+            <div class="avatar-actions">
+              <button type="button" class="btn btn-secondary" (click)="triggerFileInput()">
+                <span class="material-icons">photo_camera</span>
+                Changer la photo
+              </button>
+              <input 
+                type="file" 
+                accept="image/*" 
+                (change)="onFileSelected($event)"
+                style="display: none;">
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Nom</label>
-          <input [(ngModel)]="profile.lastName" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input [(ngModel)]="profile.email" type="email" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>Téléphone</label>
-          <input [(ngModel)]="profile.phone" class="form-control">
-        </div>
-      </div>
-    </div>
 
-    <div class="form-section">
-      <h3>Spécialisations</h3>
-      <div class="specializations">
-        <span *ngFor="let spec of profile.specializations" class="spec-badge">{{ spec }}</span>
-      </div>
-    </div>
+        <div class="form-section">
+          <h3>Informations Personnelles</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Prénom *</label>
+              <input [(ngModel)]="editedProfile.firstName" name="firstName" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Nom *</label>
+              <input [(ngModel)]="editedProfile.lastName" name="lastName" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input [(ngModel)]="editedProfile.email" name="email" type="email" class="form-control" disabled>
+              <small class="form-hint">L'email ne peut pas être modifié</small>
+            </div>
+            <div class="form-group">
+              <label>Téléphone</label>
+              <input [(ngModel)]="editedProfile.phone" name="phone" class="form-control">
+            </div>
+          </div>
+        </div>
 
-    <div class="actions">
-      <button class="btn btn-primary" (click)="saveProfile()">
-        <span class="material-icons">save</span>
-        Enregistrer
-      </button>
+        <div class="form-section">
+          <h3>Bio</h3>
+          <div class="form-group">
+            <textarea 
+              [(ngModel)]="editedProfile.bio" 
+              name="bio"
+              class="form-control" 
+              rows="4"
+              placeholder="Décrivez votre parcours et vos compétences..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Spécialisations</h3>
+          <div class="specializations-edit">
+            <div class="specs-list">
+              <span *ngFor="let spec of editedProfile.specializations" class="spec-badge editable">
+                {{ spec }}
+                <span class="material-icons" (click)="removeSpecialization(spec)">close</span>
+              </span>
+            </div>
+            <div class="add-spec">
+              <input 
+                type="text" 
+                #specInput
+                placeholder="Ajouter une spécialisation"
+                class="form-control"
+                (keyup.enter)="addSpecialization(specInput.value); specInput.value = ''">
+              <button type="button" class="btn btn-secondary" (click)="addSpecialization(specInput.value); specInput.value = ''">
+                <span class="material-icons">add</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="cancelEditing()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="!profileForm.valid || isSaving">
+            <span *ngIf="isSaving" class="spinner"></span>
+            <span *ngIf="!isSaving">
+              <span class="material-icons">save</span>
+              Enregistrer
+            </span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Messages -->
+      <div class="alert alert-success" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
     </div>
   </div>
 </div>
-
-
-

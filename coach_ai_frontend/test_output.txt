@@ -1,0 +1,43 @@
+﻿node.exe : - 
+Generating browser 
+application bundles 
+(phase: setup)...
+At C:\Users\FadouaOug
+as\AppData\Roaming\np
+m\ng.ps1:24 char:5
++     & "node$exe"  "
+$basedir/node_modules
+/@angular/cli/bin/ng.
+js" $arg ...
++     ~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (- Gener   
+ ating br...hase:    
+ setup)...:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+Γ£ö Browser 
+application bundle 
+generation complete.
+25 12 2025 17:43:56.791:INFO [karma-server]: Karma v6.4.4 server started at http://localhost:4000/
+25 12 2025 17:43:56.792:INFO [launcher]: Launching browsers Chrome with concurrency unlimited
+25 12 2025 17:43:56.804:INFO [launcher]: Starting browser Chrome
+25 12 2025 17:43:56.807:ERROR [launcher]: Cannot start Chrome
+	Can not find the binary C:\Program Files\Google\Chrome\Application\chrome.exe
+	Please set env variable CHROME_BIN
+25 12 2025 17:43:56.807:ERROR [launcher]: Chrome stdout: 
+25 12 2025 17:43:56.807:ERROR [launcher]: Chrome stderr: 
+Γ£ö Browser 
+application bundle 
+generation complete.
+Γ£ö Browser 
+application bundle 
+generation complete.

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NotificationsEnhancedService } from '../../../services/notifications-enhanced.service';
+import { NotificationsAdminService } from '../../../services/notifications-admin.service';
 import { 
   Notification, 
   AutomaticNotificationRule,
@@ -39,8 +39,16 @@ export class NotificationsManagementComponent implements OnInit {
     priority: 'medium',
     targetAudience: 'all'
   };
+  
+  // User search
+  searchQuery: string = '';
+  searchRole: 'all' | 'TRAINER' | 'USER' | 'ADMIN' = 'all';
+  searchResults: any[] = [];
+  selectedUsers: any[] = [];
+  isSearching: boolean = false;
+  showUserSearch: boolean = false;
 
-  constructor(private notificationsService: NotificationsEnhancedService) {}
+  constructor(private notificationsService: NotificationsAdminService) {}
 
   ngOnInit(): void {
     this.loadNotifications();
@@ -55,15 +63,62 @@ export class NotificationsManagementComponent implements OnInit {
   }
 
   loadAutomaticRules(): void {
-    this.notificationsService.getAutomaticRules().subscribe(rules => {
-      this.automaticRules = rules;
-    });
+    // TODO: Implement automatic rules when backend is ready
+    this.automaticRules = [];
   }
 
   loadStatistics(): void {
-    this.notificationsService.getNotificationStatistics().subscribe(stats => {
-      this.notifStats = stats;
+    this.notificationsService.getNotificationStats().subscribe(stats => {
+      this.notifStats = {
+        total: stats.total || 0,
+        sent: stats.sent || 0,
+        scheduled: stats.scheduled || 0,
+        totalRecipients: 0,
+        readRate: stats.readRate || 0,
+        activeRules: stats.activeRules || 0
+      };
     });
+  }
+  
+  // User search
+  searchUsers(): void {
+    if (!this.searchQuery || this.searchQuery.trim().length < 2) {
+      this.searchResults = [];
+      return;
+    }
+    
+    this.isSearching = true;
+    this.notificationsService.searchUsers(this.searchQuery, this.searchRole === 'all' ? undefined : this.searchRole).subscribe({
+      next: (users) => {
+        this.searchResults = users;
+        this.isSearching = false;
+      },
+      error: (error) => {
+        console.error('Error searching users:', error);
+        this.isSearching = false;
+        this.searchResults = [];
+      }
+    });
+  }
+  
+  selectUser(user: any): void {
+    if (!this.selectedUsers.find(u => u.id === user.id)) {
+      this.selectedUsers.push(user);
+    }
+    this.searchQuery = '';
+    this.searchResults = [];
+  }
+  
+  removeSelectedUser(userId: string): void {
+    this.selectedUsers = this.selectedUsers.filter(u => u.id !== userId);
+  }
+  
+  toggleUserSearch(): void {
+    this.showUserSearch = !this.showUserSearch;
+    if (!this.showUserSearch) {
+      this.searchQuery = '';
+      this.searchResults = [];
+    }
   }
 
   // Composer
@@ -72,15 +127,28 @@ export class NotificationsManagementComponent implements OnInit {
       alert('Veuillez remplir tous les champs requis');
       return;
     }
+    
+    // Si des utilisateurs spécifiques sont sélectionnés, utiliser leur audience
+    const notificationToSend: Partial<Notification> = {
+      ...this.newNotification,
+      targetAudience: this.selectedUsers.length > 0 ? 'specific' : this.newNotification.targetAudience,
+      targetUserIds: this.selectedUsers.length > 0 ? this.selectedUsers.map(u => u.id) : undefined
+    };
 
-    this.notificationsService.createNotification(this.newNotification).subscribe(notification => {
-      this.notificationsService.sendNotification(notification.id).subscribe(() => {
-        alert('Notification envoyée avec succès!');
+    this.notificationsService.createNotification(notificationToSend).subscribe({
+      next: (response) => {
+        const recipientsCount = response.totalRecipients || 0;
+        alert(`Notification envoyée avec succès à ${recipientsCount} destinataire(s)!`);
         this.resetComposer();
         this.loadNotifications();
         this.loadStatistics();
         this.activeTab = 'sent';
-      });
+      },
+      error: (error) => {
+        console.error('Error sending notification:', error);
+        const errorMessage = error?.error?.error || error?.error?.message || 'Erreur lors de l\'envoi de la notification';
+        alert('Erreur: ' + errorMessage);
+      }
     });
   }
 
@@ -119,22 +187,24 @@ export class NotificationsManagementComponent implements OnInit {
       priority: 'medium',
       targetAudience: 'all'
     };
+    this.selectedUsers = [];
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.showUserSearch = false;
   }
 
   // Automatic Rules
   toggleRule(rule: AutomaticNotificationRule): void {
-    this.notificationsService.toggleAutomaticRule(rule.id, !rule.enabled).subscribe(() => {
-      this.loadAutomaticRules();
-      this.loadStatistics();
-    });
+    // TODO: Implement when backend is ready
+    rule.enabled = !rule.enabled;
+    this.loadStatistics();
   }
 
   deleteRule(rule: AutomaticNotificationRule): void {
     if (confirm(`Supprimer la règle "${rule.name}"?`)) {
-      this.notificationsService.deleteAutomaticRule(rule.id).subscribe(() => {
-        this.loadAutomaticRules();
-        this.loadStatistics();
-      });
+      // TODO: Implement when backend is ready
+      this.automaticRules = this.automaticRules.filter(r => r.id !== rule.id);
+      this.loadStatistics();
     }
   }
 

@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 export interface AuthUser {
   id: string;
@@ -9,6 +10,7 @@ export interface AuthUser {
   email: string;
   avatarUrl?: string;
   joinDate: string;
+  role?: string;
 }
 
 export interface LoginCredentials {
@@ -18,47 +20,47 @@ export interface LoginCredentials {
 }
 
 export interface SignUpData {
-  fullName: string;
+  fullName?: string;
   email: string;
   password: string;
-  confirmPassword: string;
+  confirmPassword?: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+}
+
+interface AuthResponse {
+  token: string;
+  type: string;
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private apiUrl = 'http://localhost:8081/api/auth';
   private currentUserSubject: BehaviorSubject<AuthUser | null>;
   public currentUser: Observable<AuthUser | null>;
   private isAuthenticatedSubject: BehaviorSubject<boolean>;
   public isAuthenticated: Observable<boolean>;
 
-  // Mock user database
-  private mockUsers: AuthUser[] = [
-    {
-      id: '1',
-      fullName: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      avatarUrl: 'https://i.pravatar.cc/150?img=10',
-      joinDate: new Date().toISOString()
-    },
-    {
-      id: '2',
-      fullName: 'John Doe',
-      email: 'john@example.com',
-      avatarUrl: 'https://i.pravatar.cc/150?img=12',
-      joinDate: new Date().toISOString()
-    }
-  ];
-
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private http: HttpClient
+  ) {
     const storedUser = localStorage.getItem('currentUser');
+    const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
     const user = storedUser ? JSON.parse(storedUser) : null;
     
     this.currentUserSubject = new BehaviorSubject<AuthUser | null>(user);
     this.currentUser = this.currentUserSubject.asObservable();
     
-    this.isAuthenticatedSubject = new BehaviorSubject<boolean>(!!user);
+    this.isAuthenticatedSubject = new BehaviorSubject<boolean>(!!(user && storedToken));
     this.isAuthenticated = this.isAuthenticatedSubject.asObservable();
   }
 
@@ -71,85 +73,121 @@ export class AuthService {
   }
 
   login(credentials: LoginCredentials): Observable<AuthUser> {
-    // Mock authentication - simulate API call
-    return of(null).pipe(
-      delay(1000), // Simulate network delay
-      map(() => {
-        // Check if user exists with matching email
-        const user = this.mockUsers.find(u => u.email === credentials.email);
-        
-        // Mock password validation (in real app, this would be done server-side)
-        // For demo, accept any password for existing emails, or "password" for new emails
-        if (user || credentials.password === 'password') {
-          const authenticatedUser = user || {
-            id: Date.now().toString(),
-            fullName: credentials.email.split('@')[0],
-            email: credentials.email,
-            avatarUrl: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
-            joinDate: new Date().toISOString()
-          };
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, {
+      email: credentials.email,
+      password: credentials.password
+    }).pipe(
+      map((response: AuthResponse) => {
+        // Map backend response to AuthUser
+        const authenticatedUser: AuthUser = {
+          id: response.id,
+          fullName: `${response.firstName} ${response.lastName}`,
+          email: response.email,
+          avatarUrl: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
+          joinDate: new Date().toISOString(),
+          role: response.role
+        };
 
-          // Store user in localStorage if "remember me" is checked
-          if (credentials.rememberMe) {
-            localStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
-          } else {
-            sessionStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
-          }
-
-          this.currentUserSubject.next(authenticatedUser);
-          this.isAuthenticatedSubject.next(true);
-
-          return authenticatedUser;
+        // Store token and user
+        if (credentials.rememberMe) {
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
         } else {
-          throw new Error('Invalid email or password');
+          sessionStorage.setItem('token', response.token);
+          sessionStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
         }
+
+        this.currentUserSubject.next(authenticatedUser);
+        this.isAuthenticatedSubject.next(true);
+
+        return authenticatedUser;
+      }),
+      catchError((error) => {
+        let errorMessage = 'Invalid email or password';
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.error && typeof error.error === 'string') {
+          try {
+            const errorObj = JSON.parse(error.error);
+            errorMessage = errorObj.message || errorMessage;
+          } catch (e) {
+            errorMessage = error.error;
+          }
+        }
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
 
-  signup(signupData: SignUpData): Observable<AuthUser> {
-    // Mock signup - simulate API call
-    return of(null).pipe(
-      delay(1000),
-      map(() => {
-        // Check if user already exists
-        const existingUser = this.mockUsers.find(u => u.email === signupData.email);
-        if (existingUser) {
-          throw new Error('Email already registered');
-        }
+  signup(signupData: SignUpData | any): Observable<AuthResponse> {
+    // Validate password match if confirmPassword is provided
+    if (signupData.confirmPassword && signupData.password !== signupData.confirmPassword) {
+      return throwError(() => new Error('Passwords do not match'));
+    }
 
-        // Validate password match
-        if (signupData.password !== signupData.confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
+    // Prepare request data
+    const requestData: any = {
+      email: signupData.email.trim().toLowerCase(),
+      password: signupData.password,
+      role: signupData.role || 'USER'
+    };
 
-        // Create new user
+    // Use firstName/lastName if provided, otherwise extract from fullName
+    if (signupData.firstName && signupData.lastName) {
+      requestData.firstName = signupData.firstName;
+      requestData.lastName = signupData.lastName;
+    } else if (signupData.fullName) {
+      const nameParts = signupData.fullName.trim().split(' ', 2);
+      requestData.firstName = nameParts[0] || '';
+      requestData.lastName = nameParts.length > 1 ? nameParts[1] : '';
+    } else {
+      return throwError(() => new Error('First name and last name are required'));
+    }
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, requestData).pipe(
+      map((response: AuthResponse) => {
+        // Map backend response to AuthUser
         const newUser: AuthUser = {
-          id: Date.now().toString(),
-          fullName: signupData.fullName,
-          email: signupData.email,
+          id: response.id,
+          fullName: `${response.firstName} ${response.lastName}`,
+          email: response.email,
           avatarUrl: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
-          joinDate: new Date().toISOString()
+          joinDate: new Date().toISOString(),
+          role: response.role
         };
 
-        // Add to mock database
-        this.mockUsers.push(newUser);
-
-        // Store user in localStorage
+        // Store token and user
+        localStorage.setItem('token', response.token);
         localStorage.setItem('currentUser', JSON.stringify(newUser));
 
         this.currentUserSubject.next(newUser);
         this.isAuthenticatedSubject.next(true);
 
-        return newUser;
+        return response; // Return AuthResponse instead of AuthUser
+      }),
+      catchError((error) => {
+        let errorMessage = 'Registration failed';
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.error && typeof error.error === 'string') {
+          try {
+            const errorObj = JSON.parse(error.error);
+            errorMessage = errorObj.message || errorMessage;
+          } catch (e) {
+            errorMessage = error.error;
+          }
+        }
+        return throwError(() => ({ error, message: errorMessage }));
       })
     );
   }
 
   logout(): void {
-    // Remove user from storage
+    // Remove user and token from storage
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('token');
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('token');
     
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
@@ -158,15 +196,8 @@ export class AuthService {
   }
 
   forgotPassword(email: string): Observable<boolean> {
-    // Mock forgot password - simulate API call
-    return of(true).pipe(
-      delay(1000),
-      map(() => {
-        // In real app, this would send a password reset email
-        console.log(`Password reset email sent to: ${email}`);
-        return true;
-      })
-    );
+    // TODO: Implement forgot password endpoint when available
+    return throwError(() => new Error('Forgot password not yet implemented'));
   }
 
   isLoggedIn(): boolean {
@@ -174,9 +205,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    // Mock token - in real app, this would be a JWT token
-    const user = this.currentUserValue;
-    return user ? `mock-token-${user.id}` : null;
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
   }
 }
 

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { 
   TrainerProfile, 
   TrainerStats, 
@@ -10,6 +11,7 @@ import {
   StudentDashboard,
   TrainerModule,
   TrainerCourse,
+  TrainerLesson,
   TrainerExercise,
   TrainerQuiz,
   ExerciseReview,
@@ -20,102 +22,128 @@ import {
   Alert,
   PersonalizedLearningPath,
   AIContentGenerationRequest,
-  AIGeneratedContent
+  AIGeneratedContent,
+  ContentStatus,
+  DifficultyLevel
 } from '../models/trainer.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TrainerService {
-  private apiUrl = '/api/trainer';
+  private apiUrl = 'http://localhost:8081/api/trainer';
 
   constructor(private http: HttpClient) {}
 
   // ==================== PROFIL FORMATEUR ====================
   
   getTrainerProfile(): Observable<TrainerProfile> {
-    // Mock data for now
-    return of({
-      id: 'trainer-1',
-      email: 'formateur@example.com',
-      firstName: 'Jean',
-      lastName: 'Dupont',
-      avatarUrl: '',
-      phone: '+33123456789',
-      bio: 'Formateur expérimenté en développement web',
-      specializations: ['JavaScript', 'Angular', 'React', 'Node.js'],
-      formationsAssigned: ['form-1', 'form-2'],
-      status: 'active',
-      validatedAt: new Date('2024-01-15'),
-      joinedAt: new Date('2024-01-10'),
-      lastActive: new Date(),
-      preferences: {
-        language: 'fr',
-        notificationsEnabled: true,
-        emailUpdates: true,
-        defaultDifficultyLevel: 'Moyen',
-        aiAssistanceEnabled: true
-      }
-    });
+    return this.http.get<any>(`${this.apiUrl}/profile`).pipe(
+      map((user: any) => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        avatarUrl: user.avatarUrl || '',
+        phone: user.phone || '',
+        bio: user.bio || '',
+        specializations: user.specializations || [],
+        formationsAssigned: user.formationsAssigned || [],
+        status: user.status || 'active',
+        validatedAt: user.validatedAt ? new Date(user.validatedAt) : new Date(),
+        joinedAt: user.joinedAt ? new Date(user.joinedAt) : new Date(),
+        lastActive: user.lastActive ? new Date(user.lastActive) : new Date(),
+        preferences: {
+          language: 'fr',
+          notificationsEnabled: true,
+          emailUpdates: true,
+          defaultDifficultyLevel: 'Moyen' as 'Facile' | 'Moyen' | 'Difficile',
+          aiAssistanceEnabled: true
+        }
+      })),
+      catchError((error) => {
+        console.error('Error fetching trainer profile:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   updateTrainerProfile(profile: Partial<TrainerProfile>): Observable<TrainerProfile> {
-    return this.http.put<TrainerProfile>(`${this.apiUrl}/profile`, profile);
+    return this.http.put<any>(`${this.apiUrl}/profile`, profile).pipe(
+      map((user: any) => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        avatarUrl: user.avatarUrl || '',
+        phone: user.phone || '',
+        bio: user.bio || '',
+        specializations: user.specializations || [],
+        formationsAssigned: user.formationsAssigned || [],
+        status: user.status || 'active',
+        validatedAt: user.validatedAt ? new Date(user.validatedAt) : new Date(),
+        joinedAt: user.joinedAt ? new Date(user.joinedAt) : new Date(),
+        lastActive: user.lastActive ? new Date(user.lastActive) : new Date(),
+        preferences: {
+          language: 'fr',
+          notificationsEnabled: true,
+          emailUpdates: true,
+          defaultDifficultyLevel: 'Moyen' as 'Facile' | 'Moyen' | 'Difficile',
+          aiAssistanceEnabled: true
+        }
+      }))
+    );
   }
 
   getTrainerStats(): Observable<TrainerStats> {
-    // Mock data
-    return of({
-      trainerId: 'trainer-1',
-      totalStudents: 156,
-      activeStudents: 98,
-      totalFormations: 5,
-      totalModules: 23,
-      totalCourses: 67,
-      totalExercises: 45,
-      totalQuizzes: 38,
-      contentPendingValidation: 3,
-      contentApproved: 120,
-      averageStudentProgress: 68.5,
-      averageStudentSatisfaction: 4.3,
-      responseTime: 2.5
-    });
+    return this.http.get<any>(`${this.apiUrl}/stats`).pipe(
+      map((stats: any) => ({
+        trainerId: stats.trainerId || '',
+        totalStudents: stats.totalStudents || 0,
+        activeStudents: stats.activeStudents || 0,
+        totalFormations: stats.totalFormations || 0,
+        totalModules: stats.totalModules || 0,
+        totalCourses: stats.totalCourses || 0,
+        totalExercises: stats.totalExercises || 0,
+        totalQuizzes: stats.totalQuizzes || 0,
+        contentPendingValidation: stats.contentPendingValidation || 0,
+        contentApproved: stats.contentApproved || 0,
+        averageStudentProgress: stats.averageProgress || 0,
+        averageStudentSatisfaction: stats.averageSatisfaction || 0,
+        responseTime: stats.responseTime || 0
+      })),
+      catchError((error) => {
+        console.error('Error fetching trainer stats:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // ==================== GESTION DES FORMATIONS ====================
   
   getFormationsStatistics(): Observable<FormationStatistics[]> {
-    // Mock data
-    return of([
-      {
-        formationId: 'form-1',
-        formationName: 'Formation JavaScript Avancé',
-        totalStudents: 45,
-        activeStudents: 32,
-        averageProgress: 72.5,
-        averageCompletionTime: 45,
-        averageScore: 78.3,
-        completionRate: 68.9,
-        dropoutRate: 8.9,
-        modulesStatistics: [],
-        coursesStatistics: [],
-        performanceTrend: []
-      },
-      {
-        formationId: 'form-2',
-        formationName: 'Angular Fundamentals',
-        totalStudents: 38,
-        activeStudents: 29,
-        averageProgress: 65.2,
-        averageCompletionTime: 38,
-        averageScore: 75.6,
-        completionRate: 71.1,
-        dropoutRate: 10.5,
-        modulesStatistics: [],
-        coursesStatistics: [],
-        performanceTrend: []
-      }
-    ]);
+    return this.http.get<any[]>(`${this.apiUrl}/stats/formations/statistics`).pipe(
+      map((data: any[]) => {
+        return data.map(item => ({
+          formationId: item.formationId,
+          formationName: item.formationName,
+          totalStudents: item.totalStudents || 0,
+          activeStudents: item.activeStudents || 0,
+          averageProgress: item.averageProgress || 0,
+          averageCompletionTime: item.averageCompletionTime || 0,
+          averageScore: item.averageScore || 0,
+          completionRate: item.completionRate || 0,
+          dropoutRate: item.dropoutRate || 0,
+          modulesStatistics: [],
+          coursesStatistics: [],
+          performanceTrend: []
+        }));
+      }),
+      catchError((error) => {
+        console.error('Error fetching formations statistics:', error);
+        return of([]);
+      })
+    );
   }
 
   getFormations(): Observable<TrainerFormation[]> {
@@ -138,8 +166,26 @@ export class TrainerService {
     return this.http.delete<void>(`${this.apiUrl}/formations/${id}`);
   }
 
-  submitForValidation(id: string, type: 'formation' | 'module' | 'course'): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/validation/submit`, { id, type });
+  submitForValidation(id: string, type: 'formation' | 'module' | 'course'): Observable<TrainerFormation> {
+    if (type === 'formation') {
+      return this.http.post<TrainerFormation>(`${this.apiUrl}/formations/${id}/submit`, {});
+    }
+    // Pour les autres types, utiliser l'endpoint générique si nécessaire
+    return this.http.post<TrainerFormation>(`${this.apiUrl}/validation/submit`, { id, type });
+  }
+  
+  /**
+   * Repasse une formation en brouillon (pour modifications)
+   */
+  setFormationToDraft(id: string): Observable<TrainerFormation> {
+    return this.http.put<TrainerFormation>(`${this.apiUrl}/formations/${id}`, { status: 'DRAFT' });
+  }
+  
+  /**
+   * Duplique une formation (pour créer une nouvelle version)
+   */
+  duplicateFormation(id: string): Observable<TrainerFormation> {
+    return this.http.post<TrainerFormation>(`${this.apiUrl}/formations/${id}/duplicate`, {});
   }
 
   // ==================== MODULES ====================
@@ -153,6 +199,10 @@ export class TrainerService {
 
   getTrainerModules(): Observable<TrainerModule[]> {
     return this.getModules();
+  }
+
+  getModuleById(id: string): Observable<TrainerModule> {
+    return this.http.get<TrainerModule>(`${this.apiUrl}/modules/${id}`);
   }
 
   createModule(module: Partial<TrainerModule>): Observable<TrainerModule> {
@@ -177,7 +227,37 @@ export class TrainerService {
   }
 
   getTrainerCourses(): Observable<TrainerCourse[]> {
-    return this.getCourses();
+    // Utiliser le nouvel endpoint qui retourne les cours du formateur avec toutes les infos
+    return this.http.get<any[]>(`${this.apiUrl}/stats/courses`).pipe(
+      map((data: any[]) => {
+        return data.map(item => ({
+          id: item.id,
+          moduleId: item.moduleId || '',
+          title: item.title || '',
+          description: item.description || '',
+          content: '',
+          order: 0,
+          status: (item.status || 'draft') as ContentStatus,
+          duration: item.duration || 0,
+          difficulty: item.difficulty ? (item.difficulty as DifficultyLevel) : undefined,
+          lessons: [],
+          resources: [],
+          exercises: [],
+          quizzes: [],
+          enrolledStudents: item.enrolledCount || 0,
+          enrolledCount: item.enrolledCount || 0,
+          completionRate: item.completionRate || 0,
+          createdBy: '',
+          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+          updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date()
+        } as TrainerCourse));
+      }),
+      catchError((error) => {
+        console.error('Error fetching trainer courses:', error);
+        // Fallback vers l'ancien endpoint
+        return this.getCourses();
+      })
+    );
   }
 
   getCourseById(id: string): Observable<TrainerCourse> {
@@ -185,7 +265,38 @@ export class TrainerService {
   }
 
   createCourse(course: Partial<TrainerCourse>): Observable<TrainerCourse> {
-    return this.http.post<TrainerCourse>(`${this.apiUrl}/courses`, course);
+    return this.http.post<TrainerCourse>(`${this.apiUrl}/courses`, course).pipe(
+      map((course: any) => ({
+        id: course.id,
+        moduleId: course.module?.id || course.moduleId || '',
+        title: course.title,
+        description: course.description || '',
+        content: course.longDescription || course.description || '',
+        order: course.order || 0,
+        status: (course.status?.toLowerCase() || 'draft') as ContentStatus,
+        duration: course.estimatedHours ? course.estimatedHours * 60 : 0,
+        lessons: course.lessons || [],
+        resources: course.resources || [],
+        exercises: course.exercises || [],
+        quizzes: course.quizzes || [],
+        enrolledStudents: course.enrolledStudents || 0,
+        enrolledCount: course.enrolledCount || course.enrolledStudents || 0,
+        completionRate: course.completionRate || 0,
+        createdBy: course.createdBy?.id || '',
+        createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
+        updatedAt: course.updatedAt ? new Date(course.updatedAt) : new Date()
+      } as TrainerCourse))
+    );
+  }
+
+  getModuleQuiz(moduleId: string): Observable<TrainerQuiz | null> {
+    return this.http.get<TrainerQuiz>(`${this.apiUrl}/modules/${moduleId}/quiz`).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  createModuleQuiz(quizData: any): Observable<TrainerQuiz> {
+    return this.http.post<TrainerQuiz>(`${this.apiUrl}/modules/${quizData.moduleId}/quiz`, quizData);
   }
 
   updateCourse(id: string, course: Partial<TrainerCourse>): Observable<TrainerCourse> {
@@ -194,6 +305,74 @@ export class TrainerService {
 
   deleteCourse(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/courses/${id}`);
+  }
+
+  // ==================== LEÇONS ====================
+  
+  getLessons(courseId?: string): Observable<TrainerLesson[]> {
+    const url = courseId 
+      ? `${this.apiUrl}/lessons?courseId=${courseId}`
+      : `${this.apiUrl}/lessons`;
+    return this.http.get<TrainerLesson[]>(url).pipe(
+      map((lessons: any[]) => {
+        return lessons.map(lesson => ({
+          id: lesson.id,
+          courseId: lesson.course?.id || courseId || '',
+          title: lesson.title,
+          content: lesson.description || lesson.transcript || '',
+          order: lesson.order || lesson.lessonNumber || 0,
+          duration: lesson.duration || 0,
+          type: this.mapLessonType(lesson.type),
+          videoUrl: lesson.videoUrl || undefined,
+          resources: lesson.resources || [],
+          createdBy: lesson.createdBy?.id || '',
+          createdAt: lesson.createdAt ? new Date(lesson.createdAt) : new Date(),
+          updatedAt: lesson.updatedAt ? new Date(lesson.updatedAt) : new Date()
+        } as TrainerLesson));
+      }),
+      catchError((error) => {
+        console.error('Error fetching lessons:', error);
+        return of([]);
+      })
+    );
+  }
+
+  private mapLessonType(type: string): 'video' | 'text' | 'interactive' | 'quiz' {
+    const typeMap: Record<string, 'video' | 'text' | 'interactive' | 'quiz'> = {
+      'VIDEO': 'video',
+      'LECTURE': 'text',
+      'EXERCISE': 'interactive',
+      'QUIZ': 'quiz',
+      'AI_CHAT': 'interactive'
+    };
+    return typeMap[type?.toUpperCase()] || 'text';
+  }
+
+  createLesson(lesson: Partial<TrainerLesson>): Observable<TrainerLesson> {
+    return this.http.post<TrainerLesson>(`${this.apiUrl}/lessons`, lesson).pipe(
+      map((lesson: any) => ({
+        id: lesson.id,
+        courseId: lesson.course?.id || '',
+        title: lesson.title,
+        content: lesson.description || lesson.transcript || '',
+        order: lesson.order || lesson.lessonNumber || 0,
+        duration: lesson.duration || 0,
+        type: this.mapLessonType(lesson.type),
+        videoUrl: lesson.videoUrl || undefined,
+        resources: lesson.resources || [],
+        createdBy: lesson.createdBy?.id || '',
+        createdAt: lesson.createdAt ? new Date(lesson.createdAt) : new Date(),
+        updatedAt: lesson.updatedAt ? new Date(lesson.updatedAt) : new Date()
+      } as TrainerLesson))
+    );
+  }
+
+  updateLesson(id: string, lesson: Partial<TrainerLesson>): Observable<TrainerLesson> {
+    return this.http.put<TrainerLesson>(`${this.apiUrl}/lessons/${id}`, lesson);
+  }
+
+  deleteLesson(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/lessons/${id}`);
   }
 
   // ==================== EXERCICES ====================
@@ -246,13 +425,166 @@ export class TrainerService {
     return this.http.delete<void>(`${this.apiUrl}/quizzes/${id}`);
   }
 
+  // ==================== QUESTIONS DE QUIZ ====================
+  
+  getQuizById(id: string): Observable<TrainerQuiz> {
+    return this.http.get<TrainerQuiz>(`${this.apiUrl}/quizzes/${id}`);
+  }
+
+  getQuizQuestions(quizId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/quiz-questions/quiz/${quizId}`);
+  }
+
+  createQuizQuestion(question: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/quiz-questions`, question);
+  }
+
+  updateQuizQuestion(id: string, question: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/quiz-questions/${id}`, question);
+  }
+
+  deleteQuizQuestion(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/quiz-questions/${id}`);
+  }
+
   // ==================== SUIVI DES APPRENANTS ====================
   
   getStudents(formationId?: string): Observable<StudentDashboard[]> {
+    // Utiliser l'endpoint /levels qui utilise le Gradient Boosting pour calculer les niveaux
     const url = formationId 
-      ? `${this.apiUrl}/students?formationId=${formationId}`
-      : `${this.apiUrl}/students`;
-    return this.http.get<StudentDashboard[]>(url);
+      ? `${this.apiUrl}/students/levels?formationId=${formationId}`
+      : `${this.apiUrl}/students/levels`;
+    
+    return this.http.get<any[]>(url).pipe(
+      map((users: any[]) => {
+        // Mapper les User du backend vers StudentDashboard avec les niveaux calculés par Gradient Boosting
+        return users.map(user => ({
+          studentId: user.id,
+          studentName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          studentEmail: user.email,
+          studentAvatar: user.avatarUrl || '',
+          formationId: formationId || '',
+          formationName: 'Formation',
+          overallProgress: 0, // À calculer depuis CourseProgress
+          modulesCompleted: 0,
+          totalModules: 0,
+          coursesCompleted: 0,
+          totalCourses: 0,
+          timeSpent: 0,
+          lastActivity: user.lastConversationDate ? new Date(user.lastConversationDate) : new Date(),
+          currentStreak: 0,
+          averageScore: 0,
+          performance: {
+            studentId: user.id,
+            formationId: formationId || '',
+            modulesProgress: [],
+            coursesProgress: [],
+            quizScores: [],
+            exerciseScores: [],
+            timeDistribution: [],
+            trend: 'stable' as const
+          },
+          difficulties: [],
+          achievements: [],
+          chatLevel: user.level || 'Débutant', // Niveau calculé par Gradient Boosting
+          chatLevelScore: user.levelScore || 0,
+          totalConversations: user.totalConversations || 0,
+          totalChatMessages: user.totalMessages || 0
+        } as StudentDashboard));
+      }),
+      catchError((error) => {
+        console.error('Error fetching students with levels:', error);
+        // Fallback vers l'endpoint standard
+        const fallbackUrl = formationId 
+          ? `${this.apiUrl}/students?formationId=${formationId}`
+          : `${this.apiUrl}/students`;
+        return this.http.get<any[]>(fallbackUrl).pipe(
+          map((users: any[]) => users.map(user => ({
+            studentId: user.id,
+            studentName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+            studentEmail: user.email,
+            studentAvatar: user.avatarUrl || '',
+            formationId: formationId || '',
+            formationName: 'Formation',
+            overallProgress: 0,
+            modulesCompleted: 0,
+            totalModules: 0,
+            coursesCompleted: 0,
+            totalCourses: 0,
+            timeSpent: 0,
+            lastActivity: new Date(),
+            currentStreak: 0,
+            averageScore: 0,
+            performance: {
+              studentId: user.id,
+              formationId: formationId || '',
+              modulesProgress: [],
+              coursesProgress: [],
+              quizScores: [],
+              exerciseScores: [],
+              timeDistribution: [],
+              trend: 'stable' as const
+            },
+            difficulties: [],
+            achievements: [],
+            chatLevel: 'Débutant',
+            chatLevelScore: 0,
+            totalConversations: 0,
+            totalChatMessages: 0
+          } as StudentDashboard)))
+        );
+      })
+    );
+  }
+  
+  // Méthode pour obtenir les étudiants avec leurs niveaux (utilise Gradient Boosting)
+  getStudentsWithLevels(formationId?: string): Observable<StudentDashboard[]> {
+    // Utiliser l'endpoint avec niveaux
+    const url = formationId 
+      ? `${this.apiUrl}/students/levels?formationId=${formationId}`
+      : `${this.apiUrl}/students/levels`;
+    return this.http.get<any[]>(url).pipe(
+      map((users: any[]) => {
+        // Mapper les User du backend vers StudentDashboard
+        return users.map(user => ({
+          studentId: user.id,
+          studentName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          studentEmail: user.email,
+          studentAvatar: user.avatarUrl || '',
+          formationId: formationId || '',
+          formationName: 'Formation',
+          overallProgress: 0, // À calculer depuis CourseProgress
+          modulesCompleted: 0,
+          totalModules: 0,
+          coursesCompleted: 0,
+          totalCourses: 0,
+          timeSpent: 0,
+          lastActivity: new Date(),
+          currentStreak: 0,
+          averageScore: 0,
+          performance: {
+            studentId: user.id,
+            formationId: formationId || '',
+            modulesProgress: [],
+            coursesProgress: [],
+            quizScores: [],
+            exerciseScores: [],
+            timeDistribution: [],
+            trend: 'stable' as const
+          },
+          difficulties: [],
+          achievements: [],
+          chatLevel: (user as any).level || 'Débutant',
+          chatLevelScore: (user as any).levelScore || 0,
+          totalConversations: (user as any).totalConversations || 0,
+          totalChatMessages: (user as any).totalMessages || 0
+        } as StudentDashboard));
+      }),
+      catchError((error) => {
+        console.error('Error fetching students:', error);
+        return of([]);
+      })
+    );
   }
 
   getStudentById(id: string): Observable<StudentDashboard> {
@@ -260,50 +592,102 @@ export class TrainerService {
   }
 
   getAtRiskStudents(): Observable<AtRiskStudent[]> {
-    // Mock data
-    return of([
-      {
-        studentId: 'student-1',
-        studentName: 'Marie Dubois',
-        studentAvatar: '',
-        formationId: 'form-1',
-        formationName: 'Formation JavaScript Avancé',
-        riskLevel: 'high',
-        reasons: ['Inactif depuis 7 jours', 'Progression faible (35%)', 'Échec aux derniers quiz'],
-        lastActivity: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        daysInactive: 7,
-        progress: 35,
-        performance: 'poor',
-        suggestedActions: [
-          'Envoyer un message de motivation',
-          'Proposer un accompagnement personnalisé',
-          'Ajuster le parcours d\'apprentissage'
-        ]
-      },
-      {
-        studentId: 'student-2',
-        studentName: 'Pierre Martin',
-        studentAvatar: '',
-        formationId: 'form-2',
-        formationName: 'Angular Fundamentals',
-        riskLevel: 'medium',
-        reasons: ['Inactif depuis 4 jours', 'Baisse de performance récente'],
-        lastActivity: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-        daysInactive: 4,
-        progress: 58,
-        performance: 'average',
-        suggestedActions: [
-          'Rappel par message',
-          'Vérifier les difficultés rencontrées'
-        ]
-      }
-    ]);
+    return this.http.get<any[]>(`${this.apiUrl}/students/at-risk`).pipe(
+      map((students: any[]) => students.map((s: any) => ({
+        studentId: s.studentId || '',
+        studentName: s.studentName || '',
+        studentAvatar: s.studentAvatar || '',
+        formationId: s.formationId || '',
+        formationName: s.formationName || '',
+        riskLevel: (s.riskLevel || 'low') as 'low' | 'medium' | 'high',
+        reasons: s.reasons || [],
+        lastActivity: s.lastActivity ? new Date(s.lastActivity) : new Date(),
+        daysInactive: s.daysInactive || 0,
+        progress: s.progress || 0,
+        performance: (s.performance || 'average') as 'poor' | 'average' | 'good',
+        suggestedActions: s.suggestedActions || []
+      }))),
+      catchError((error) => {
+        console.error('Error fetching at-risk students:', error);
+        // Fallback to empty array
+        return of([]);
+      })
+    );
+  }
+
+  // ==================== FORMATION STUDENTS ====================
+  
+  /**
+   * Récupère les étudiants inscrits à une formation avec leur progression détaillée
+   */
+  getFormationStudents(formationId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/formations/${formationId}/students`).pipe(
+      map((students: any[]) => students.map((s: any) => ({
+        id: s.id,
+        firstName: s.firstName || '',
+        lastName: s.lastName || '',
+        email: s.email || '',
+        avatarUrl: s.avatarUrl || '',
+        enrollmentId: s.enrollmentId,
+        enrolledAt: s.enrolledAt ? new Date(s.enrolledAt) : new Date(),
+        status: s.status || 'ACTIVE',
+        overallProgress: s.overallProgress || 0,
+        completedModules: s.completedModules || 0,
+        totalModules: s.totalModules || 0,
+        completedLessons: s.completedLessons || 0,
+        totalLessons: s.totalLessons || 0,
+        averageQuizScore: s.averageQuizScore || 0,
+        lastActivityDate: s.lastActivityDate ? new Date(s.lastActivityDate) : undefined,
+        modulesProgress: s.modulesProgress || []
+      }))),
+      catchError((error) => {
+        console.error('Error fetching formation students:', error);
+        return of([]);
+      })
+    );
   }
 
   // ==================== ÉVALUATION ====================
   
   getExerciseReviews(): Observable<ExerciseReview[]> {
-    // Mock data
+    // Utiliser l'endpoint backend pour récupérer tous les exercices (pas seulement pending)
+    return this.http.get<any[]>(`${this.apiUrl}/exercises/submissions`).pipe(
+      map((submissions: any[]) => {
+        return submissions.map(sub => ({
+          id: sub.id,
+          exerciseId: sub.exercise?.id || '',
+          exerciseName: sub.exercise?.title || 'Exercice',
+          exerciseTitle: sub.exercise?.title || 'Exercice',
+          submissionId: sub.id,
+          studentId: sub.user?.id || '',
+          studentName: `${sub.user?.firstName || ''} ${sub.user?.lastName || ''}`.trim() || 'Apprenant',
+          studentAvatar: sub.user?.avatarUrl || '',
+          submittedAt: sub.submittedAt ? new Date(sub.submittedAt) : new Date(),
+          content: sub.content || sub.answer || '',
+          attachments: sub.attachments || [],
+          answerPreview: sub.content ? (sub.content.length > 100 ? sub.content.substring(0, 100) + '...' : sub.content) : '',
+          timeSpent: sub.timeSpent || 0,
+          formationId: sub.exercise?.course?.module?.formation?.id || '',
+          score: sub.score || undefined,
+          maxScore: sub.exercise?.maxScore || 100,
+          feedback: sub.feedback || undefined,
+          recommendations: [],
+          status: (sub.status?.toLowerCase() || 'pending') as 'pending' | 'reviewed' | 'graded' | 'validated',
+          reviewedBy: sub.gradedBy?.id || undefined,
+          reviewedAt: sub.reviewedAt ? new Date(sub.reviewedAt) : undefined,
+          gradedAt: sub.reviewedAt ? new Date(sub.reviewedAt) : undefined
+        } as ExerciseReview));
+      }),
+      catchError((error) => {
+        console.error('Error fetching exercise reviews:', error);
+        // Fallback vers pending reviews
+        return this.getPendingExerciseReviews();
+      })
+    );
+  }
+
+  getExerciseReviewsMock(): Observable<ExerciseReview[]> {
+    // Mock data (fallback)
     return of([
       {
         id: 'review-1',
@@ -346,7 +730,45 @@ export class TrainerService {
   }
 
   getQuizReviews(): Observable<QuizReview[]> {
-    // Mock data
+    // Utiliser l'endpoint backend pour récupérer tous les quiz attempts
+    return this.http.get<any[]>(`${this.apiUrl}/reviews/quizzes/pending`).pipe(
+      map((attempts: any[]) => {
+        return attempts.map(attempt => ({
+          id: attempt.id,
+          quizId: attempt.quiz?.id || '',
+          quizName: attempt.quiz?.title || 'Quiz',
+          quizTitle: attempt.quiz?.title || 'Quiz',
+          attemptId: attempt.id,
+          studentId: attempt.user?.id || '',
+          studentName: `${attempt.user?.firstName || ''} ${attempt.user?.lastName || ''}`.trim() || 'Apprenant',
+          studentAvatar: attempt.user?.avatarUrl || undefined,
+          completedAt: attempt.completedAt ? new Date(attempt.completedAt) : new Date(),
+          score: attempt.score || 0,
+          percentage: attempt.percentage || 0,
+          passed: attempt.passed || false,
+          correctAnswers: attempt.correctAnswers || 0,
+          totalQuestions: attempt.totalQuestions || 0,
+          timeSpent: attempt.timeSpent || undefined,
+          formationId: attempt.quiz?.course?.module?.formation?.id || undefined,
+          answers: attempt.answers || [],
+          hasFeedback: !!attempt.feedback,
+          feedback: attempt.feedback || undefined,
+          recommendations: [],
+          reviewed: !!attempt.feedback,
+          reviewedBy: attempt.reviewedBy?.id || undefined,
+          reviewedAt: attempt.reviewedAt ? new Date(attempt.reviewedAt) : undefined
+        } as QuizReview));
+      }),
+      catchError((error) => {
+        console.error('Error fetching quiz reviews:', error);
+        // Fallback vers pending reviews
+        return this.getPendingQuizReviews();
+      })
+    );
+  }
+
+  getQuizReviewsMock(): Observable<QuizReview[]> {
+    // Mock data (fallback)
     return of([
       {
         id: 'quiz-review-1',
@@ -417,103 +839,86 @@ export class TrainerService {
   }
 
   getTrainerMessages(): Observable<TrainerMessage[]> {
-    // Mock data
-    return of([
-      {
-        id: 'msg-1',
-        senderId: 'student-1',
-        senderName: 'Marie Dupont',
-        senderRole: 'student',
-        recipientId: 'trainer-1',
-        recipientName: 'Jean Formateur',
-        recipientRole: 'trainer',
-        subject: 'Question sur le module JavaScript',
-        content: 'Bonjour, j\'ai une question concernant les fonctions fléchées dans le module JavaScript. Pourriez-vous m\'aider ?',
-        type: 'message',
-        priority: 'medium',
-        read: false,
-        sentAt: new Date('2024-12-10T10:30:00')
-      },
-      {
-        id: 'msg-2',
-        senderId: 'student-2',
-        senderName: 'Pierre Martin',
-        senderRole: 'student',
-        recipientId: 'trainer-1',
-        recipientName: 'Jean Formateur',
-        recipientRole: 'trainer',
-        subject: 'Problème avec l\'exercice 3',
-        content: 'Je rencontre des difficultés avec l\'exercice 3 du module React. Le composant ne se rend pas correctement.',
-        type: 'message',
-        priority: 'high',
-        read: true,
-        readAt: new Date('2024-12-10T11:00:00'),
-        sentAt: new Date('2024-12-10T09:15:00')
-      }
-    ]);
+    return this.http.get<any[]>(`${this.apiUrl}/messages`).pipe(
+      map((messages: any[]) => {
+        if (!messages || messages.length === 0) {
+          return [];
+        }
+        return messages.map((msg: any) => {
+          const user = msg.conversation?.user || {};
+          const senderRole = msg.sender === 'USER' ? 'student' : (user.role?.toLowerCase() === 'user' ? 'student' : user.role?.toLowerCase() === 'trainer' ? 'trainer' : 'admin');
+          const senderName = user.firstName && user.lastName 
+            ? `${user.firstName} ${user.lastName}`.trim()
+            : (user.firstName || user.lastName || user.email || 'Utilisateur');
+          
+          return {
+            id: msg.id || msg.conversationId || '',
+            conversationId: msg.conversationId || msg.conversation?.id || '',
+            senderId: user.id || '',
+            senderName: senderName,
+            senderRole: senderRole as 'student' | 'trainer' | 'admin',
+            recipientId: '', // À déterminer selon le contexte
+            recipientName: '',
+            recipientRole: 'trainer' as 'student' | 'trainer' | 'admin',
+            subject: msg.content?.substring(0, 50) || 'Message',
+            content: msg.content || '',
+            type: 'message' as 'message' | 'reminder' | 'feedback' | 'announcement',
+            priority: 'medium' as 'low' | 'medium' | 'high',
+            read: msg.read || false,
+            sentAt: msg.timestamp ? new Date(msg.timestamp) : new Date()
+          };
+        });
+      }),
+      catchError((error) => {
+        console.error('Error fetching trainer messages:', error);
+        return of([]);
+      })
+    );
+  }
+
+  getConversationMessages(conversationId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/messages/conversation/${conversationId}`).pipe(
+      catchError((error) => {
+        console.error('Error fetching conversation messages:', error);
+        return of([]);
+      })
+    );
   }
 
   getStudentQuestions(): Observable<StudentQuestion[]> {
-    // Mock data
-    return of([
-      {
-        id: 'q-1',
-        studentId: 'student-1',
-        studentName: 'Marie Dupont',
-        question: 'Comment utiliser les hooks React dans un composant fonctionnel ?',
-        category: 'technical',
-        priority: 'high',
-        status: 'open',
-        createdAt: new Date('2024-12-10T14:30:00')
-      },
-      {
-        id: 'q-2',
-        studentId: 'student-2',
-        studentName: 'Pierre Martin',
-        question: 'Quelle est la différence entre useState et useEffect ?',
-        category: 'content',
-        priority: 'medium',
-        status: 'answered',
-        answer: 'useState gère l\'état local, tandis que useEffect gère les effets de bord...',
-        answeredBy: 'trainer-1',
-        answeredAt: new Date('2024-12-10T15:00:00'),
-        createdAt: new Date('2024-12-10T13:00:00')
-      }
-    ]);
+    // Utiliser les messages de chat comme questions d'étudiants
+    return this.http.get<any[]>(`${this.apiUrl}/messages`).pipe(
+      map((messages: any[]) => {
+        // Filtrer les messages des étudiants (USER) et les mapper comme questions
+        return messages
+          .filter((msg: any) => msg.sender === 'USER' && msg.conversation?.user?.role === 'USER')
+          .map((msg: any, index: number) => ({
+            id: msg.id || `q-${index}`,
+            studentId: msg.conversation?.user?.id || '',
+            studentName: msg.conversation?.user ? `${msg.conversation.user.firstName || ''} ${msg.conversation.user.lastName || ''}`.trim() : 'Étudiant',
+            question: msg.content || '',
+            category: 'technical' as 'technical' | 'content' | 'pedagogical' | 'other',
+            priority: 'medium' as 'low' | 'medium' | 'high',
+            status: 'open' as 'open' | 'answered' | 'resolved' | 'closed',
+            createdAt: msg.timestamp ? new Date(msg.timestamp) : new Date()
+          }));
+      }),
+      catchError((error) => {
+        console.error('Error fetching student questions:', error);
+        return of([]);
+      })
+    );
   }
 
   getReminders(): Observable<Reminder[]> {
-    // Mock data
-    return of([
-      {
-        id: 'rem-1',
-        trainerId: 'trainer-1',
-        targetAudience: 'formation_students',
-        recipients: ['student-1', 'student-2', 'student-3'],
-        formationId: 'form-1',
-        type: 'deadline',
-        title: 'Échéance du projet final',
-        message: 'Rappel : Le projet final doit être soumis avant le 20 décembre 2024.',
-        scheduledFor: new Date('2024-12-15T09:00:00'),
-        sent: false,
-        createdBy: 'trainer-1',
-        createdAt: new Date('2024-12-10T10:00:00')
-      },
-      {
-        id: 'rem-2',
-        trainerId: 'trainer-1',
-        targetAudience: 'all_students',
-        recipients: ['student-1', 'student-2', 'student-3', 'student-4', 'student-5'],
-        type: 'session',
-        title: 'Session de révision',
-        message: 'Session de révision prévue demain à 14h00. N\'oubliez pas de préparer vos questions.',
-        scheduledFor: new Date('2024-12-11T14:00:00'),
-        sent: true,
-        sentAt: new Date('2024-12-10T16:00:00'),
-        createdBy: 'trainer-1',
-        createdAt: new Date('2024-12-09T10:00:00')
-      }
-    ]);
+    // Pour l'instant, retourner un tableau vide car il n'y a pas de modèle Reminder dans le backend
+    // TODO: Créer un modèle Reminder dans le backend si nécessaire
+    return of([]).pipe(
+      catchError((error) => {
+        console.error('Error fetching reminders:', error);
+        return of([]);
+      })
+    );
   }
 
   sendMessage(message: Partial<TrainerMessage>): Observable<TrainerMessage> {
@@ -535,25 +940,178 @@ export class TrainerService {
   }
 
   getPersonalizedPaths(): Observable<PersonalizedLearningPath[]> {
-    return this.getLearningPaths();
+    return this.http.get<any[]>(`${this.apiUrl}/learning-paths`).pipe(
+      map((paths: any[]) => paths.map(p => {
+        // Extraire les informations des ajustements (recommandations ML)
+        const adjustments = p.adjustments || [];
+        const mainAdjustment = adjustments.length > 0 ? adjustments[0] : {};
+        
+        return {
+          id: p.id || '',
+          studentId: p.studentId || '',
+          studentName: p.studentName || '',
+          formationId: p.formationId || '',
+          formationName: p.formationName || '',
+          formationTitle: p.formationName || '',
+          baseFormationId: p.baseFormationId || p.formationId || '',
+          adjustments: adjustments,
+          modules: p.modules || [],
+          modulesCount: p.modules?.length || 0,
+          status: (p.status || 'active') as 'active' | 'completed' | 'archived' | 'draft',
+          createdBy: p.createdBy || '',
+          createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+          updatedAt: p.updatedAt ? new Date(p.updatedAt) : new Date(),
+          // Informations basées sur le ML
+          aiSuggestions: p.aiSuggestions || [],
+          confidenceScore: mainAdjustment.confidenceScore || 0,
+          predictedDifficulty: mainAdjustment.predictedDifficulty || null,
+          courseTitle: mainAdjustment.courseTitle || '',
+          conversationExcerpt: mainAdjustment.conversationExcerpt || '',
+          completionRate: 0, // À calculer si disponible
+          estimatedTime: 0, // À calculer si disponible
+          averageScore: 0 // À calculer si disponible
+        };
+      })),
+      catchError((error) => {
+        console.error('Error fetching personalized paths:', error);
+        return of([]);
+      })
+    );
   }
 
   getAIPathSuggestions(): Observable<any[]> {
-    // Mock data
-    return of([
-      {
-        id: 'sug-1',
-        studentName: 'Marie Dupont',
-        suggestion: 'Ajouter un module de révision sur les bases de JavaScript',
-        priority: 'high'
-      },
-      {
-        id: 'sug-2',
-        studentName: 'Pierre Martin',
-        suggestion: 'Réduire la difficulté des exercices du module React',
-        priority: 'medium'
+    // Utiliser les nouveaux endpoints de recommandations ML
+    return this.http.get<any[]>(`${this.apiUrl}/recommendations`).pipe(
+      map((recommendations: any[]) => recommendations.map((rec: any) => {
+        // Extraire le nom de l'étudiant depuis students array
+        const student = rec.students && rec.students.length > 0 ? rec.students[0] : null;
+        const studentName = student 
+          ? `${student.name || student.firstName || ''} ${student.lastName || ''}`.trim() || student.email || 'Étudiant'
+          : 'Étudiant';
+        
+        // Construire une suggestion détaillée avec les infos du ML
+        let suggestion = rec.justification || rec.description || `Recommandation basée sur l'analyse ML des conversations`;
+        if (rec.title) {
+          suggestion = `${rec.title}: ${suggestion}`;
+        }
+        
+        // Extraire la confiance depuis basedOn ou utiliser une valeur par défaut
+        const confidence = rec.confidence || this.extractConfidenceFromBasedOn(rec.basedOn) || 0.75;
+        
+        return {
+          id: rec.id,
+          studentName: studentName,
+          suggestion: suggestion,
+          priority: confidence > 0.7 ? 'high' : 'medium',
+          confidenceScore: confidence,
+          courseTitle: rec.title || '',
+          conversationExcerpt: rec.justification || '',
+          studentId: student?.id || '',
+          specialty: rec.specialty || '',
+          level: rec.level || '',
+          topics: rec.topics || []
+        };
+      })),
+      catchError((error) => {
+        console.error('Error fetching AI path suggestions:', error);
+        return of([]);
+      })
+    );
+  }
+
+  private extractConfidenceFromBasedOn(basedOn: string[]): number | null {
+    if (!basedOn || !Array.isArray(basedOn)) return null;
+    
+    for (const item of basedOn) {
+      const match = item.match(/confiance:\s*(\d+(?:\.\d+)?)/i);
+      if (match) {
+        return parseFloat(match[1]) / 100.0;
       }
-    ]);
+    }
+    return null;
+  }
+
+  // Nouvelle méthode pour récupérer les recommandations ML détaillées
+  getMLRecommendations(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/ml-recommendations`).pipe(
+      map((recommendations: any[]) => recommendations.map(rec => ({
+        id: rec.id,
+        title: rec.title,
+        description: rec.description,
+        justification: rec.justification,
+        level: rec.level,
+        specialty: rec.specialty,
+        priority: rec.priority,
+        status: rec.status,
+        confidence: rec.confidence || this.extractConfidenceFromBasedOn(rec.basedOn) || 0.75,
+        topics: rec.topics || [],
+        students: rec.students || [],
+        studentCount: rec.studentCount || 0,
+        createdAt: rec.createdAt ? new Date(rec.createdAt) : new Date(),
+        basedOn: rec.basedOn || []
+      }))),
+      catchError((error) => {
+        console.error('Error fetching ML recommendations:', error);
+        return of([]);
+      })
+    );
+  }
+
+  // Récupérer les détails d'une recommandation spécifique
+  getRecommendationDetails(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/ml-recommendations/${id}`).pipe(
+      map((rec: any) => ({
+        id: rec.id,
+        title: rec.title,
+        description: rec.description,
+        justification: rec.justification,
+        level: rec.level,
+        specialty: rec.specialty,
+        priority: rec.priority,
+        status: rec.status,
+        confidence: rec.confidence || this.extractConfidenceFromBasedOn(rec.basedOn) || 0.75,
+        topics: rec.topics || [],
+        students: rec.students || [],
+        studentCount: rec.studentCount || 0,
+        createdAt: rec.createdAt ? new Date(rec.createdAt) : new Date(),
+        basedOn: rec.basedOn || [],
+        levelAnalysis: rec.levelAnalysis || {}
+      })),
+      catchError((error) => {
+        console.error('Error fetching recommendation details:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Appliquer une recommandation (créer une formation)
+  applyRecommendation(recommendationId: string, formationData?: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ml-recommendations/${recommendationId}/apply`, formationData || {}).pipe(
+      map((response: any) => ({
+        message: response.message,
+        formation: response.formation,
+        recommendationId: response.recommendationId
+      })),
+      catchError((error) => {
+        console.error('Error applying recommendation:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // Générer des recommandations pour tous les étudiants
+  generateAllRecommendations(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ml-recommendations/generate`, {}).pipe(
+      map((response: any) => ({
+        message: response.message,
+        count: response.count,
+        recommendations: response.recommendations || []
+      })),
+      catchError((error) => {
+        console.error('Error generating recommendations:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   createLearningPath(path: Partial<PersonalizedLearningPath>): Observable<PersonalizedLearningPath> {
@@ -567,15 +1125,140 @@ export class TrainerService {
   // ==================== ASSISTANT IA ====================
   
   generateContent(request: Partial<AIContentGenerationRequest>): Observable<AIGeneratedContent> {
-    return this.http.post<AIGeneratedContent>(`${this.apiUrl}/ai/generate`, request);
+    return this.http.post<any>(`${this.apiUrl}/ai/generate`, request).pipe(
+      map((content: any) => ({
+        id: content.id || '',
+        requestId: content.requestId || content.id || '',
+        type: (content.type || 'exercise') as 'exercise' | 'quiz' | 'summary' | 'lesson' | 'example' | 'case_study',
+        content: content.content || {},
+        metadata: {
+          generationTime: content.metadata?.generationTime || 0,
+          tokensUsed: content.metadata?.tokensUsed,
+          model: content.metadata?.model
+        },
+        generatedAt: content.createdAt ? new Date(content.createdAt) : new Date(),
+        reviewed: content.status === 'approved' || content.status === 'rejected',
+        approved: content.status === 'approved',
+        used: false,
+        rating: content.rating,
+        feedback: content.feedback
+      })),
+      catchError((error) => {
+        console.error('Error generating content:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   approveAIContent(contentId: string): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/ai/approve/${contentId}`, {});
+    return this.http.post<void>(`${this.apiUrl}/ai/approve/${contentId}`, {}).pipe(
+      catchError((error) => {
+        console.error('Error approving AI content:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   getAIGenerationHistory(): Observable<AIGeneratedContent[]> {
-    return this.http.get<AIGeneratedContent[]>(`${this.apiUrl}/ai/history`);
+    return this.http.get<any[]>(`${this.apiUrl}/ai/history`).pipe(
+      map((history: any[]) => history.map(item => ({
+        id: item.id || '',
+        requestId: item.requestId || item.id || '',
+        type: (item.type || 'exercise') as 'exercise' | 'quiz' | 'summary' | 'lesson' | 'example' | 'case_study',
+        content: item.content || {},
+        metadata: {
+          generationTime: item.metadata?.generationTime || 0,
+          tokensUsed: item.metadata?.tokensUsed,
+          model: item.metadata?.model
+        },
+        generatedAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+        reviewed: item.status === 'approved' || item.status === 'rejected',
+        approved: item.status === 'approved',
+        used: false,
+        rating: item.rating,
+        feedback: item.feedback
+      }))),
+      catchError((error) => {
+        console.error('Error fetching AI generation history:', error);
+        return of([]);
+      })
+    );
+  }
+
+  getAIStatistics(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/stats/ai/statistics`).pipe(
+      map((stats: any) => ({
+        totalGenerated: stats.totalGenerated || 0,
+        quizzesGenerated: stats.quizzesGenerated || 0,
+        exercisesGenerated: stats.exercisesGenerated || 0,
+        summariesGenerated: stats.summariesGenerated || 0
+      })),
+      catchError((error) => {
+        console.error('Error fetching AI statistics:', error);
+        return of({
+          totalGenerated: 0,
+          quizzesGenerated: 0,
+          exercisesGenerated: 0,
+          summariesGenerated: 0
+        });
+      })
+    );
+  }
+
+  // ==================== RECOMMANDATIONS ====================
+  
+  getRecommendations(studentId?: string, status?: string): Observable<any[]> {
+    let url = `${this.apiUrl}/recommendations`;
+    const params: string[] = [];
+    if (studentId) params.push(`studentId=${studentId}`);
+    if (status) params.push(`status=${status}`);
+    if (params.length > 0) url += '?' + params.join('&');
+    
+    return this.http.get<any[]>(url).pipe(
+      map((recommendations: any[]) => recommendations.map(rec => ({
+        id: rec.id,
+        studentId: rec.student?.id || rec.studentId,
+        studentName: rec.student ? `${rec.student.firstName || ''} ${rec.student.lastName || ''}`.trim() : '',
+        studentEmail: rec.student?.email || '',
+        courseId: rec.course?.id || rec.courseId,
+        course: rec.course ? {
+          id: rec.course.id,
+          moduleId: rec.course.module?.id || '',
+          title: rec.course.title,
+          description: rec.course.description || '',
+          duration: rec.course.estimatedHours ? rec.course.estimatedHours * 60 : 0,
+          difficulty: rec.course.level ? (rec.course.level.toLowerCase() === 'debutant' ? 'Facile' : rec.course.level.toLowerCase() === 'intermediaire' ? 'Moyen' : 'Difficile') as DifficultyLevel : 'Moyen' as DifficultyLevel,
+          status: rec.course.status || 'DRAFT',
+          category: rec.course.category || '',
+          thumbnailUrl: rec.course.thumbnailUrl || ''
+        } : undefined,
+        reason: rec.reason || '',
+        conversationExcerpt: rec.conversationExcerpt || '',
+        confidenceScore: rec.confidenceScore || 0,
+        status: rec.status || 'PENDING',
+        reviewedBy: rec.reviewedBy?.id || rec.reviewedBy,
+        reviewedAt: rec.reviewedAt ? new Date(rec.reviewedAt) : undefined,
+        reviewNotes: rec.reviewNotes || '',
+        createdAt: rec.createdAt ? new Date(rec.createdAt) : new Date(),
+        updatedAt: rec.updatedAt ? new Date(rec.updatedAt) : new Date()
+      })))
+    );
+  }
+
+  getRecommendationById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/recommendations/${id}`);
+  }
+
+  generateRecommendationsForStudent(studentId: string): Observable<any[]> {
+    return this.http.post<any[]>(`${this.apiUrl}/recommendations/generate/${studentId}`, {});
+  }
+
+  acceptRecommendation(id: string, notes?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/recommendations/${id}/accept`, { notes: notes || '' });
+  }
+
+  rejectRecommendation(id: string, notes?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/recommendations/${id}/reject`, { notes: notes || '' });
   }
 }
 

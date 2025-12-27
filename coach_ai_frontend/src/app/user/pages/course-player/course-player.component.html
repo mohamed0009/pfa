@@ -76,17 +76,6 @@
 
     <!-- Main Player Area -->
     <main class="player-main">
-      <!-- Video Player -->
-      <div class="video-container" *ngIf="currentLesson && currentLesson.type === 'video'">
-        <iframe 
-          *ngIf="safeVideoUrl"
-          [src]="safeVideoUrl"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen>
-        </iframe>
-      </div>
-
       <!-- Lesson Content -->
       <div class="lesson-content">
         <div class="lesson-header">
@@ -113,30 +102,178 @@
           </div>
         </div>
 
-        <!-- Tabs for Notes, Transcript, etc. -->
-        <div class="lesson-tabs">
-          <button class="tab active">
-            <span class="material-icons">description</span>
-            Transcription
-          </button>
-          <button class="tab">
-            <span class="material-icons">note</span>
-            Mes notes
-          </button>
-          <button class="tab">
-            <span class="material-icons">forum</span>
-            Discussions
-          </button>
+        <!-- Video Player -->
+        <div class="video-container" *ngIf="currentLesson && currentLesson.type === 'video'">
+          <iframe 
+            *ngIf="safeVideoUrl"
+            [src]="safeVideoUrl"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
         </div>
 
-        <!-- Transcript/Notes Content -->
-        <div class="lesson-body">
-          <div class="transcript" *ngIf="currentLesson?.transcript">
-            <h3>Transcription de la vidéo</h3>
-            <p>{{ currentLesson?.transcript }}</p>
+        <!-- Quiz Content -->
+        <div class="quiz-content" *ngIf="currentLesson?.type === 'quiz' && currentQuiz && !isQuizSubmitted">
+          <!-- Timer -->
+          <div class="quiz-timer" [class.warning]="timeRemaining < 300">
+            <span class="material-icons">schedule</span>
+            <span class="timer-text">{{ getQuizTimeFormatted() }}</span>
           </div>
-          <div class="transcript" *ngIf="!currentLesson?.transcript">
-            <p class="empty-state">La transcription sera disponible prochainement.</p>
+
+          <!-- Progress Bar -->
+          <div class="quiz-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getQuizProgressPercentage()"></div>
+            </div>
+            <p class="progress-text">
+              Question {{ currentQuestionIndex + 1 }} sur {{ currentQuiz.questions.length }} • 
+              {{ userAnswers.size }} / {{ currentQuiz.questions.length }} réponses
+            </p>
+          </div>
+
+          <!-- Current Question -->
+          <div class="question-container" *ngIf="getCurrentQuestion() as question">
+            <div class="question-header">
+              <span class="question-number">Question {{ question.questionNumber }}</span>
+              <span class="question-points">{{ question.points }} points</span>
+            </div>
+
+            <h2 class="question-text">{{ question.question }}</h2>
+
+            <!-- Multiple Choice -->
+            <div class="options-list" *ngIf="question.type === 'multiple-choice' && question.options">
+              <div 
+                class="option-item"
+                *ngFor="let option of question.options; let i = index"
+                [class.selected]="getUserQuizAnswer(question.id) === option.id"
+                (click)="selectQuizAnswer(option.id)">
+                <div class="option-radio">
+                  <span class="radio-circle" *ngIf="getUserQuizAnswer(question.id) === option.id"></span>
+                </div>
+                <div class="option-text">
+                  <span class="option-letter">{{ String.fromCharCode(65 + i) }}.</span>
+                  {{ option.text }}
+                </div>
+              </div>
+            </div>
+
+            <!-- True/False -->
+            <div class="true-false-options" *ngIf="question.type === 'true-false'">
+              <button 
+                class="tf-option"
+                [class.selected]="getUserQuizAnswer(question.id) === 'true'"
+                (click)="selectQuizAnswer('true')">
+                <span class="material-icons">check_circle</span>
+                Vrai
+              </button>
+              <button 
+                class="tf-option"
+                [class.selected]="getUserQuizAnswer(question.id) === 'false'"
+                (click)="selectQuizAnswer('false')">
+                <span class="material-icons">cancel</span>
+                Faux
+              </button>
+            </div>
+
+            <!-- Short Answer -->
+            <div class="short-answer" *ngIf="question.type === 'short-answer'">
+              <textarea 
+                [value]="getUserQuizAnswer(question.id) || ''"
+                (input)="selectQuizAnswer($any($event.target).value)"
+                placeholder="Saisissez votre réponse..."
+                rows="4">
+              </textarea>
+            </div>
+          </div>
+
+          <!-- Quiz Navigation -->
+          <div class="quiz-navigation">
+            <button 
+              class="btn-nav"
+              [disabled]="currentQuestionIndex === 0"
+              (click)="previousQuizQuestion()">
+              <span class="material-icons">chevron_left</span>
+              Précédente
+            </button>
+
+            <div class="questions-dots">
+              <button 
+                *ngFor="let q of currentQuiz.questions; let i = index"
+                class="question-dot"
+                [class.active]="i === currentQuestionIndex"
+                [class.answered]="isQuizQuestionAnswered(q.id)"
+                (click)="goToQuizQuestion(i)">
+                {{ i + 1 }}
+              </button>
+            </div>
+
+            <button 
+              class="btn-nav"
+              *ngIf="currentQuestionIndex < currentQuiz.questions.length - 1"
+              (click)="nextQuizQuestion()">
+              Suivante
+              <span class="material-icons">chevron_right</span>
+            </button>
+
+            <button 
+              class="btn-nav btn-submit"
+              *ngIf="currentQuestionIndex === currentQuiz.questions.length - 1"
+              [disabled]="!canSubmitQuiz()"
+              (click)="submitQuiz()">
+              <span class="material-icons">send</span>
+              Soumettre le Quiz
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Results -->
+        <div class="quiz-results" *ngIf="currentLesson?.type === 'quiz' && isQuizSubmitted && currentQuiz">
+          <div class="results-container">
+            <div class="results-header" [class.passed]="quizPassed" [class.failed]="!quizPassed">
+              <span class="material-icons result-icon">
+                {{ quizPassed ? 'check_circle' : 'cancel' }}
+              </span>
+              <h1>{{ quizPassed ? 'Félicitations!' : 'Quiz non réussi' }}</h1>
+              <p *ngIf="quizPassed">Vous avez réussi le quiz avec succès!</p>
+              <p *ngIf="!quizPassed">Vous devez obtenir au moins {{ currentQuiz.passingScore }}% pour réussir</p>
+            </div>
+
+            <div class="score-display">
+              <div class="score-circle" [class.passed]="quizPassed">
+                <span class="score-value">{{ quizScore }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Regular Lesson Content (Non-Quiz) -->
+        <div *ngIf="currentLesson?.type !== 'quiz'">
+          <!-- Tabs for Notes, Transcript, etc. -->
+          <div class="lesson-tabs">
+            <button class="tab active">
+              <span class="material-icons">description</span>
+              Transcription
+            </button>
+            <button class="tab">
+              <span class="material-icons">note</span>
+              Mes notes
+            </button>
+            <button class="tab">
+              <span class="material-icons">forum</span>
+              Discussions
+            </button>
+          </div>
+
+          <!-- Transcript/Notes Content -->
+          <div class="lesson-body">
+            <div class="transcript" *ngIf="currentLesson?.transcript">
+              <h3>Transcription de la vidéo</h3>
+              <p>{{ currentLesson?.transcript }}</p>
+            </div>
+            <div class="transcript" *ngIf="!currentLesson?.transcript">
+              <p class="empty-state">La transcription sera disponible prochainement.</p>
+            </div>
           </div>
         </div>
 

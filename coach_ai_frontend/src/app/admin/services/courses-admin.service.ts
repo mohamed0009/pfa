@@ -1,11 +1,17 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, delay, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { Course, Module, Lesson } from '../models/admin.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CoursesAdminService {
+  private apiUrl = 'http://localhost:8081/api/admin/courses';
+  
+  constructor(private http: HttpClient) {}
+  
   private courses: Course[] = [
     {
       id: 'c1',
@@ -63,16 +69,52 @@ export class CoursesAdminService {
     }
   ];
 
-  constructor() {}
-
   // Get all courses
-  getCourses(): Observable<Course[]> {
-    return of(this.courses).pipe(delay(300));
+  getCourses(status?: string, search?: string): Observable<Course[]> {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    if (search) params = params.set('search', search);
+    
+    return this.http.get<any[]>(this.apiUrl, { params }).pipe(
+      map((courses: any[]) => courses.map(c => this.mapBackendCourseToFrontend(c))),
+      catchError((error) => {
+        console.error('Error fetching courses:', error);
+        return of(this.courses).pipe(delay(300));
+      })
+    );
   }
 
   // Get course by ID
   getCourseById(id: string): Observable<Course | undefined> {
-    return of(this.courses.find(c => c.id === id)).pipe(delay(200));
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+      map((course: any) => this.mapBackendCourseToFrontend(course)),
+      catchError((error) => {
+        console.error('Error fetching course:', error);
+        const course = this.courses.find(c => c.id === id);
+        return of(course).pipe(delay(200));
+      })
+    );
+  }
+  
+  private mapBackendCourseToFrontend(course: any): Course {
+    return {
+      id: course.id || '',
+      moduleId: course.moduleId || '',
+      title: course.title || '',
+      description: course.description || '',
+      content: course.content || '',
+      order: course.order || 0,
+      status: course.status || 'draft',
+      duration: course.duration || 0,
+      lessons: course.lessons || [],
+      resources: course.resources || [],
+      enrolledStudents: course.enrolledStudents || 0,
+      completionRate: course.completionRate || 0,
+      createdBy: course.createdBy || '',
+      createdAt: course.createdAt ? new Date(course.createdAt) : new Date(),
+      validatedBy: course.validatedBy || '',
+      validatedAt: course.validatedAt ? new Date(course.validatedAt) : undefined
+    };
   }
 
   // Create new course
@@ -133,18 +175,22 @@ export class CoursesAdminService {
 
   // Get course statistics
   getCourseStats(courseId: string): Observable<any> {
-    const course = this.courses.find(c => c.id === courseId);
-    if (!course) {
-      return throwError(() => new Error('Course not found'));
-    }
-
-    return of({
-      enrolledStudents: course.enrolledStudents,
-      completionRate: course.completionRate,
-      totalLessons: course.lessons.length,
-      totalResources: course.resources.length,
-      status: course.status
-    }).pipe(delay(300));
+    return this.http.get<any>(`${this.apiUrl}/${courseId}/stats`).pipe(
+      catchError((error) => {
+        console.error('Error fetching course stats:', error);
+        const course = this.courses.find(c => c.id === courseId);
+        if (!course) {
+          return throwError(() => new Error('Course not found'));
+        }
+        return of({
+          enrolledStudents: course.enrolledStudents,
+          completionRate: course.completionRate,
+          totalLessons: course.lessons.length,
+          totalResources: course.resources.length,
+          status: course.status
+        }).pipe(delay(300));
+      })
+    );
   }
 }
 

@@ -9,8 +9,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "course_progress")
@@ -52,9 +50,8 @@ public class CourseProgress {
     @LastModifiedDate
     private LocalDateTime lastActivityDate;
     
-    @OneToMany(mappedBy = "progress", cascade = CascadeType.ALL, orphanRemoval = true)
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private List<ModuleProgress> moduleProgresses = new ArrayList<>();
+    // Note: ModuleProgress est maintenant lié à FormationEnrollment, pas à CourseProgress
+    // Cette relation a été supprimée car elle n'est plus utilisée dans la nouvelle architecture
 }
 
 

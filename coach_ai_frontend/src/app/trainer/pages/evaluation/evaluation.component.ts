@@ -122,22 +122,86 @@ export class EvaluationComponent implements OnInit {
     return daysSince > 3;
   }
 
+  // Modal state
+  showReviewModal = false;
+  reviewModalType: 'exercise' | 'quiz' | null = null;
+  selectedReview: ExerciseReview | QuizReview | null = null;
+  reviewFeedback = '';
+  reviewScore = 0;
+  isSubmittingReview = false;
+
   viewDetail(id: string, type: 'exercise' | 'quiz'): void {
     if (type === 'exercise') {
-      this.router.navigate(['/trainer/evaluation/exercise-reviews', id]);
+      const review = this.exerciseReviews.find(r => r.id === id);
+      if (review) {
+        this.selectedReview = review;
+        this.reviewModalType = 'exercise';
+        this.reviewFeedback = review.feedback || '';
+        this.reviewScore = review.score || 0;
+        this.showReviewModal = true;
+      }
     } else {
-      this.router.navigate(['/trainer/evaluation/quiz-reviews', id]);
+      const review = this.quizReviews.find(r => r.id === id);
+      if (review) {
+        this.selectedReview = review;
+        this.reviewModalType = 'quiz';
+        this.reviewFeedback = review.feedback || '';
+        this.reviewScore = review.score || 0;
+        this.showReviewModal = true;
+      }
     }
   }
 
   startReview(id: string, type: 'exercise' | 'quiz'): void {
-    console.log('Starting review:', id, type);
     this.viewDetail(id, type);
   }
 
   addFeedback(id: string): void {
-    console.log('Adding feedback for quiz:', id);
-    this.router.navigate(['/trainer/evaluation/quiz-reviews', id]);
+    this.viewDetail(id, 'quiz');
+  }
+
+  closeReviewModal(): void {
+    this.showReviewModal = false;
+    this.selectedReview = null;
+    this.reviewModalType = null;
+    this.reviewFeedback = '';
+    this.reviewScore = 0;
+  }
+
+  submitReview(): void {
+    if (!this.selectedReview || !this.reviewModalType) return;
+
+    this.isSubmittingReview = true;
+
+    if (this.reviewModalType === 'exercise') {
+      const exerciseReview = this.selectedReview as ExerciseReview;
+      this.trainerService.reviewExercise(exerciseReview.id, this.reviewFeedback, this.reviewScore).subscribe({
+        next: () => {
+          this.loadData();
+          this.closeReviewModal();
+          this.isSubmittingReview = false;
+        },
+        error: (error) => {
+          console.error('Error submitting review:', error);
+          this.isSubmittingReview = false;
+          alert('Erreur lors de la soumission de la correction');
+        }
+      });
+    } else {
+      const quizReview = this.selectedReview as QuizReview;
+      this.trainerService.reviewQuiz(quizReview.id, this.reviewFeedback).subscribe({
+        next: () => {
+          this.loadData();
+          this.closeReviewModal();
+          this.isSubmittingReview = false;
+        },
+        error: (error) => {
+          console.error('Error submitting review:', error);
+          this.isSubmittingReview = false;
+          alert('Erreur lors de la soumission du feedback');
+        }
+      });
+    }
   }
 
   getStatusLabel(status: string): string {
@@ -154,6 +218,35 @@ export class EvaluationComponent implements OnInit {
     if (!content) return '';
     const maxLength = 100;
     return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
+  }
+
+  // Getters pour le template
+  getSelectedExerciseReview(): ExerciseReview | null {
+    return this.reviewModalType === 'exercise' ? (this.selectedReview as ExerciseReview) : null;
+  }
+
+  getSelectedQuizReview(): QuizReview | null {
+    return this.reviewModalType === 'quiz' ? (this.selectedReview as QuizReview) : null;
+  }
+
+  getStudentName(): string {
+    if (!this.selectedReview) return '';
+    if (this.reviewModalType === 'exercise') {
+      return (this.selectedReview as ExerciseReview).studentName;
+    } else {
+      return (this.selectedReview as QuizReview).studentName;
+    }
+  }
+
+  getReviewTitle(): string {
+    if (!this.selectedReview) return '';
+    if (this.reviewModalType === 'exercise') {
+      const review = this.selectedReview as ExerciseReview;
+      return review.exerciseTitle || review.exerciseName || '';
+    } else {
+      const review = this.selectedReview as QuizReview;
+      return review.quizTitle || review.quizName || '';
+    }
   }
 }
 

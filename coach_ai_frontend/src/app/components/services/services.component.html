@@ -10,21 +10,21 @@
       </p>
     </div>
 
-    <div class="services-grid">
-      <div class="service-card" *ngFor="let service of services">
+    <div class="services-grid" *ngIf="!isLoading">
+      <div class="service-card" *ngFor="let formation of formations">
         <div class="service-image">
-          <img [src]="service.imageUrl" [alt]="service.title">
+          <img [src]="getFormationImage(formation)" [alt]="formation.title">
           <div class="service-overlay">
-            <button class="btn btn-learn">En Savoir Plus</button>
+            <button class="btn btn-learn" [routerLink]="['/login']">En Savoir Plus</button>
           </div>
         </div>
         
         <div class="service-content">
-          <h3>{{ service.title }}</h3>
-          <p class="service-description">{{ service.description }}</p>
+          <h3>{{ formation.title }}</h3>
+          <p class="service-description">{{ formation.description }}</p>
           
           <ul class="service-features">
-            <li *ngFor="let feature of service.features">
+            <li *ngFor="let feature of getFormationFeatures(formation)">
               <span class="material-icons">check_circle</span>
               <span>{{ feature }}</span>
             </li>
@@ -33,17 +33,27 @@
           <div class="service-meta">
             <div class="meta-item">
               <span class="material-icons">schedule</span>
-              <span>{{ service.duration }}</span>
+              <span>{{ getFormationDuration(formation) }}</span>
             </div>
             <div class="meta-item">
               <span class="material-icons">devices</span>
-              <span>{{ service.format }}</span>
+              <span>100% En ligne</span>
             </div>
           </div>
 
-          <button class="btn btn-book">Démarrer</button>
+          <button class="btn btn-book" [routerLink]="['/login']">Démarrer</button>
         </div>
       </div>
+      
+      <div *ngIf="formations.length === 0" class="empty-state">
+        <span class="material-icons">school</span>
+        <p>Aucune formation disponible pour le moment</p>
+      </div>
+    </div>
+    
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des formations...</p>
     </div>
   </div>
 </section>

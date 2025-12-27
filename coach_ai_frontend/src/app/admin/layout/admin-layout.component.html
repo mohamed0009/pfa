@@ -54,8 +54,8 @@
         </button>
 
         <div class="admin-profile" *ngIf="currentUser$ | async as user">
-          <img [src]="user.avatarUrl" [alt]="user.fullName" class="profile-avatar">
-          <div class="profile-info">
+          <img [src]="user.avatarUrl" [alt]="user.fullName" class="profile-avatar" [routerLink]="['/admin/profile']" style="cursor: pointer;">
+          <div class="profile-info" [routerLink]="['/admin/profile']" style="cursor: pointer;">
             <span class="profile-name">{{ user.fullName }}</span>
             <span class="profile-role">Administrateur</span>
           </div>

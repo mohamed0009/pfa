@@ -1,0 +1,93 @@
+========================================
+JMeter Quick Start - Coach AI
+========================================
+
+✅ JMeter: Installed at C:\apache-jmeter-5.6.3\bin\jmeter.bat
+✅ Test Plan: jmeter\Coach_AI_Test_Plan.jmx
+⚠️  Backend: Needs to be started first
+
+========================================
+HOW TO RUN TESTS
+========================================
+
+STEP 1: Start Backend
+----------------------
+Open a NEW terminal/PowerShell window and run:
+  cd backend
+  mvn spring-boot:run
+
+Wait until you see: "Started CoachAiApplication"
+
+STEP 2: Run JMeter Tests
+-------------------------
+Option A - Automated Script (Easiest):
+  cd jmeter
+  .\run-jmeter-tests.ps1
+
+Option B - JMeter GUI:
+  1. Open JMeter:
+     jmeter
+  
+  2. In JMeter:
+     File → Open → Select: jmeter\Coach_AI_Test_Plan.jmx
+     Click Start button (green play icon)
+  
+  3. View results in:
+     - "View Results Tree" (detailed)
+     - "Summary Report" (statistics)
+
+Option C - Command Line:
+  cd jmeter
+  jmeter -n -t Coach_AI_Test_Plan.jmx -l results.jtl -e -o report/
+
+STEP 3: View Results
+--------------------
+After tests complete, open:
+  jmeter-results\[timestamp]\html-report\index.html
+
+Or if using command line:
+  report\index.html
+
+========================================
+WHAT GETS TESTED
+========================================
+
+✅ Authentication:
+   - Login API
+   - Signup API
+
+✅ Public APIs:
+   - Get all formations
+   - Get formation by ID
+
+✅ User APIs (Authenticated):
+   - Get user profile
+   - Get courses
+
+========================================
+TEST CONFIGURATION
+========================================
+
+Base URL: http://localhost:8081
+Test User: test@etud.com / password123
+Concurrent Users: 5-20 (varies by test)
+Duration: ~1-2 minutes
+
+========================================
+FILES CREATED
+========================================
+
+✅ Coach_AI_Test_Plan.jmx - Main test plan
+✅ README.md - Full documentation
+✅ QUICK_START.md - Quick start guide
+✅ START_HERE.md - Step-by-step guide
+✅ run-jmeter-tests.ps1 - Windows script
+✅ run-jmeter-tests.sh - Linux/Mac script
+
+========================================
+NEED HELP?
+========================================
+
+See README.md for detailed documentation
+or QUICK_START.md for quick reference
+

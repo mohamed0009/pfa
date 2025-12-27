@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, delay, map, catchError } from 'rxjs';
 import { 
   Formation, 
   Module, 
@@ -14,6 +15,9 @@ import {
   providedIn: 'root'
 })
 export class ContentManagementService {
+  private apiUrl = 'http://localhost:8081/api/admin/content';
+
+  constructor(private http: HttpClient) {}
 
   private formations: Formation[] = [
     {
@@ -199,12 +203,70 @@ export class ContentManagementService {
     }
   ];
 
-  constructor() {}
-
   // ==================== FORMATIONS ====================
 
   getFormations(): Observable<Formation[]> {
-    return of(this.formations).pipe(delay(300));
+    return this.http.get<any[]>(`http://localhost:8081/api/admin/formations`).pipe(
+      map((formations: any[]) => formations.map(f => this.mapBackendFormationToFrontend(f))),
+      catchError((error) => {
+        console.error('Error fetching formations from backend:', error);
+        return of([]);
+      })
+    );
+  }
+
+  // Récupérer les formations en attente d'approbation (créées par les formateurs via recommandations ML)
+  getPendingFormations(): Observable<Formation[]> {
+    return this.http.get<any[]>(`http://localhost:8081/api/admin/content/pending`).pipe(
+      map((response: any) => {
+        const formations = response.formations || [];
+        return formations.map((f: any) => this.mapBackendFormationToFrontend(f));
+      }),
+      catchError((error) => {
+        console.error('Error fetching pending formations:', error);
+        return of([]);
+      })
+    );
+  }
+  
+  private mapBackendFormationToFrontend(formation: any): Formation {
+    return {
+      id: formation.id,
+      title: formation.title,
+      description: formation.description || '',
+      thumbnail: formation.thumbnail || '',
+      level: this.mapBackendLevelToFrontend(formation.level),
+      category: formation.category || '',
+      status: this.mapBackendStatusToFrontend(formation.status),
+      duration: formation.duration || 0,
+      modules: [], // Les modules seront chargés séparément si nécessaire
+      enrolledCount: formation.enrolledCount || 0,
+      completionRate: formation.completionRate || 0,
+      createdBy: formation.createdBy?.id || formation.createdBy || '',
+      createdAt: formation.createdAt ? new Date(formation.createdAt) : new Date(),
+      updatedAt: formation.updatedAt ? new Date(formation.updatedAt) : new Date()
+    };
+  }
+  
+  private mapBackendLevelToFrontend(level: string): 'Débutant' | 'Intermédiaire' | 'Avancé' {
+    const mapping: Record<string, 'Débutant' | 'Intermédiaire' | 'Avancé'> = {
+      'DEBUTANT': 'Débutant',
+      'INTERMEDIAIRE': 'Intermédiaire',
+      'AVANCE': 'Avancé'
+    };
+    return mapping[level] || 'Débutant';
+  }
+  
+  private mapBackendStatusToFrontend(status: string): ContentStatus {
+    const mapping: Record<string, ContentStatus> = {
+      'DRAFT': 'draft',
+      'PENDING': 'pending',
+      'APPROVED': 'approved',
+      'PUBLISHED': 'published' as ContentStatus,
+      'REJECTED': 'rejected',
+      'ARCHIVED': 'archived'
+    };
+    return mapping[status] || 'draft';
   }
 
   getFormationById(id: string): Observable<Formation | undefined> {
@@ -212,46 +274,52 @@ export class ContentManagementService {
   }
 
   createFormation(formation: Partial<Formation>): Observable<Formation> {
-    const newFormation: Formation = {
-      id: 'f' + (this.formations.length + 1),
+    const formationData: any = {
       title: formation.title || '',
       description: formation.description || '',
       thumbnail: formation.thumbnail || '',
-      level: formation.level || 'Débutant',
+      level: formation.level?.toUpperCase() || 'DEBUTANT',
       category: formation.category || '',
-      status: 'draft',
       duration: formation.duration || 0,
-      modules: [],
-      enrolledCount: 0,
-      completionRate: 0,
-      createdBy: 'current-user',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      trainerId: formation.createdBy || undefined
     };
-    this.formations.push(newFormation);
-    return of(newFormation).pipe(delay(400));
+    
+    return this.http.post<any>(`http://localhost:8081/api/admin/formations`, formationData).pipe(
+      map((saved: any) => this.mapBackendFormationToFrontend(saved)),
+      catchError((error) => {
+        console.error('Error creating formation:', error);
+        throw error;
+      })
+    );
   }
 
   updateFormation(id: string, updates: Partial<Formation>): Observable<Formation> {
-    const index = this.formations.findIndex(f => f.id === id);
-    if (index !== -1) {
-      this.formations[index] = { 
-        ...this.formations[index], 
-        ...updates, 
-        updatedAt: new Date() 
-      };
-      return of(this.formations[index]).pipe(delay(300));
-    }
-    throw new Error('Formation not found');
+    const updateData: any = {};
+    if (updates.title !== undefined) updateData.title = updates.title;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.thumbnail !== undefined) updateData.thumbnail = updates.thumbnail;
+    if (updates.level !== undefined) updateData.level = updates.level.toUpperCase();
+    if (updates.category !== undefined) updateData.category = updates.category;
+    if (updates.duration !== undefined) updateData.duration = updates.duration;
+    if (updates.status !== undefined) updateData.status = updates.status.toUpperCase();
+    
+    return this.http.put<any>(`http://localhost:8081/api/admin/formations/${id}`, updateData).pipe(
+      map((saved: any) => this.mapBackendFormationToFrontend(saved)),
+      catchError((error) => {
+        console.error('Error updating formation:', error);
+        throw error;
+      })
+    );
   }
 
   deleteFormation(id: string): Observable<boolean> {
-    const index = this.formations.findIndex(f => f.id === id);
-    if (index !== -1) {
-      this.formations.splice(index, 1);
-      return of(true).pipe(delay(300));
-    }
-    return of(false);
+    return this.http.delete<void>(`http://localhost:8081/api/admin/formations/${id}`).pipe(
+      map(() => true),
+      catchError((error) => {
+        console.error('Error deleting formation:', error);
+        return of(false);
+      })
+    );
   }
 
   // ==================== MODULES ====================
@@ -378,7 +446,79 @@ export class ContentManagementService {
   // ==================== VALIDATION ====================
 
   getPendingValidations(): Observable<ContentValidation[]> {
-    return of(this.validations.filter(v => v.status === 'pending')).pipe(delay(300));
+    return this.http.get<any>(`${this.apiUrl}/pending`).pipe(
+      map((data: any) => {
+        const validations: ContentValidation[] = [];
+        
+        // Mapper les formations en attente
+        if (data.formations) {
+          data.formations.forEach((f: any) => {
+            validations.push({
+              id: f.id,
+              contentId: f.id,
+              contentType: 'formation',
+              status: 'pending',
+              reviewedAt: f.createdAt ? new Date(f.createdAt) : undefined
+            });
+          });
+        }
+        
+        // Mapper les cours en attente
+        if (data.courses) {
+          data.courses.forEach((c: any) => {
+            validations.push({
+              id: c.id,
+              contentId: c.id,
+              contentType: 'cours',
+              status: 'pending',
+              reviewedAt: c.createdAt ? new Date(c.createdAt) : undefined
+            });
+          });
+        }
+        
+        return validations;
+      }),
+      catchError((error) => {
+        console.error('Error fetching pending validations:', error);
+        return of([]);
+      })
+    );
+  }
+
+  approveFormation(id: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/formations/${id}/approve`, {}).pipe(
+      catchError((error) => {
+        console.error('Error approving formation:', error);
+        throw error;
+      })
+    );
+  }
+
+  rejectFormation(id: string, reason?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/formations/${id}/reject`, { reason: reason || '' }).pipe(
+      catchError((error) => {
+        console.error('Error rejecting formation:', error);
+        throw error;
+      })
+    );
+  }
+
+  approveCourse(id: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/courses/${id}/approve`, {}).pipe(
+      catchError((error) => {
+        console.error('Error approving course:', error);
+        throw error;
+      })
+    );
+  }
+
+  rejectCourse(id: string, reason?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/courses/${id}/reject`, { reason: reason || '' }).pipe(
+      catchError((error) => {
+        console.error('Error rejecting course:', error);
+        throw error;
+      })
+    );
   }
 
   validateContent(validationId: string, approved: boolean, feedback?: string): Observable<ContentValidation> {
@@ -448,6 +588,100 @@ export class ContentManagementService {
     });
 
     return of(results).pipe(delay(300));
+  }
+
+  // ==================== FORMATION ENROLLMENTS ====================
+
+  /**
+   * Récupère toutes les formations avec leurs statistiques
+   */
+  getAllFormations(): Observable<Formation[]> {
+    return this.http.get<any[]>(`http://localhost:8081/api/admin/formations`).pipe(
+      map((formations: any[]) => formations.map(f => this.mapBackendFormationToFrontend(f))),
+      catchError((error) => {
+        console.error('Error fetching all formations:', error);
+        return of(this.formations).pipe(delay(300));
+      })
+    );
+  }
+
+  /**
+   * Récupère les inscriptions pour une formation spécifique
+   */
+  getFormationEnrollments(formationId: string): Observable<any[]> {
+    return this.http.get<any[]>(`http://localhost:8081/api/admin/formations/${formationId}/inscriptions`).pipe(
+      map((enrollments: any[]) => enrollments.map((e: any) => ({
+        enrollmentId: e.enrollmentId,
+        studentId: e.studentId,
+        studentName: e.studentName || '',
+        studentEmail: e.studentEmail || '',
+        enrolledAt: e.enrolledAt ? new Date(e.enrolledAt) : new Date(),
+        status: e.status || 'ACTIVE',
+        overallProgress: e.overallProgress || 0,
+        completedModules: e.completedModules || 0,
+        totalModules: e.totalModules || 0,
+        averageQuizScore: e.averageQuizScore || 0
+      }))),
+      catchError((error) => {
+        console.error('Error fetching formation enrollments:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Récupère la progression des étudiants pour une formation
+   */
+  getFormationProgression(formationId: string): Observable<any[]> {
+    return this.http.get<any[]>(`http://localhost:8081/api/admin/formations/${formationId}/progression`).pipe(
+      map((progression: any[]) => progression.map((p: any) => ({
+        studentId: p.studentId,
+        studentName: p.studentName || '',
+        overallProgress: p.overallProgress || 0,
+        completedModules: p.completedModules || 0,
+        totalModules: p.totalModules || 0,
+        completedLessons: p.completedLessons || 0,
+        totalLessons: p.totalLessons || 0,
+        averageQuizScore: p.averageQuizScore || 0,
+        lastActivityDate: p.lastActivityDate ? new Date(p.lastActivityDate) : undefined,
+        modules: p.modules || []
+      }))),
+      catchError((error) => {
+        console.error('Error fetching formation progression:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Valide ou refuse une formation
+   */
+  validateFormation(id: string, action: 'approve' | 'reject', reason?: string): Observable<any> {
+    return this.http.patch<any>(`http://localhost:8081/api/admin/formations/${id}/validation`, {
+      action,
+      reason: reason || ''
+    }).pipe(
+      map((saved: any) => this.mapBackendFormationToFrontend(saved)),
+      catchError((error) => {
+        console.error('Error validating formation:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Associe ou change le formateur d'une formation
+   */
+  assignTrainerToFormation(formationId: string, trainerId: string): Observable<Formation> {
+    return this.http.patch<any>(`http://localhost:8081/api/admin/formations/${formationId}/formateur`, {
+      trainerId
+    }).pipe(
+      map((saved: any) => this.mapBackendFormationToFrontend(saved)),
+      catchError((error) => {
+        console.error('Error assigning trainer:', error);
+        throw error;
+      })
+    );
   }
 }
 

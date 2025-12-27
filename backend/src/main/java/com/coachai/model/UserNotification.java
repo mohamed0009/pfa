@@ -50,8 +50,11 @@ public class UserNotification {
     @Column(nullable = false)
     private boolean isRead = false;
     
+    @Column(nullable = true)
+    private String createdBy; // "admin", "system", "trainer", etc.
+    
     public enum NotificationType {
-        REMINDER, NEW_CONTENT, MOTIVATION, ALERT, ACHIEVEMENT
+        REMINDER, NEW_CONTENT, MOTIVATION, ALERT, ACHIEVEMENT, TRAINER_MESSAGE, ENROLLMENT, PROGRESS, VALIDATION, SYSTEM
     }
     
     public enum NotificationPriority {

@@ -44,7 +44,7 @@ export interface UserActivity {
 // ==================== CONTENUS PÉDAGOGIQUES ====================
 
 export type ContentType = 'formation' | 'module' | 'cours' | 'ressource';
-export type ContentStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
+export type ContentStatus = 'draft' | 'pending' | 'approved' | 'published' | 'rejected' | 'archived';
 export type ResourceType = 'pdf' | 'video' | 'link' | 'document' | 'quiz' | 'exercise';
 
 export interface Formation {
@@ -201,6 +201,11 @@ export interface Trainer {
   joinedAt: Date;
   validatedAt?: Date;
   validatedBy?: string;
+  isOnline?: boolean;
+  pendingFormations?: number;
+  pendingFormationsList?: Array<{ id: string; title: string; status: string; createdAt: Date }>;
+  totalFormations?: number;
+  publishedFormations?: number;
 }
 
 export interface TrainerActivity {

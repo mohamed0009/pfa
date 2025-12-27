@@ -1,0 +1,181 @@
+<div class="analysis-page">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>
+      <span class="material-icons">analytics</span>
+      Analyse des Conversations IA
+    </h1>
+    <div class="header-actions">
+      <select [(ngModel)]="selectedPeriod" (change)="onPeriodChange()" class="period-select">
+        <option *ngFor="let period of periods" [value]="period.value">
+          {{ period.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Analyse en cours...</p>
+  </div>
+
+  <!-- Analysis Dashboard -->
+  <div class="analysis-dashboard" *ngIf="analysis && !isLoading">
+    
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="material-icons">forum</span>
+        <div>
+          <h3>{{ analysis.totalConversations }}</h3>
+          <p>Conversations</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="material-icons">chat</span>
+        <div>
+          <h3>{{ analysis.totalMessages }}</h3>
+          <p>Messages analysés</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="material-icons">people</span>
+        <div>
+          <h3>{{ analysis.uniqueStudents }}</h3>
+          <p>Apprenants actifs</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Topics Detected -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>
+          <span class="material-icons">tag</span>
+          Sujets les plus mentionnés
+        </h2>
+      </div>
+      <div class="topics-list">
+        <div 
+          class="topic-item"
+          *ngFor="let topic of analysis.topicsDetected"
+          [class.high-severity]="topic.severity === 'HIGH'">
+          <div class="topic-info">
+            <h4>{{ topic.topic }}</h4>
+            <p class="topic-course" *ngIf="topic.relatedCourse">
+              <span class="material-icons">book</span>
+              {{ topic.relatedCourse }}
+            </p>
+          </div>
+          <div class="topic-stats">
+            <span class="count-badge">{{ topic.count }} mentions</span>
+            <span class="severity-badge" [style.background-color]="getSeverityColor(topic.severity)">
+              {{ topic.severity }}
+            </span>
+            <span class="trend-badge" [style.color]="getTrendColor(topic.trend)">
+              <span class="material-icons">{{ getTrendIcon(topic.trend) }}</span>
+              {{ topic.trend }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Frequent Questions -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>
+          <span class="material-icons">help_outline</span>
+          Questions fréquentes
+        </h2>
+      </div>
+      <div class="questions-list">
+        <div class="question-item" *ngFor="let q of analysis.frequentQuestions">
+          <div class="question-content">
+            <h4>{{ q.question }}</h4>
+            <div class="question-meta">
+              <span>
+                <span class="material-icons">person</span>
+                {{ q.studentsAsked }} apprenants
+              </span>
+              <span>
+                <span class="material-icons">repeat</span>
+                {{ q.count }} fois posée
+              </span>
+              <span *ngIf="q.relatedModule">
+                <span class="material-icons">folder</span>
+                {{ q.relatedModule }}
+              </span>
+            </div>
+            <div class="suggested-action">
+              <span class="material-icons">lightbulb</span>
+              <strong>Action suggérée:</strong> {{ q.suggestedAction }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Difficulties Detected -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>
+          <span class="material-icons">warning</span>
+          Difficultés principales détectées
+        </h2>
+      </div>
+      <div class="difficulties-list">
+        <div 
+          class="difficulty-item"
+          *ngFor="let diff of analysis.difficultiesDetected"
+          [class.high-priority]="diff.priority === 1">
+          <div class="difficulty-header">
+            <div class="difficulty-title">
+              <span class="priority-number">#{{ diff.priority }}</span>
+              <h4>{{ diff.subject }}</h4>
+            </div>
+            <span class="level-badge" [style.background-color]="getSeverityColor(diff.level)">
+              {{ diff.level }}
+            </span>
+          </div>
+          <div class="difficulty-stats">
+            <div class="stat">
+              <span class="material-icons">people</span>
+              <span>{{ diff.studentCount }} apprenants affectés</span>
+            </div>
+            <div class="stat">
+              <span class="material-icons">repeat</span>
+              <span>Moyenne {{ diff.averageAttempts }} tentatives</span>
+            </div>
+          </div>
+          <div class="solution-suggested">
+            <span class="material-icons">check_circle</span>
+            <strong>Solution suggérée:</strong> {{ diff.suggestedSolution }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level Distribution -->
+    <div class="section-card">
+      <div class="section-header">
+        <h2>
+          <span class="material-icons">bar_chart</span>
+          Distribution des niveaux (détectés par IA)
+        </h2>
+      </div>
+      <div class="level-distribution">
+        <div class="level-bar" *ngFor="let level of analysis.levelDistribution | keyvalue">
+          <div class="level-label">{{ level.key }}</div>
+          <div class="bar-container">
+            <div class="bar-fill" [style.width.%]="level.value"></div>
+            <span class="bar-value">{{ level.value }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+

@@ -38,6 +38,10 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./pages/content/content-management/content-management.component').then(m => m.ContentManagementComponent)
       },
       {
+        path: 'content/formations/enrollments',
+        loadComponent: () => import('./pages/content/formations-enrollments/formations-enrollments.component').then(m => m.FormationsEnrollmentsComponent)
+      },
+      {
         path: 'ai-supervision',
         loadComponent: () => import('./pages/ai/ai-supervision/ai-supervision.component').then(m => m.AiSupervisionComponent)
       },
@@ -56,6 +60,10 @@ export const adminRoutes: Routes = [
       {
         path: 'analytics',
         loadComponent: () => import('./pages/analytics/analytics.component').then(m => m.AnalyticsComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./pages/profile/admin-profile.component').then(m => m.AdminProfileComponent)
       }
     ]
   }

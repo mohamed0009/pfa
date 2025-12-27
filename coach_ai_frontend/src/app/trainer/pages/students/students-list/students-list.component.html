@@ -4,6 +4,12 @@
       <h1>Mes Apprenants</h1>
       <p>Suivez la progression et les performances de vos apprenants</p>
     </div>
+    <div class="header-actions">
+      <a [routerLink]="['/trainer/recommendations']" class="btn-recommendations">
+        <span class="material-icons">recommend</span>
+        Recommandations
+      </a>
+    </div>
   </header>
 
   <!-- At Risk Alert -->
@@ -92,6 +98,25 @@
             <span class="label">Temps d'étude</span>
             <span class="value">{{ student.timeSpent }}h</span>
           </div>
+        </div>
+
+        <!-- Chat Level Badge -->
+        <div *ngIf="student.chatLevel" class="chat-level-badge" [class]="'level-' + getLevelClass(student.chatLevel)">
+          <span class="material-icons">chat_bubble</span>
+          <span class="level-label">Niveau Chat: {{ student.chatLevel }}</span>
+          <span class="level-score" *ngIf="student.chatLevelScore">({{ student.chatLevelScore }} pts)</span>
+        </div>
+
+        <!-- Chat Stats -->
+        <div *ngIf="student.totalConversations || student.totalChatMessages" class="chat-stats">
+          <span *ngIf="student.totalConversations" class="chat-stat">
+            <span class="material-icons">forum</span>
+            {{ student.totalConversations }} conversation{{ student.totalConversations > 1 ? 's' : '' }}
+          </span>
+          <span *ngIf="student.totalChatMessages" class="chat-stat">
+            <span class="material-icons">message</span>
+            {{ student.totalChatMessages }} message{{ student.totalChatMessages > 1 ? 's' : '' }}
+          </span>
         </div>
       </div>
 

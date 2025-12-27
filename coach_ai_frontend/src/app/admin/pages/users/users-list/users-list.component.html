@@ -246,46 +246,50 @@
       </button>
     </div>
 
-    <div class="modal-body" *ngIf="selectedUser || modalMode === 'create'">
+    <div class="modal-body" *ngIf="selectedUser">
       <div class="form-group">
-        <label>Nom Complet</label>
+        <label>Nom Complet *</label>
         <input 
           type="text" 
-          [(ngModel)]="selectedUser!.fullName" 
+          [(ngModel)]="selectedUser.fullName" 
           class="form-control"
           [readonly]="modalMode === 'view'"
-          placeholder="Entrez le nom complet">
+          placeholder="Entrez le nom complet"
+          required>
       </div>
 
       <div class="form-group">
-        <label>Email</label>
+        <label>Email *</label>
         <input 
           type="email" 
-          [(ngModel)]="selectedUser!.email" 
+          [(ngModel)]="selectedUser.email" 
           class="form-control"
           [readonly]="modalMode === 'view'"
-          placeholder="Entrez l'email">
+          placeholder="Entrez l'email"
+          required>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Rôle</label>
+          <label>Rôle *</label>
           <select 
-            [(ngModel)]="selectedUser!.role" 
+            [(ngModel)]="selectedUser.role" 
             class="form-control"
-            [disabled]="modalMode === 'view'">
-            <option value="Administrateur">Administrateur</option>
-            <option value="Formateur">Formateur</option>
+            [disabled]="modalMode === 'view'"
+            required>
             <option value="Apprenant">Apprenant</option>
+            <option value="Formateur">Formateur</option>
+            <option value="Administrateur">Administrateur</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Statut</label>
+          <label>Statut *</label>
           <select 
-            [(ngModel)]="selectedUser!.status" 
+            [(ngModel)]="selectedUser.status" 
             class="form-control"
-            [disabled]="modalMode === 'view'">
+            [disabled]="modalMode === 'view'"
+            required>
             <option value="active">Actif</option>
             <option value="inactive">Inactif</option>
             <option value="pending">En attente</option>
@@ -297,18 +301,22 @@
       <div class="form-row">
         <div class="form-group">
           <label>Formation</label>
-          <input 
-            type="text" 
-            [(ngModel)]="selectedUser!.training" 
+          <select 
+            [(ngModel)]="selectedUser.training" 
             class="form-control"
-            [readonly]="modalMode === 'view'"
-            placeholder="Formation suivie">
+            [disabled]="modalMode === 'view'">
+            <option value="">Aucune formation</option>
+            <option *ngFor="let formation of formations" [value]="formation.title">
+              {{ formation.title }}
+            </option>
+          </select>
+          <small class="form-text">Sélectionnez une formation existante</small>
         </div>
 
         <div class="form-group">
           <label>Niveau</label>
           <select 
-            [(ngModel)]="selectedUser!.level" 
+            [(ngModel)]="selectedUser.level" 
             class="form-control"
             [disabled]="modalMode === 'view'">
             <option value="Débutant">Débutant</option>
@@ -317,12 +325,36 @@
           </select>
         </div>
       </div>
+      
+      <!-- Password Field -->
+      <div class="form-group" *ngIf="modalMode !== 'view'">
+        <div class="password-field-header">
+          <label>Mot de passe {{ modalMode === 'create' ? '*' : '' }}</label>
+          <button 
+            type="button" 
+            class="btn-link" 
+            (click)="togglePasswordField()"
+            *ngIf="modalMode === 'edit'">
+            {{ showPasswordField ? 'Annuler' : 'Modifier le mot de passe' }}
+          </button>
+        </div>
+        <input 
+          *ngIf="showPasswordField || modalMode === 'create'"
+          type="password" 
+          [(ngModel)]="newPassword" 
+          class="form-control"
+          [required]="modalMode === 'create'"
+          [placeholder]="modalMode === 'create' ? 'Entrez le mot de passe' : 'Laissez vide pour ne pas modifier'">
+        <small class="form-text" *ngIf="modalMode === 'edit' && !showPasswordField">
+          Le mot de passe ne sera pas modifié si vous ne remplissez pas ce champ
+        </small>
+      </div>
 
       <div class="form-group">
         <label>URL de l'Avatar</label>
         <input 
           type="text" 
-          [(ngModel)]="selectedUser!.avatarUrl" 
+          [(ngModel)]="selectedUser.avatarUrl" 
           class="form-control"
           [readonly]="modalMode === 'view'"
           placeholder="URL de l'image de profil">
@@ -330,8 +362,9 @@
     </div>
 
     <div class="modal-footer" *ngIf="modalMode !== 'view'">
-      <button class="btn btn-secondary" (click)="closeModal()">Annuler</button>
-      <button class="btn btn-primary" (click)="saveUser()">
+      <button type="button" class="btn btn-secondary" (click)="closeModal()">Annuler</button>
+      <button type="button" class="btn btn-primary" (click)="saveUser()">
+        <span class="material-icons">save</span>
         {{ modalMode === 'create' ? 'Créer' : 'Sauvegarder' }}
       </button>
     </div>

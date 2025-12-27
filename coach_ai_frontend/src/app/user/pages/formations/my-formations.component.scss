@@ -1,0 +1,597 @@
+@import '../../../../styles/variables';
+
+// Variables locales
+$primary-blue: #2d7ff9;
+$primary-green: #10b981;
+$text-primary: #1f2937;
+$text-secondary: #6b7280;
+$text-muted: #9ca3af;
+$border-color: #e5e7eb;
+$bg-light: #f9fafb;
+$bg-white: #ffffff;
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+
+.my-formations-page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+  background: $bg-light;
+  min-height: calc(100vh - 80px);
+}
+
+// Header
+.page-header {
+  margin-bottom: 32px;
+  padding: 0 8px;
+
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+}
+
+// Onglets améliorés
+.tabs-container {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid $border-color;
+  margin-bottom: 24px;
+  background: $bg-white;
+  border-radius: 12px 12px 0 0;
+  padding: 0;
+  box-shadow: $shadow-sm;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    padding: 16px 32px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    bottom: -2px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: $primary-green;
+      transform: scaleX(0);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    &:hover {
+      color: $primary-green;
+      background: rgba($primary-green, 0.05);
+    }
+
+    &.active {
+      color: $text-primary;
+      background: transparent;
+
+      &::before {
+        transform: scaleX(1);
+      }
+    }
+
+    // Badge de compteur
+    &::after {
+      content: attr(data-count);
+      margin-left: 8px;
+      padding: 2px 8px;
+      background: rgba($text-secondary, 0.1);
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: $text-secondary;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    &.active::after {
+      background: rgba($primary-green, 0.1);
+      color: $primary-green;
+      opacity: 1;
+    }
+  }
+}
+
+// Contenu des onglets
+.tab-content {
+  background: $bg-white;
+  border-radius: 0 0 12px 12px;
+  padding: 32px;
+  min-height: 400px;
+  box-shadow: $shadow-sm;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// État de chargement
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+  min-height: 400px;
+
+  .spinner {
+    width: 56px;
+    height: 56px;
+    border: 4px solid rgba($primary-green, 0.1);
+    border-top-color: $primary-green;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 24px;
+  }
+
+  p {
+    color: $text-secondary;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Liste des formations
+.formations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// Carte formation améliorée
+.formation-card-coursera {
+  display: flex;
+  gap: 24px;
+  padding: 28px;
+  background: $bg-white;
+  border: 1px solid $border-color;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: transparent;
+    transition: background 0.3s ease;
+  }
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: $primary-green;
+    transform: translateY(-2px);
+
+    &::before {
+      background: $primary-green;
+    }
+  }
+
+  &.completed {
+    border-left: 4px solid #10b981;
+    background: linear-gradient(to right, rgba(16, 185, 129, 0.02), $bg-white);
+
+    &::before {
+      background: #10b981;
+    }
+  }
+
+  // Thumbnail
+  .formation-thumbnail {
+    flex-shrink: 0;
+    width: 240px;
+    height: 140px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, $primary-green 0%, darken($primary-green, 12%) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: $shadow-sm;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), transparent);
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover img {
+      transform: scale(1.05);
+    }
+
+    .formation-icon {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      position: relative;
+      z-index: 1;
+
+      .material-icons {
+        font-size: 72px;
+        opacity: 0.95;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      }
+
+      &.completed {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      }
+    }
+  }
+
+  // Détails de la formation
+  .formation-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+
+    h3 {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: $text-primary;
+      margin: 0;
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+
+    .formation-provider {
+      font-size: 0.95rem;
+      color: $text-secondary;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .formation-description {
+      font-size: 0.95rem;
+      color: $text-secondary;
+      line-height: 1.6;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    // Section progression
+    .progress-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-top: 4px;
+      padding-top: 16px;
+      border-top: 1px solid $border-color;
+
+      .progress-info {
+        flex: 1;
+        min-width: 0;
+
+        .progress-label {
+          display: block;
+          font-size: 0.9rem;
+          color: $text-secondary;
+          margin-bottom: 10px;
+          font-weight: 600;
+        }
+
+        .progress-bar-coursera {
+          width: 100%;
+          height: 10px;
+          background: #e5e7eb;
+          border-radius: 5px;
+          overflow: hidden;
+          position: relative;
+
+          .progress-fill-coursera {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+            border-radius: 5px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+
+            &::after {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+              animation: shimmer 2s infinite;
+            }
+          }
+        }
+      }
+
+      .btn-resume {
+        padding: 12px 28px;
+        background: $primary-blue;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(45, 127, 249, 0.2);
+
+        &:hover {
+          background: darken($primary-blue, 8%);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 16px rgba(45, 127, 249, 0.4);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+
+    // Statistiques
+    .formation-stats {
+      display: flex;
+      gap: 32px;
+      font-size: 0.875rem;
+      color: $text-secondary;
+      margin-top: 4px;
+      flex-wrap: wrap;
+
+      span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        &::before {
+          content: '•';
+          color: $text-muted;
+          margin-right: 4px;
+        }
+      }
+    }
+
+    // Date de complétion
+    .completion-date {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #10b981;
+      margin-top: 8px;
+      font-weight: 500;
+
+      .material-icons {
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+// État vide
+.empty-state {
+  text-align: center;
+  padding: 100px 20px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .material-icons {
+    font-size: 96px;
+    color: $text-muted;
+    margin-bottom: 24px;
+    opacity: 0.5;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    color: $text-primary;
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+
+  p {
+    color: $text-secondary;
+    margin-bottom: 32px;
+    max-width: 500px;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+}
+
+// Boutons
+.btn {
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 1rem;
+  box-shadow: $shadow-sm;
+
+  .material-icons {
+    font-size: 20px;
+  }
+
+  &.btn-primary {
+    background: $primary-green;
+    color: white;
+
+    &:hover {
+      background: darken($primary-green, 8%);
+      transform: translateY(-2px);
+      box-shadow: $shadow-md;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Message d'erreur
+.error-message {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid #fca5a5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .material-icons {
+    font-size: 24px;
+  }
+}
+
+// Animation shimmer pour la barre de progression
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .formation-card-coursera {
+    .formation-thumbnail {
+      width: 200px;
+      height: 120px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .my-formations-page {
+    padding: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .tabs-container {
+    border-radius: 8px 8px 0 0;
+
+    .tab {
+      padding: 12px 20px;
+      font-size: 0.9rem;
+    }
+  }
+
+  .tab-content {
+    padding: 20px;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .formation-card-coursera {
+    flex-direction: column;
+    padding: 20px;
+
+    .formation-thumbnail {
+      width: 100%;
+      height: 200px;
+    }
+
+    .progress-section {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 16px;
+
+      .btn-resume {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .formation-stats {
+      flex-direction: column;
+      gap: 12px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .tabs-container .tab {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+
+  .formation-card-coursera {
+    padding: 16px;
+
+    .formation-details h3 {
+      font-size: 1.125rem;
+    }
+  }
+}
+

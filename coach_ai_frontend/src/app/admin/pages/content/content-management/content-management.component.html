@@ -6,6 +6,10 @@
       <p class="subtitle">Gérez formations, modules, cours et ressources</p>
     </div>
     <div class="header-actions">
+      <button class="btn btn-secondary" [routerLink]="['/admin/content/formations/enrollments']">
+        <span class="material-icons">people</span>
+        Inscriptions
+      </button>
       <button class="btn btn-secondary" (click)="viewMode = viewMode === 'list' ? 'hierarchy' : 'list'">
         <span class="material-icons">{{ viewMode === 'list' ? 'account_tree' : 'view_list' }}</span>
         {{ viewMode === 'list' ? 'Vue Hiérarchique' : 'Vue Liste' }}
@@ -230,6 +234,112 @@
           class="form-control">
         </textarea>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Formation Modal -->
+<div class="modal-overlay" *ngIf="showFormationModal">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>Créer une Nouvelle Formation</h2>
+      <button class="btn-close" (click)="closeFormationModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form (ngSubmit)="saveFormation()">
+        <div class="form-group">
+          <label>Titre de la Formation *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newFormation.title" 
+            name="title"
+            class="form-control" 
+            placeholder="Ex: Formation Complète en Développement Web"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea 
+            [(ngModel)]="newFormation.description" 
+            name="description"
+            class="form-control" 
+            rows="4"
+            placeholder="Décrivez la formation..."
+            required
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Niveau</label>
+            <select [(ngModel)]="newFormation.level" name="level" class="form-control">
+              <option value="Débutant">Débutant</option>
+              <option value="Intermédiaire">Intermédiaire</option>
+              <option value="Avancé">Avancé</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Catégorie</label>
+            <input 
+              type="text" 
+              [(ngModel)]="newFormation.category" 
+              name="category"
+              class="form-control" 
+              placeholder="Ex: Développement"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Durée (heures)</label>
+            <input 
+              type="number" 
+              [(ngModel)]="newFormation.duration" 
+              name="duration"
+              class="form-control" 
+              min="0"
+              placeholder="120"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Formateur *</label>
+          <select [(ngModel)]="newFormation.createdBy" name="trainerId" class="form-control" required>
+            <option value="">Sélectionnez un formateur</option>
+            <option *ngFor="let trainer of trainers" [value]="trainer.id">
+              {{ trainer.fullName }} ({{ trainer.email }})
+            </option>
+          </select>
+          <small class="form-text">Chaque formation doit être assignée à un formateur</small>
+        </div>
+
+        <div class="form-group">
+          <label>URL de l'Image (Thumbnail)</label>
+          <input 
+            type="url" 
+            [(ngModel)]="newFormation.thumbnail" 
+            name="thumbnail"
+            class="form-control" 
+            placeholder="https://example.com/image.jpg"
+          />
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeFormationModal()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <span class="material-icons">save</span>
+            Créer la Formation
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

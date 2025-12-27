@@ -26,7 +26,7 @@ import { TrainerModule } from '../../../models/trainer.interfaces';
           </div>
           <p>{{ module.description }}</p>
           <div class="module-stats">
-            <span><span class="material-icons">book</span> {{ module.coursesCount || module.courses?.length || 0 }} cours</span>
+            <span><span class="material-icons">book</span> {{ (module.coursesCount ?? (module.courses?.length ?? 0)) }} cours</span>
             <span><span class="material-icons">schedule</span> {{ module.estimatedDuration || module.duration }}h</span>
             <span><span class="material-icons">people</span> {{ module.enrolledStudents || 0 }} inscrits</span>
           </div>

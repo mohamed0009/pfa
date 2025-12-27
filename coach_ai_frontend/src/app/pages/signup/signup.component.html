@@ -37,10 +37,24 @@
           <p>Commencez votre formation dès aujourd'hui</p>
         </div>
 
+        <!-- Success Message -->
+        <div class="alert alert-success" *ngIf="successMessage">
+          <span class="material-icons">check_circle</span>
+          <div class="success-content">
+            <strong>{{ successMessage }}</strong>
+            <small>Redirection en cours...</small>
+          </div>
+        </div>
+
         <!-- Error Message -->
         <div class="alert alert-error" *ngIf="errorMessage && submitted">
           <span class="material-icons">error</span>
-          <span>{{ errorMessage }}</span>
+          <div class="error-content">
+            <strong>{{ errorMessage }}</strong>
+            <small *ngIf="errorMessage.includes('connexion au serveur') || errorMessage.includes('backend')">
+              Vérifiez que le backend est démarré sur http://localhost:8081
+            </small>
+          </div>
         </div>
 
         <!-- Signup Form -->
@@ -65,6 +79,34 @@
             </div>
           </div>
 
+          <!-- Role Selection Field -->
+          <div class="form-group">
+            <label for="role">Rôle *</label>
+            <div class="input-wrapper">
+              <span class="input-icon material-icons">badge</span>
+              <select
+                id="role"
+                formControlName="role"
+                class="form-control"
+                [class.invalid]="submitted && f['role'].errors"
+                (change)="selectedRole = $any($event.target).value"
+              >
+                <option value="USER">Étudiant</option>
+                <option value="TRAINER">Formateur</option>
+                <option value="ADMIN">Administrateur</option>
+              </select>
+            </div>
+            <div class="error-message" *ngIf="submitted && f['role'].errors">
+              <span *ngIf="f['role'].errors['required']">Le rôle est requis</span>
+            </div>
+            <div class="info-message">
+              <span class="material-icons">info</span>
+              <span *ngIf="selectedRole === 'USER'">Email doit se terminer par &#64;etud.com</span>
+              <span *ngIf="selectedRole === 'TRAINER'">Email doit se terminer par &#64;form.com</span>
+              <span *ngIf="selectedRole === 'ADMIN'">Email doit se terminer par &#64;adm.com</span>
+            </div>
+          </div>
+
           <!-- Email Field -->
           <div class="form-group">
             <label for="email">Adresse Email</label>
@@ -76,12 +118,15 @@
                 formControlName="email"
                 class="form-control"
                 [class.invalid]="submitted && f['email'].errors"
-                placeholder="Entrez votre email"
+                [placeholder]="selectedRole === 'USER' ? 'exemple&#64;etud.com' : selectedRole === 'TRAINER' ? 'exemple&#64;form.com' : 'exemple&#64;adm.com'"
               />
             </div>
             <div class="error-message" *ngIf="submitted && f['email'].errors">
               <span *ngIf="f['email'].errors['required']">L'email est requis</span>
               <span *ngIf="f['email'].errors['email']">L'email n'est pas valide</span>
+              <span *ngIf="f['email'].errors['emailFormat']">
+                L'email doit se terminer par {{ f['email'].errors['emailFormat'].expectedDomain }} pour le rôle {{ f['email'].errors['emailFormat'].role }}
+              </span>
             </div>
           </div>
 
@@ -160,12 +205,13 @@
           <!-- Terms Checkbox -->
           <div class="form-group">
             <label class="checkbox-label">
-              <input type="checkbox" formControlName="acceptTerms" />
-              <span>
+              <input type="checkbox" formControlName="acceptTerms" id="acceptTerms" />
+              <span class="checkbox-custom"></span>
+              <span class="terms-text">
                 J'accepte les 
-                <a href="#" class="link-primary">Conditions d'Utilisation</a> 
+                <a href="#" class="link-inline">Conditions d'Utilisation</a> 
                 et la 
-                <a href="#" class="link-primary">Politique de Confidentialité</a>
+                <a href="#" class="link-inline">Politique de Confidentialité</a>
               </span>
             </label>
             <div class="error-message" *ngIf="submitted && f['acceptTerms'].errors">

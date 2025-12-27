@@ -11,7 +11,7 @@
           Parcours d'apprentissage personnalisés, accompagnement intelligent et suivi en temps réel.<br>
           Développez vos compétences avec l'IA au service de votre réussite.
         </p>
-        <button class="btn btn-hero" (click)="scrollToSection('services')">
+        <button class="btn btn-hero" routerLink="/login">
           Commencer Maintenant
         </button>
       </div>
@@ -57,7 +57,7 @@
         <div class="about-stats">
           <div class="stat" *ngFor="let stat of statistics">
             <button class="btn btn-stat">En Savoir Plus</button>
-            <button class="btn btn-stat-primary">Démarrer</button>
+            <button class="btn btn-stat-primary" routerLink="/login">Démarrer</button>
           </div>
         </div>
       </div>

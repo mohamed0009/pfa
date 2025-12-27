@@ -85,6 +85,7 @@
   }
 
   .summary-content {
+    flex: 1;
     h3 {
       font-size: 1.75rem;
       font-weight: 700;
@@ -95,6 +96,21 @@
     p {
       color: #64748b;
       font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .summary-link {
+      color: #3b82f6;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-block;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #2563eb;
+        text-decoration: underline;
+      }
     }
   }
 }

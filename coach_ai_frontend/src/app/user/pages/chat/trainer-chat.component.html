@@ -1,0 +1,139 @@
+<div class="chat-container">
+  <!-- Conversations Sidebar -->
+  <aside class="conversations-sidebar" [class.show]="showConversationsList">
+    <div class="sidebar-header">
+      <h2>Conversations</h2>
+      <button class="btn-icon" (click)="openNewConversationModal()" title="Nouvelle conversation">
+        <span class="material-icons">add_circle</span>
+      </button>
+    </div>
+
+    <div class="conversations-list">
+      <div 
+        class="conversation-item" 
+        *ngFor="let conv of conversations"
+        [class.active]="activeConversation?.id === conv.id"
+        (click)="selectConversation(conv)">
+        <div class="conversation-content">
+          <div class="conversation-header">
+            <h4>{{ conv.title }}</h4>
+            <span class="conversation-time">{{ formatTime(conv.lastMessageDate) }}</span>
+          </div>
+          <p class="conversation-preview">{{ conv.lastMessage || 'Aucun message' }}</p>
+          <span class="conversation-badge" *ngIf="conv.messagesCount > 0">{{ conv.messagesCount }} messages</span>
+        </div>
+      </div>
+
+      <div *ngIf="conversations.length === 0 && !isLoading" class="empty-conversations">
+        <span class="material-icons">chat_bubble_outline</span>
+        <p>Aucune conversation</p>
+        <button class="btn btn-primary btn-sm" (click)="openNewConversationModal()">
+          Commencer une conversation
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Chat Area -->
+  <main class="chat-area">
+    <!-- Chat Header -->
+    <header class="chat-header" *ngIf="activeConversation">
+      <button class="btn-menu-toggle" (click)="toggleConversationsList()">
+        <span class="material-icons">menu</span>
+      </button>
+      <div class="chat-header-info">
+        <div class="trainer-avatar">
+          <span class="material-icons">person</span>
+        </div>
+        <div>
+          <h3>Votre Formateur</h3>
+          <p>{{ activeConversation.title }}</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Messages Container -->
+    <div class="messages-container" #messagesContainer *ngIf="activeConversation">
+      <div class="messages-list">
+        <div 
+          class="message" 
+          *ngFor="let message of messages"
+          [class.message-user]="message.sender === 'USER'"
+          [class.message-trainer]="message.sender === 'AI'">
+          
+          <div class="message-avatar" *ngIf="message.sender === 'AI'">
+            <span class="material-icons">person</span>
+          </div>
+
+          <div class="message-content">
+            <div class="message-bubble">
+              <p>{{ message.content }}</p>
+            </div>
+            <span class="message-time">{{ formatTime(message.timestamp) }}</span>
+          </div>
+
+          <div class="message-avatar" *ngIf="message.sender === 'USER'">
+            <span class="material-icons">person</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Conversation Selected -->
+    <div class="empty-chat" *ngIf="!activeConversation && !isLoading">
+      <span class="material-icons">chat_bubble_outline</span>
+      <h3>Chat avec votre Formateur</h3>
+      <p>Sélectionnez une conversation ou créez-en une nouvelle pour commencer</p>
+      <button class="btn btn-primary" (click)="openNewConversationModal()">
+        <span class="material-icons">add</span>
+        Nouvelle Conversation
+      </button>
+    </div>
+
+    <!-- Message Input -->
+    <div class="message-input-container" *ngIf="activeConversation">
+      <form (ngSubmit)="sendMessage()" class="message-form">
+        <input 
+          type="text" 
+          [(ngModel)]="newMessage"
+          name="newMessage"
+          placeholder="Tapez votre message..."
+          class="message-input">
+        <button type="submit" class="send-btn" [disabled]="!newMessage.trim()">
+          <span class="material-icons">send</span>
+        </button>
+      </form>
+    </div>
+  </main>
+</div>
+
+<!-- New Conversation Modal -->
+<div class="modal-overlay" *ngIf="showNewConversationModal" (click)="closeNewConversationModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Nouvelle Conversation</h3>
+      <button class="btn-close" (click)="closeNewConversationModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="conversationTitle">Titre de la conversation</label>
+        <input 
+          type="text" 
+          id="conversationTitle"
+          [(ngModel)]="newConversationTitle"
+          name="conversationTitle"
+          placeholder="Ex: Question sur le cours JavaScript"
+          class="form-control">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeNewConversationModal()">Annuler</button>
+      <button class="btn btn-primary" (click)="createConversation()" [disabled]="!newConversationTitle.trim()">
+        Créer
+      </button>
+    </div>
+  </div>
+</div>
+

@@ -1,17 +1,27 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, BehaviorSubject, throwError } from 'rxjs';
+import { map, catchError, tap, delay } from 'rxjs/operators';
 import { UserNotification } from '../models/user.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserNotificationsService {
+  private apiUrl = 'http://localhost:8081/api/user/notifications';
   private notificationsSubject = new BehaviorSubject<UserNotification[]>([]);
   public notifications$ = this.notificationsSubject.asObservable();
 
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+    this.loadNotifications();
+  }
+
+  private loadNotifications(): void {
+    this.getNotifications().subscribe();
+  }
 
   private mockNotifications: UserNotification[] = [
     {
@@ -79,31 +89,52 @@ export class UserNotificationsService {
     }
   ];
 
-  constructor() {
-    this.notificationsSubject.next(this.mockNotifications);
-    this.updateUnreadCount();
-  }
-
   // Récupérer toutes les notifications
   getNotifications(): Observable<UserNotification[]> {
-    return of(this.mockNotifications).pipe(delay(300));
+    return this.http.get<any[]>(this.apiUrl).pipe(
+      map((notifs: any[]) => {
+        const notifications: UserNotification[] = notifs.map(notif => ({
+          id: notif.id,
+          userId: notif.userId || '',
+          type: notif.type || 'info',
+          title: notif.title || '',
+          message: notif.message || '',
+          createdAt: notif.createdAt ? new Date(notif.createdAt) : new Date(),
+          readAt: notif.readAt ? new Date(notif.readAt) : undefined,
+          priority: notif.priority || 'medium',
+          actionUrl: notif.actionUrl,
+          createdBy: notif.createdBy || 'system' // Source de la notification
+        }));
+        this.notificationsSubject.next(notifications);
+        this.updateUnreadCount(notifications);
+        return notifications;
+      }),
+      catchError((error) => {
+        console.error('Error fetching notifications:', error);
+        return of(this.mockNotifications);
+      })
+    );
   }
 
   // Récupérer les notifications non lues
   getUnreadNotifications(): Observable<UserNotification[]> {
-    const unread = this.mockNotifications.filter(n => !n.readAt);
-    return of(unread).pipe(delay(300));
+    return this.getNotifications().pipe(
+      map(notifications => notifications.filter(n => !n.readAt))
+    );
   }
 
   // Marquer une notification comme lue
   markAsRead(notificationId: string): Observable<boolean> {
-    const notification = this.mockNotifications.find(n => n.id === notificationId);
-    if (notification && !notification.readAt) {
-      notification.readAt = new Date();
-      this.notificationsSubject.next([...this.mockNotifications]);
-      this.updateUnreadCount();
-    }
-    return of(true).pipe(delay(200));
+    return this.http.put<any>(`${this.apiUrl}/${notificationId}/read`, {}).pipe(
+      map(() => {
+        this.loadNotifications();
+        return true;
+      }),
+      catchError((error) => {
+        console.error('Error marking notification as read:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Marquer toutes comme lues
@@ -131,13 +162,23 @@ export class UserNotificationsService {
 
   // Obtenir le nombre de notifications non lues
   getUnreadCount(): Observable<number> {
-    const count = this.mockNotifications.filter(n => !n.readAt).length;
-    return of(count).pipe(delay(100));
+    return this.http.get<{count: number}>(`${this.apiUrl}/unread/count`).pipe(
+      map(response => {
+        this.unreadCountSubject.next(response.count);
+        return response.count;
+      }),
+      catchError((error) => {
+        console.error('Error fetching unread count:', error);
+        const count = this.notificationsSubject.value.filter(n => !n.readAt).length;
+        return of(count);
+      })
+    );
   }
 
   // Mettre à jour le compteur de non lues
-  private updateUnreadCount(): void {
-    const count = this.mockNotifications.filter(n => !n.readAt).length;
+  private updateUnreadCount(notifications?: UserNotification[]): void {
+    const notifs = notifications || this.notificationsSubject.value;
+    const count = notifs.filter(n => !n.readAt).length;
     this.unreadCountSubject.next(count);
   }
 

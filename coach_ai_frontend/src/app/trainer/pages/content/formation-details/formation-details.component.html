@@ -1,0 +1,404 @@
+<div class="page-container" *ngIf="formation">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <button class="btn-back" (click)="router.navigate(['/trainer/content/formations'])" type="button">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div>
+        <h1>{{ formation.title }}</h1>
+        <p class="subtitle">{{ formation.description || 'Aucune description' }}</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" [routerLink]="['/trainer/content/formations', formation.id, 'students']">
+        <span class="material-icons">people</span>
+        Voir les étudiants
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModuleModal()">
+        <span class="material-icons">add</span>
+        Nouveau Module
+      </button>
+    </div>
+  </header>
+
+  <!-- Formation Info -->
+  <div class="formation-info">
+    <div class="info-item">
+      <span class="material-icons">trending_up</span>
+      <div>
+        <span class="label">Niveau</span>
+        <span class="value">{{ formation.level || 'Non défini' }}</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">schedule</span>
+      <div>
+        <span class="label">Durée</span>
+        <span class="value">{{ formation.duration || 0 }}h</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">people</span>
+      <div>
+        <span class="label">Inscrits</span>
+        <span class="value">{{ formation.enrolledCount || 0 }}</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">check_circle</span>
+      <div>
+        <span class="label">Statut</span>
+        <span class="value status-badge" [style.background]="getStatusColor(formation.status)">
+          {{ getStatusBadge(formation.status) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modules Section -->
+  <section class="modules-section">
+    <div class="section-header">
+      <h2>Structure de la Formation</h2>
+      <div class="header-right">
+        <div class="duration-indicator" [class.valid]="isDurationValid()" [class.invalid]="!isDurationValid()">
+          <span class="material-icons">{{ isDurationValid() ? 'check_circle' : 'warning' }}</span>
+          <span class="duration-text">
+            {{ getTotalModulesDuration().toFixed(1) }}h / {{ formation.duration }}h
+          </span>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getDurationProgress()" [class.over-limit]="!isDurationValid()"></div>
+          </div>
+        </div>
+        <span class="modules-count">{{ modules.length }} module(s)</span>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement de la structure...</p>
+    </div>
+
+    <!-- Modules Tree -->
+    <div *ngIf="!isLoading && modules.length > 0" class="modules-tree">
+      <div *ngFor="let module of modules; let i = index" class="module-item">
+        <!-- Module Header -->
+        <div class="module-header" (click)="toggleModule(module.id)">
+          <div class="module-order">{{ i + 1 }}</div>
+          <div class="module-content">
+            <div class="module-title-row">
+              <h3>{{ module.title }}</h3>
+              <span class="material-icons expand-icon" [class.expanded]="isModuleExpanded(module.id)">
+                chevron_right
+              </span>
+            </div>
+            <p class="module-description">{{ module.description || 'Aucune description' }}</p>
+            <div class="module-meta">
+              <span class="meta-item">
+                <span class="material-icons">menu_book</span>
+                {{ module.coursesCount || module.courses?.length || 0 }} cours
+              </span>
+              <span class="meta-item">
+                <span class="material-icons">schedule</span>
+                {{ module.duration || module.estimatedDuration || 0 }}h
+              </span>
+              <span class="meta-item status-badge" [style.background]="getStatusColor(module.status)">
+                {{ getStatusBadge(module.status) }}
+              </span>
+            </div>
+          </div>
+          <div class="module-actions" (click)="$event.stopPropagation()">
+            <button class="btn-icon" [routerLink]="['/trainer/content/modules', module.id]" title="Gérer">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="btn-icon btn-danger" (click)="deleteModule(module.id)" title="Supprimer">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Module Content (Cours) -->
+        <div class="module-content-expanded" *ngIf="isModuleExpanded(module.id)">
+          <div *ngIf="!module.courses || module.courses.length === 0" class="empty-courses">
+            <span class="material-icons">info</span>
+            <p>Aucun cours dans ce module</p>
+            <button class="btn btn-secondary" [routerLink]="['/trainer/content/modules', module.id]">
+              <span class="material-icons">add</span>
+              Ajouter un cours
+            </button>
+          </div>
+
+          <div *ngFor="let course of module.courses" class="course-item">
+            <!-- Course Header -->
+            <div class="course-header" (click)="toggleCourse(course.id, $event)">
+              <div class="course-icon">
+                <span class="material-icons">menu_book</span>
+              </div>
+              <div class="course-content">
+                <div class="course-title-row">
+                  <h4>{{ course.title }}</h4>
+                  <span class="material-icons expand-icon" [class.expanded]="isCourseExpanded(course.id)">
+                    chevron_right
+                  </span>
+                </div>
+                <p class="course-description">{{ course.description || 'Aucune description' }}</p>
+                <div class="course-meta">
+                  <span class="meta-item">
+                    <span class="material-icons">play_circle</span>
+                    {{ course.lessons?.length || 0 }} leçons
+                  </span>
+                  <span class="meta-item">
+                    <span class="material-icons">schedule</span>
+                    {{ course.duration || 0 }} min
+                  </span>
+                  <span class="meta-item status-badge" [style.background]="getStatusColor(course.status)">
+                    {{ getStatusBadge(course.status) }}
+                  </span>
+                </div>
+              </div>
+              <div class="course-actions" (click)="$event.stopPropagation()">
+                <button class="btn-icon" [routerLink]="['/trainer/content/courses', course.id]" title="Gérer">
+                  <span class="material-icons">edit</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Course Content (Lessons) -->
+            <div class="course-content-expanded" *ngIf="isCourseExpanded(course.id)">
+              <!-- Lessons -->
+              <div class="lessons-section" *ngIf="course.lessons && course.lessons.length > 0">
+                <h5 class="section-title">
+                  <span class="material-icons">play_circle</span>
+                  Leçons ({{ course.lessons.length }})
+                </h5>
+                <div class="lessons-list">
+                  <div *ngFor="let lesson of course.lessons" class="lesson-item">
+                    <div class="lesson-icon" [style.background]="getLessonTypeColor(lesson.type)">
+                      <span class="material-icons">{{ getLessonTypeIcon(lesson.type) }}</span>
+                    </div>
+                    <div class="lesson-content">
+                      <h6>{{ lesson.title }}</h6>
+                      <div class="lesson-meta">
+                        <span class="meta-item">
+                          <span class="material-icons">{{ getLessonTypeIcon(lesson.type) }}</span>
+                          {{ getLessonTypeLabel(lesson.type) }}
+                        </span>
+                        <span class="meta-item" *ngIf="lesson.duration">
+                          <span class="material-icons">schedule</span>
+                          {{ lesson.duration }} min
+                        </span>
+                      </div>
+                    </div>
+                    <div class="lesson-actions">
+                      <button class="btn-icon" [routerLink]="['/trainer/content/courses', course.id]" title="Modifier">
+                        <span class="material-icons">edit</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Labs (Exercises) -->
+              <div class="labs-section" *ngIf="course.exercises && course.exercises.length > 0">
+                <h5 class="section-title">
+                  <span class="material-icons">code</span>
+                  Labs pratiques ({{ course.exercises.length }})
+                </h5>
+                <div class="exercises-list">
+                  <div *ngFor="let exercise of course.exercises" class="exercise-item">
+                    <div class="exercise-icon">
+                      <span class="material-icons">code</span>
+                    </div>
+                    <div class="exercise-content">
+                      <h6>{{ exercise.title }}</h6>
+                      <p>{{ exercise.description || 'Aucune description' }}</p>
+                      <div class="exercise-meta">
+                        <span class="meta-item">
+                          <span class="material-icons">schedule</span>
+                          {{ exercise.estimatedTime || 0 }} min
+                        </span>
+                        <span class="meta-item">
+                          <span class="material-icons">trending_up</span>
+                          {{ exercise.difficulty || 'Moyen' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty Lessons State -->
+              <div *ngIf="(!course.lessons || course.lessons.length === 0) && (!course.exercises || course.exercises.length === 0)" class="empty-lessons">
+                <span class="material-icons">info</span>
+                <p>Aucune leçon ou lab dans ce cours</p>
+                <button class="btn btn-secondary" [routerLink]="['/trainer/content/courses', course.id]">
+                  <span class="material-icons">add</span>
+                  Ajouter du contenu
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Module Quiz (QCM) -->
+          <div class="module-quiz-section" *ngIf="getModuleQuiz(module)">
+            <div class="quiz-card">
+              <div class="quiz-header">
+                <div class="quiz-icon">
+                  <span class="material-icons">quiz</span>
+                </div>
+                <div class="quiz-content">
+                  <h5>
+                    <span class="material-icons">quiz</span>
+                    Quiz QCM - {{ getModuleQuiz(module)!.title }}
+                  </h5>
+                  <p>{{ getModuleQuiz(module)!.description || 'Quiz d\'évaluation du module' }}</p>
+                  <div class="quiz-meta">
+                    <span class="meta-item">
+                      <span class="material-icons">help_outline</span>
+                      {{ getQuizQuestionsCount(getModuleQuiz(module)!) }} questions
+                    </span>
+                    <span class="meta-item">
+                      <span class="material-icons">schedule</span>
+                      {{ getModuleQuiz(module)!.duration || 0 }} min
+                    </span>
+                    <span class="meta-item">
+                      <span class="material-icons">check_circle</span>
+                      Score minimum: {{ getModuleQuiz(module)!.passingScore || 70 }}%
+                    </span>
+                    <span class="meta-item" *ngIf="getModuleQuiz(module)!.maxAttempts">
+                      <span class="material-icons">repeat</span>
+                      {{ getModuleQuiz(module)!.maxAttempts }} tentatives max
+                    </span>
+                  </div>
+                </div>
+                <div class="quiz-actions">
+                  <button class="btn btn-primary" [routerLink]="['/trainer/content/quizzes', getModuleQuiz(module)!.id]" title="Gérer le quiz">
+                    <span class="material-icons">edit</span>
+                    Gérer
+                  </button>
+                </div>
+              </div>
+
+              <!-- Quiz Questions Preview -->
+              <div class="quiz-questions-preview" *ngIf="getModuleQuiz(module)!.questions && getModuleQuiz(module)!.questions.length > 0">
+                <h6>Questions du Quiz (QCM):</h6>
+                <div class="questions-list">
+                  <div *ngFor="let question of getModuleQuiz(module)!.questions; let qIndex = index" class="question-item">
+                    <div class="question-number">{{ qIndex + 1 }}</div>
+                    <div class="question-content">
+                      <p class="question-text">{{ question.question }}</p>
+                      <div class="question-type-badge" *ngIf="isQCMQuestion(question)">
+                        <span class="material-icons">check_circle</span>
+                        {{ question.type === 'mcq' ? 'QCM' : 'Vrai/Faux' }}
+                      </div>
+                      <div class="question-options" *ngIf="question.type === 'mcq' && question.options">
+                        <div *ngFor="let option of question.options; let oIndex = index" class="option-item">
+                          <span class="option-letter">{{ getOptionLetter(oIndex) }}</span>
+                          <span>{{ option }}</span>
+                          <span class="correct-answer" *ngIf="oIndex === question.correctAnswer">
+                            <span class="material-icons">check</span>
+                          </span>
+                        </div>
+                      </div>
+                      <div class="question-points">
+                        <span class="material-icons">star</span>
+                        {{ question.points }} points
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && modules.length === 0" class="empty-state">
+      <span class="material-icons">view_module</span>
+      <h3>Aucun module</h3>
+      <p class="warning-text">⚠️ Une formation doit contenir au moins un module</p>
+      <p>Créez votre premier module pour cette formation</p>
+      <button class="btn btn-primary" (click)="openCreateModuleModal()">
+        <span class="material-icons">add</span>
+        Créer un Module
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- Modal de Création de Module -->
+<div *ngIf="showCreateModuleModal" class="modal-overlay" (click)="closeCreateModuleModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Créer un Nouveau Module</h2>
+      <button class="btn-close" (click)="closeCreateModuleModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="createModule()" class="modal-body">
+      <div class="form-group">
+        <label>Titre *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newModule.title" 
+          name="title"
+          placeholder="Ex: Introduction à JavaScript"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea 
+          [(ngModel)]="newModule.description" 
+          name="description"
+          rows="4"
+          placeholder="Décrivez le module..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ordre</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newModule.order" 
+            name="order"
+            min="1">
+        </div>
+
+        <div class="form-group">
+          <label>Durée (en heures) *</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newModule.duration" 
+            name="duration"
+            min="0"
+            step="0.5"
+            required>
+          <div class="duration-hint" *ngIf="formation">
+            <span *ngIf="getTotalModulesDuration() + newModule.duration > formation.duration" class="error-hint">
+              ⚠️ La somme dépassera la durée de la formation ({{ formation.duration }}h)
+            </span>
+            <span *ngIf="getTotalModulesDuration() + newModule.duration <= formation.duration" class="success-hint">
+              ✓ Reste {{ (formation.duration - getTotalModulesDuration() - newModule.duration).toFixed(1) }}h disponible
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModuleModal()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isCreatingModule || !newModule.title.trim()">
+          <span *ngIf="isCreatingModule" class="spinner-small"></span>
+          <span *ngIf="!isCreatingModule">Créer le Module</span>
+          <span *ngIf="isCreatingModule">Création...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

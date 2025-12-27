@@ -23,9 +23,14 @@ public class Quiz {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     
+    // Quiz peut être associé à un Course (ancien système) ou à un Module (nouveau système)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
+    @JoinColumn(name = "course_id")
     private Course course;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "module_id")
+    private Module module;
     
     @Column(nullable = false)
     private String title;

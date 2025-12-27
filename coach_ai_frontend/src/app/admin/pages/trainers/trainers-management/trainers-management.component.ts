@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TrainersService } from '../../../services/trainers.service';
 import { ContentManagementService } from '../../../services/content-management.service';
 import { Trainer, TrainerMetrics, Formation } from '../../../models/admin.interfaces';
@@ -8,11 +9,11 @@ import { Trainer, TrainerMetrics, Formation } from '../../../models/admin.interf
 @Component({
   selector: 'app-trainers-management',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './trainers-management.component.html',
   styleUrl: './trainers-management.component.scss'
 })
-export class TrainersManagementComponent implements OnInit {
+export class TrainersManagementComponent implements OnInit, OnDestroy {
   trainers: Trainer[] = [];
   formations: Formation[] = [];
   
@@ -21,9 +22,14 @@ export class TrainersManagementComponent implements OnInit {
     total: 0,
     active: 0,
     pending: 0,
+    online: 0,
     totalStudents: 0,
+    pendingFormations: 0,
     averageRating: 0
   };
+  
+  // Auto-refresh pour le statut en ligne
+  private refreshInterval: any;
 
   // Filter
   statusFilter: 'all' | 'pending' | 'active' | 'suspended' = 'all';
@@ -58,6 +64,18 @@ export class TrainersManagementComponent implements OnInit {
     this.loadTrainers();
     this.loadFormations();
     this.loadStatistics();
+    
+    // Rafraîchir automatiquement toutes les 30 secondes pour le statut en ligne
+    this.refreshInterval = setInterval(() => {
+      this.loadTrainers();
+      this.loadStatistics();
+    }, 30000); // 30 secondes
+  }
+  
+  ngOnDestroy(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
   }
 
   loadTrainers(): void {

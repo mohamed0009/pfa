@@ -1,12 +1,16 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { map, catchError, delay } from 'rxjs/operators';
 import { LearningPath, LearningModule, Lesson, Recommendation } from '../models/user.interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LearningPathService {
+  private apiUrl = 'http://localhost:8081/api/user/learning-path';
+  
+  constructor(private http: HttpClient) {}
   private mockLearningPath: LearningPath = {
     id: 'path1',
     userId: 'user1',
@@ -206,11 +210,47 @@ export class LearningPathService {
     }
   ];
 
-  constructor() {}
-
   // Récupérer le parcours d'apprentissage
   getLearningPath(): Observable<LearningPath> {
-    return of(this.mockLearningPath).pipe(delay(400));
+    return this.http.get<any>(this.apiUrl).pipe(
+      map((data: any) => {
+        return {
+          id: data.id || 'path1',
+          userId: data.userId || '',
+          formation: data.formation || '',
+          niveau: data.niveau || 'Débutant',
+          startDate: data.startDate ? new Date(data.startDate) : new Date(),
+          estimatedEndDate: data.estimatedEndDate ? new Date(data.estimatedEndDate) : new Date(),
+          currentStep: data.currentStep || 0,
+          totalSteps: data.totalSteps || 0,
+          progressPercentage: data.progressPercentage || 0,
+          modules: (data.modules || []).map((m: any) => ({
+            id: m.id,
+            title: m.title || '',
+            description: m.description || '',
+            status: m.status || 'available',
+            progressPercentage: m.progressPercentage || 0,
+            estimatedDuration: m.estimatedDuration || 0,
+            order: m.order || 0,
+            lessons: (m.lessons || []).map((l: any) => ({
+              id: l.id,
+              moduleId: l.moduleId || m.id,
+              title: l.title || '',
+              description: l.description || '',
+              type: l.type || 'Vidéo',
+              duration: l.duration || 0,
+              status: l.status || 'available',
+              resourceUrl: l.resourceUrl,
+              order: l.order || 0
+            }))
+          }))
+        } as LearningPath;
+      }),
+      catchError((error) => {
+        console.error('Error fetching learning path:', error);
+        return of(this.mockLearningPath).pipe(delay(400));
+      })
+    );
   }
 
   // Récupérer un module spécifique
@@ -278,22 +318,65 @@ export class LearningPathService {
     this.mockLearningPath.currentStep = completedModules + 1;
   }
 
-  // Récupérer les recommandations
+  // Récupérer les recommandations approuvées par le formateur
   getRecommendations(): Observable<Recommendation[]> {
-    return of(this.mockRecommendations).pipe(delay(350));
+    return this.http.get<any[]>(`http://localhost:8081/api/user/recommendations`).pipe(
+      map((recs: any[]) => {
+        if (!recs || recs.length === 0) {
+          return this.mockRecommendations;
+        }
+        // Mapper les recommandations backend vers l'interface frontend
+        return recs.map(r => ({
+          id: r.id || '',
+          userId: r.student?.id || '',
+          type: 'course' as 'course' | 'exercise' | 'quiz' | 'resource',
+          title: r.course?.title || '',
+          description: r.course?.description || '',
+          reason: r.reason || '',
+          targetId: r.course?.id || '',
+          relevanceScore: r.confidenceScore || 0,
+          createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
+          isAIGenerated: true // Les recommandations sont générées par l'IA
+        } as Recommendation));
+      }),
+      catchError((error) => {
+        console.error('Error fetching recommendations:', error);
+        return of(this.mockRecommendations).pipe(delay(350));
+      })
+    );
   }
 
   // Obtenir le prochain contenu à étudier
   getNextLesson(): Observable<Lesson | null> {
-    for (const module of this.mockLearningPath.modules) {
-      const nextLesson = module.lessons.find(
-        l => l.status === 'in_progress' || l.status === 'available'
-      );
-      if (nextLesson) {
-        return of(nextLesson).pipe(delay(200));
-      }
-    }
-    return of(null).pipe(delay(200));
+    return this.http.get<any>(`${this.apiUrl}/next-lesson`).pipe(
+      map((lesson: any) => {
+        if (!lesson) return null;
+        return {
+          id: lesson.id,
+          moduleId: lesson.moduleId || '',
+          title: lesson.title || '',
+          description: lesson.description || '',
+          type: lesson.type || 'Vidéo',
+          duration: lesson.duration || 0,
+          status: lesson.status || 'available',
+          resourceUrl: lesson.resourceUrl,
+          order: lesson.order || 0
+        } as Lesson;
+      }),
+      catchError((error) => {
+        console.error('Error fetching next lesson:', error);
+        // Fallback to mock logic
+        for (const module of this.mockLearningPath.modules) {
+          const nextLesson = module.lessons.find(
+            l => l.status === 'in_progress' || l.status === 'available'
+          );
+          if (nextLesson) {
+            return of(nextLesson).pipe(delay(200));
+          }
+        }
+        return of(null).pipe(delay(200));
+      })
+    );
   }
 }
 

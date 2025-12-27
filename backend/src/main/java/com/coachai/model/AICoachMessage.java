@@ -21,7 +21,7 @@ public class AICoachMessage {
     private String id;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable = false)
+    @JoinColumn(name = "session_id", nullable = false, columnDefinition = "uuid")
     private AICoachSession session;
     
     @Enumerated(EnumType.STRING)

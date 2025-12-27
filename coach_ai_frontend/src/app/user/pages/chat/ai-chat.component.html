@@ -54,8 +54,14 @@
         </div>
       </div>
       <div class="chat-header-actions">
-        <button class="btn-icon" title="Informations">
-          <span class="material-icons">info</span>
+        <button 
+          class="btn-icon btn-audio-toggle" 
+          [class.active]="autoPlayAudio || isSpeaking"
+          [class.disabled]="!synthesisSupported"
+          [title]="!synthesisSupported ? 'Synthèse vocale non supportée dans ce navigateur' : (isSpeaking ? 'Arrêter la lecture' : (autoPlayAudio ? 'Désactiver la lecture automatique' : 'Lire la dernière réponse de l\'IA'))"
+          (click)="toggleAudioPlayback()"
+          [disabled]="!synthesisSupported">
+          <span class="material-icons">{{ isSpeaking ? 'volume_up' : (autoPlayAudio ? 'volume_up' : 'volume_off') }}</span>
         </button>
       </div>
     </header>
@@ -77,6 +83,19 @@
             <div class="message-bubble">
               <p>{{ message.content }}</p>
               
+              <!-- AI Metadata (difficulty and confidence) -->
+              <div class="ai-metadata" *ngIf="message.sender === 'ai' && getAIMetadata(message.id)">
+                <div class="metadata-badges">
+                  <span class="badge badge-difficulty" [class]="'badge-' + getAIMetadata(message.id)?.predictedDifficulty?.toLowerCase()">
+                    <span class="material-icons">trending_up</span>
+                    {{ getAIMetadata(message.id)?.predictedDifficulty || 'Unknown' }}
+                  </span>
+                  <span class="badge badge-confidence" *ngIf="getAIMetadata(message.id)?.confidence">
+                    <span class="material-icons">verified</span>
+                    {{ (getAIMetadata(message.id)!.confidence * 100).toFixed(0) }}% confiance
+                  </span>
+                </div>
+              </div>
               <!-- Attachments -->
               <div class="message-attachments" *ngIf="message.attachments && message.attachments.length > 0">
                 <div 
@@ -142,17 +161,14 @@
         
         <button 
           type="button" 
-          class="btn-icon btn-audio" 
-          [class.recording]="isRecording"
-          [title]="isRecording ? 'Arrêter l\'enregistrement' : 'Enregistrer un message audio'"
-          (mousedown)="startRecording(); $event.preventDefault()"
-          (mouseup)="stopRecording(); $event.preventDefault()"
-          (mouseleave)="stopRecording()"
-          (touchstart)="startRecording(); $event.preventDefault()"
-          (touchend)="stopRecording(); $event.preventDefault()"
-          (click)="$event.preventDefault()">
-          <span class="material-icons">{{ isRecording ? 'stop' : 'mic' }}</span>
-          <span class="recording-indicator" *ngIf="isRecording">
+          class="btn-icon btn-voice-input" 
+          [class.active]="isListening || isRecording"
+          [class.recording]="isRecording || isListening"
+          [title]="isListening || isRecording ? 'Arrêter la reconnaissance vocale' : 'Reconnaissance vocale (parler pour écrire)'"
+          (click)="toggleVoiceInput()"
+          *ngIf="speechSupported">
+          <span class="material-icons">{{ isListening || isRecording ? 'mic_off' : 'keyboard_voice' }}</span>
+          <span class="recording-indicator" *ngIf="isRecording || isListening">
             <span class="pulse"></span>
           </span>
         </button>
@@ -161,8 +177,9 @@
           type="text" 
           [(ngModel)]="newMessage"
           name="message"
-          placeholder="Posez votre question au coach IA..."
+          [placeholder]="isListening ? 'Parlez maintenant...' : 'Posez votre question au coach IA...'"
           class="message-input"
+          [class.listening]="isListening"
           [disabled]="isTyping || isRecording">
         
         <button 
@@ -174,10 +191,11 @@
       </form>
       
       <!-- Audio Recording Indicator -->
-      <div class="audio-recording-info" *ngIf="isRecording">
+      <div class="audio-recording-info" *ngIf="isRecording || isListening">
         <span class="recording-dot"></span>
-        <span>Enregistrement en cours... ({{ recordingDuration }}s)</span>
-        <button type="button" class="btn-cancel-recording" (click)="cancelRecording()">
+        <span *ngIf="isRecording">Enregistrement en cours... ({{ recordingDuration }}s)</span>
+        <span *ngIf="isListening && !isRecording">Reconnaissance vocale active... {{ recognizedText ? '("' + recognizedText + '")' : '' }}</span>
+        <button type="button" class="btn-cancel-recording" (click)="cancelRecording(); stopListening()">
           <span class="material-icons">close</span>
         </button>
       </div>

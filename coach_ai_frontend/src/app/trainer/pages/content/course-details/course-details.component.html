@@ -1,0 +1,222 @@
+<div class="page-container" *ngIf="course">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <button class="btn-back" (click)="router.navigate(['/trainer/content/modules', course.moduleId])" type="button">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div>
+        <h1>{{ course.title }}</h1>
+        <p class="subtitle">{{ course.description || 'Aucune description' }}</p>
+      </div>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateLessonModal()">
+      <span class="material-icons">add</span>
+      Nouvelle Leçon
+    </button>
+  </header>
+
+  <!-- Course Info -->
+  <div class="course-info">
+    <div class="info-item">
+      <span class="material-icons">schedule</span>
+      <div>
+        <span class="label">Durée</span>
+        <span class="value">{{ course.duration || 0 }} min</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">play_circle</span>
+      <div>
+        <span class="label">Leçons</span>
+        <span class="value">{{ lessons.length }}</span>
+      </div>
+    </div>
+    <div class="info-item">
+      <span class="material-icons">check_circle</span>
+      <div>
+        <span class="label">Statut</span>
+        <span class="value status-badge" [style.background]="getStatusColor(course.status)">
+          {{ getStatusBadge(course.status) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lessons Section -->
+  <section class="lessons-section">
+    <div class="section-header">
+      <h2>Leçons du Cours</h2>
+      <span class="lessons-count">{{ lessons.length }} leçon(s)</span>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des leçons...</p>
+    </div>
+
+    <!-- Lessons List -->
+    <div *ngIf="!isLoading && lessons.length > 0" class="lessons-list">
+      <div *ngFor="let lesson of lessons; let i = index" class="lesson-card">
+        <div class="lesson-header">
+          <div class="lesson-order">{{ i + 1 }}</div>
+          <div class="lesson-icon" [class]="'type-' + lesson.type">
+            <span class="material-icons">{{ getLessonTypeIcon(lesson.type) }}</span>
+          </div>
+          <div class="lesson-content">
+            <h3>{{ lesson.title }}</h3>
+            <p>{{ lesson.content || 'Aucune description' }}</p>
+            <div class="lesson-meta">
+              <span class="meta-item">
+                <span class="material-icons">schedule</span>
+                {{ lesson.duration || 0 }} min
+              </span>
+              <span class="meta-item type-badge" [class]="'type-' + lesson.type">
+                {{ getLessonTypeLabel(lesson.type) }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="lesson-actions">
+          <button class="btn btn-secondary">
+            <span class="material-icons">edit</span>
+            Modifier
+          </button>
+          <button class="btn btn-danger" (click)="deleteLesson(lesson.id)">
+            <span class="material-icons">delete</span>
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && lessons.length === 0" class="empty-state">
+      <span class="material-icons">play_circle</span>
+      <h3>Aucune leçon</h3>
+      <p>Créez votre première leçon pour ce cours</p>
+      <button class="btn btn-primary" (click)="openCreateLessonModal()">
+        <span class="material-icons">add</span>
+        Créer une Leçon
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- Modal de Création de Leçon -->
+<div *ngIf="showCreateLessonModal" class="modal-overlay" (click)="closeCreateLessonModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Créer une Nouvelle Leçon</h2>
+      <button class="btn-close" (click)="closeCreateLessonModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="createLesson()" class="modal-body">
+      <div class="form-group">
+        <label>Titre *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="newLesson.title" 
+          name="title"
+          placeholder="Ex: Introduction à JavaScript"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea 
+          [(ngModel)]="newLesson.description" 
+          name="description"
+          rows="3"
+          placeholder="Décrivez la leçon..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Type de contenu *</label>
+        <select [(ngModel)]="newLesson.type" name="type" (change)="onTypeChange()" required>
+          <option value="video">Vidéo</option>
+          <option value="text">Texte</option>
+          <option value="schema">Schéma</option>
+        </select>
+      </div>
+
+      <!-- Champs pour Vidéo -->
+      <div *ngIf="newLesson.type === 'video'" class="form-group">
+        <label>URL de la vidéo *</label>
+        <input 
+          type="url" 
+          [(ngModel)]="newLesson.videoUrl" 
+          name="videoUrl"
+          placeholder="https://youtube.com/watch?v=... ou URL de la vidéo">
+        <small class="form-hint">Collez l'URL de la vidéo (YouTube, Vimeo, etc.)</small>
+      </div>
+
+      <div *ngIf="newLesson.type === 'video'" class="form-group">
+        <label>Transcription (optionnel)</label>
+        <textarea 
+          [(ngModel)]="newLesson.transcript" 
+          name="transcript"
+          rows="4"
+          placeholder="Transcription de la vidéo..."></textarea>
+      </div>
+
+      <!-- Champs pour Texte -->
+      <div *ngIf="newLesson.type === 'text'" class="form-group">
+        <label>URL du contenu (PDF, article, etc.)</label>
+        <input 
+          type="url" 
+          [(ngModel)]="newLesson.contentUrl" 
+          name="contentUrl"
+          placeholder="https://...">
+        <small class="form-hint">URL vers un PDF, article, ou contenu texte</small>
+      </div>
+
+      <!-- Champs pour Schéma -->
+      <div *ngIf="newLesson.type === 'schema'" class="form-group">
+        <label>URL du schéma *</label>
+        <input 
+          type="url" 
+          [(ngModel)]="newLesson.contentUrl" 
+          name="contentUrl"
+          placeholder="https://...">
+        <small class="form-hint">URL vers une image, diagramme ou schéma</small>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ordre</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newLesson.order" 
+            name="order"
+            min="1">
+        </div>
+
+        <div class="form-group">
+          <label>Durée (en minutes)</label>
+          <input 
+            type="number" 
+            [(ngModel)]="newLesson.duration" 
+            name="duration"
+            min="0"
+            step="1">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateLessonModal()">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isCreatingLesson || !newLesson.title.trim()">
+          <span *ngIf="isCreatingLesson" class="spinner-small"></span>
+          <span *ngIf="!isCreatingLesson">Créer la Leçon</span>
+          <span *ngIf="isCreatingLesson">Création...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

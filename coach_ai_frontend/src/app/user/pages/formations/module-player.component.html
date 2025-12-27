@@ -1,0 +1,303 @@
+<div class="module-player" *ngIf="formation && module">
+  <!-- Top Navigation Bar -->
+  <header class="player-header">
+    <div class="header-left">
+      <button class="nav-btn" [routerLink]="['/user/formations', formation.id]" title="Retour à la formation">
+        <span class="material-icons">arrow_back</span>
+      </button>
+      <div class="module-info">
+        <h2>{{ module.title }}</h2>
+        <p>{{ formation.title }}</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="icon-btn" (click)="toggleAIChat()" title="Coach IA">
+        <span class="material-icons">psychology</span>
+        <span class="badge" *ngIf="aiSession && aiSession.messages.length > 1">{{aiSession.messages.length - 1}}</span>
+      </button>
+      <button class="icon-btn" title="Notes">
+        <span class="material-icons">note_add</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <div class="player-container">
+    <!-- Sidebar (Formation Navigation) -->
+    <aside class="player-sidebar" [class.closed]="!sidebarOpen">
+      <div class="sidebar-header">
+        <h3>Contenu de la formation</h3>
+        <button class="close-btn" (click)="toggleSidebar()">
+          <span class="material-icons">{{ sidebarOpen ? 'chevron_left' : 'chevron_right' }}</span>
+        </button>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="module" *ngFor="let mod of formation.modules">
+          <div class="module-header">
+            <div class="module-title">
+              <h4>Module {{ mod.order }}</h4>
+              <p>{{ mod.title }}</p>
+            </div>
+            <div class="module-progress">
+              <span class="progress-text">{{ getModuleProgress(mod) }}%</span>
+            </div>
+          </div>
+
+          <div class="module-content-items">
+            <button 
+              class="content-item" 
+              [class.active]="isModuleActive(mod)"
+              [class.completed]="isModuleCompleted(mod)"
+              [class.locked]="mod.isLocked"
+              (click)="selectModule(mod)"
+              [disabled]="mod.isLocked">
+              <span class="material-icons content-icon">
+                {{ getContentIcon(mod) }}
+              </span>
+              <div class="content-info">
+                <p class="content-title">{{ mod.title }}</p>
+                <p class="content-meta">{{ mod.duration || 0 }}h</p>
+              </div>
+              <span class="material-icons check-icon" *ngIf="isModuleCompleted(mod)">
+                check_circle
+              </span>
+              <span class="material-icons play-icon" *ngIf="isModuleActive(mod)">
+                play_arrow
+              </span>
+              <span class="material-icons lock-icon" *ngIf="mod.isLocked">
+                lock
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Player Area -->
+    <main class="player-main">
+      <!-- Module Content -->
+      <div class="module-content">
+        <div class="module-header-section">
+          <div class="module-title-section">
+            <h1>{{ module.title }}</h1>
+            <p class="module-description">{{ module.description }}</p>
+          </div>
+
+          <div class="module-actions">
+            <button 
+              class="btn btn-outline" 
+              *ngIf="!isModuleFullyCompleted()"
+              (click)="markCurrentContentCompleted()">
+              <span class="material-icons">check</span>
+              Marquer comme terminé
+            </button>
+            <button 
+              class="btn btn-completed" 
+              *ngIf="isModuleFullyCompleted()"
+              disabled>
+              <span class="material-icons">check_circle</span>
+              Terminé
+            </button>
+          </div>
+        </div>
+
+        <!-- Video Player -->
+        <div class="video-container" *ngIf="currentTab === 'video' && module.videoUrl && safeVideoUrl">
+          <iframe 
+            [src]="safeVideoUrl"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <!-- Quiz Content -->
+        <div class="quiz-content" *ngIf="currentTab === 'quiz' && currentQuiz && !isQuizSubmitted">
+          <div class="quiz-header">
+            <h1>{{ currentQuiz.title }}</h1>
+            <p>{{ currentQuiz.description }}</p>
+            <div class="quiz-info">
+              <span>Score minimum : {{ currentQuiz.passingScore || 70 }}%</span>
+              <span>Durée : {{ currentQuiz.duration || 30 }} minutes</span>
+            </div>
+          </div>
+
+          <div class="quiz-questions" *ngIf="currentQuiz.questions && currentQuiz.questions.length > 0">
+            <div 
+              class="question-card" 
+              *ngFor="let question of currentQuiz.questions; let qIndex = index">
+              <div class="question-header">
+                <h3>Question {{ qIndex + 1 }}</h3>
+                <span class="points">{{ question.points || 10 }} points</span>
+              </div>
+              <p class="question-text">{{ question.question }}</p>
+              <div class="answers-list" *ngIf="getQuestionOptions(question).length > 0">
+                <button
+                  class="answer-option"
+                  *ngFor="let option of getQuestionOptions(question); let optIndex = index"
+                  [class.selected]="userAnswers.get(question.id) === (option.id || optIndex.toString())"
+                  (click)="selectAnswer(question.id, option.id || optIndex.toString())">
+                  <span class="material-icons" *ngIf="userAnswers.get(question.id) === (option.id || optIndex.toString())">
+                    radio_button_checked
+                  </span>
+                  <span class="material-icons" *ngIf="userAnswers.get(question.id) !== (option.id || optIndex.toString())">
+                    radio_button_unchecked
+                  </span>
+                  <span>{{ getOptionText(option) }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="quiz-actions">
+              <button class="btn btn-primary btn-large" (click)="submitQuiz()">
+                <span class="material-icons">send</span>
+                Soumettre le quiz
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quiz Results -->
+        <div class="quiz-results" *ngIf="currentTab === 'quiz' && showQuizResults">
+          <div class="results-card" [class.passed]="quizPassed" [class.failed]="!quizPassed">
+            <div class="results-icon">
+              <span class="material-icons" *ngIf="quizPassed">check_circle</span>
+              <span class="material-icons" *ngIf="!quizPassed">cancel</span>
+            </div>
+            <h2>{{ quizPassed ? 'Félicitations !' : 'Dommage !' }}</h2>
+            <p class="score">Votre score : {{ quizScore }}%</p>
+            <p *ngIf="quizPassed">Vous avez réussi le quiz !</p>
+            <p *ngIf="!quizPassed">Vous devez obtenir au moins {{ currentQuiz.passingScore || 70 }}% pour réussir.</p>
+          </div>
+        </div>
+
+        <!-- Regular Content (Text, Lab) -->
+        <div *ngIf="currentTab !== 'quiz' && currentTab !== 'video'">
+          <!-- Tabs for Notes, Transcript, etc. -->
+          <div class="content-tabs">
+            <button 
+              class="tab" 
+              [class.active]="contentTab === 'transcript'"
+              (click)="contentTab = 'transcript'">
+              <span class="material-icons">description</span>
+              Transcription
+            </button>
+            <button 
+              class="tab" 
+              [class.active]="contentTab === 'notes'"
+              (click)="contentTab = 'notes'">
+              <span class="material-icons">note</span>
+              Mes notes
+            </button>
+            <button 
+              class="tab" 
+              [class.active]="contentTab === 'discussions'"
+              (click)="contentTab = 'discussions'">
+              <span class="material-icons">forum</span>
+              Discussions
+            </button>
+          </div>
+
+          <!-- Content Body -->
+          <div class="content-body">
+            <div class="transcript" *ngIf="contentTab === 'transcript'">
+              <h3 *ngIf="currentTab === 'text'">Contenu texte</h3>
+              <h3 *ngIf="currentTab === 'lab'">Contenu du Lab/TP</h3>
+              <div [innerHTML]="currentTab === 'text' ? renderedTextContent : renderedLabContent"></div>
+              <div *ngIf="!renderedTextContent && !renderedLabContent" class="empty-state">
+                <p>Le contenu sera disponible prochainement.</p>
+              </div>
+            </div>
+            <div class="notes" *ngIf="contentTab === 'notes'">
+              <textarea 
+                [(ngModel)]="userNotes"
+                placeholder="Ajoutez vos notes ici..."
+                rows="10">
+              </textarea>
+            </div>
+            <div class="discussions" *ngIf="contentTab === 'discussions'">
+              <p class="empty-state">Les discussions seront disponibles prochainement.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="module-navigation">
+          <button 
+            class="btn btn-nav" 
+            (click)="goToPreviousModule()"
+            [disabled]="!hasPreviousModule()">
+            <span class="material-icons">chevron_left</span>
+            Module précédent
+          </button>
+          <button 
+            class="btn btn-nav btn-next" 
+            (click)="goToNextModule()"
+            [disabled]="!hasNextModule()">
+            Module suivant
+            <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- AI Chat Panel (Floating) -->
+    <div class="ai-chat-panel" *ngIf="aiChatOpen" [class.open]="aiChatOpen">
+      <div class="chat-header">
+        <div class="chat-title">
+          <span class="material-icons">psychology</span>
+          <h3>Coach IA</h3>
+        </div>
+        <button class="close-chat-btn" (click)="toggleAIChat()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="chat-messages">
+        <div 
+          class="message" 
+          *ngFor="let message of aiSession?.messages"
+          [class.user-message]="message.role === 'user'"
+          [class.ai-message]="message.role === 'ai'">
+          <div class="message-avatar">
+            <span class="material-icons" *ngIf="message.role === 'ai'">psychology</span>
+            <span class="material-icons" *ngIf="message.role === 'user'">person</span>
+          </div>
+          <div class="message-content">
+            <p>{{ message.content }}</p>
+            <span class="message-time">{{ message.timestamp | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <input 
+          type="text" 
+          [(ngModel)]="aiMessage"
+          (keyup.enter)="sendAIMessage()"
+          placeholder="Posez une question au coach IA...">
+        <button class="send-btn" (click)="sendAIMessage()" [disabled]="!aiMessage.trim()">
+          <span class="material-icons">send</span>
+        </button>
+      </div>
+
+      <div class="chat-suggestions">
+        <p>Suggestions :</p>
+        <button class="suggestion-chip" (click)="aiMessage = 'Peux-tu m\'expliquer ce concept ?'; sendAIMessage()">
+          Expliquer ce concept
+        </button>
+        <button class="suggestion-chip" (click)="aiMessage = 'Donne-moi un exemple pratique'; sendAIMessage()">
+          Exemple pratique
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="!module">
+  <div class="spinner"></div>
+  <p>Chargement du module...</p>
+</div>

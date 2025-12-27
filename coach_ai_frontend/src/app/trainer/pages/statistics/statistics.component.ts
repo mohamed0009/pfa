@@ -62,72 +62,53 @@ export class StatisticsComponent implements OnInit {
   loadStatistics(): void {
     this.isLoading = true;
     
-    // Simulate API call with mock data
-    setTimeout(() => {
-      this.statistics = {
-        totalStudents: 156,
-        studentsTrend: 12,
-        averageCompletion: 68,
-        completionTrend: 8,
-        averageScore: 75,
-        scoreTrend: 5,
-        averageTimeSpent: 24,
-        progressionTrend: [
-          { date: 'Sem 1', value: 45 },
-          { date: 'Sem 2', value: 52 },
-          { date: 'Sem 3', value: 58 },
-          { date: 'Sem 4', value: 68 }
-        ],
-        difficultyDistribution: {
-          easy: 35,
-          medium: 45,
-          hard: 20
-        },
-        modulePerformance: [
-          {
-            title: 'Introduction à la Programmation',
-            enrolledStudents: 89,
-            completionRate: 78,
-            averageScore: 82,
-            averageTime: 12,
-            status: 'excellent'
-          },
-          {
-            title: 'Structures de Données',
-            enrolledStudents: 67,
-            completionRate: 65,
-            averageScore: 71,
-            averageTime: 18,
-            status: 'good'
-          },
-          {
-            title: 'Algorithmes Avancés',
-            enrolledStudents: 45,
-            completionRate: 52,
-            averageScore: 68,
-            averageTime: 25,
-            status: 'needs_improvement'
-          }
-        ],
-        atRiskStudents: [
-          {
-            id: '1',
-            name: 'Marie Dupont',
-            formation: 'Développement Web',
-            riskLevel: 'Élevé',
-            reason: 'Retard de 2 semaines'
-          },
-          {
-            id: '2',
-            name: 'Jean Martin',
-            formation: 'Data Science',
-            riskLevel: 'Moyen',
-            reason: 'Score en baisse'
-          }
-        ]
-      };
-      this.isLoading = false;
-    }, 1000);
+    const formationId = this.selectedFormation !== 'all' ? this.selectedFormation : null;
+    const period = this.selectedPeriod || '30';
+    
+    // Utiliser les statistiques du backend
+    this.trainerService.getTrainerStats().subscribe(stats => {
+      // Récupérer les étudiants à risque
+      this.trainerService.getAtRiskStudents().subscribe(atRiskStudents => {
+        // Récupérer les statistiques des formations
+        this.trainerService.getFormationsStatistics().subscribe(formationsStats => {
+          // Construire les données de statistiques
+          const formationStats = formationId 
+            ? formationsStats.find(f => f.formationId === formationId)
+            : null;
+          
+          this.statistics = {
+            totalStudents: stats.totalStudents,
+            studentsTrend: 12, // À calculer depuis les données historiques
+            averageCompletion: stats.averageStudentProgress,
+            completionTrend: 8, // À calculer
+            averageScore: 75, // À calculer depuis les quiz scores
+            scoreTrend: 5, // À calculer
+            averageTimeSpent: 24, // À calculer
+            progressionTrend: [
+              { date: 'Sem 1', value: 45 },
+              { date: 'Sem 2', value: 52 },
+              { date: 'Sem 3', value: 58 },
+              { date: 'Sem 4', value: stats.averageStudentProgress }
+            ],
+            difficultyDistribution: {
+              easy: 35,
+              medium: 45,
+              hard: 20
+            },
+            modulePerformance: [], // À remplir depuis les modules
+            atRiskStudents: atRiskStudents.map(s => ({
+              id: s.studentId,
+              name: s.studentName,
+              formation: s.formationName,
+              riskLevel: s.riskLevel === 'high' ? 'Élevé' : s.riskLevel === 'medium' ? 'Moyen' : 'Faible',
+              reason: s.reasons && s.reasons.length > 0 ? s.reasons[0] : 'Problème de progression'
+            }))
+          };
+          
+          this.isLoading = false;
+        });
+      });
+    });
   }
 
   exportStatistics(): void {
